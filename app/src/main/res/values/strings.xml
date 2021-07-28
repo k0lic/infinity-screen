@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">InfinityScreen</string>
+    <string name="app_name">Infinity Screen</string>
+    <string name="no_message">No message</string>
 </resources>
