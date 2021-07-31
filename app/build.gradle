@@ -51,4 +51,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
     // if using Java8, use the following instead of lifecycle-compiler
     implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+
+    // ffmpeg-android
+    implementation 'com.arthenica:mobile-ffmpeg-full:4.4.LTS'
 }
