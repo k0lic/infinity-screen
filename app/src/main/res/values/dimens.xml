@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="default_fragment_padding">16dp</dimen>
+    <dimen name="default_element_padding">8dp</dimen>
+
+    <dimen name="default_vertical_margin">16dp</dimen>
+
+    <dimen name="default_corner_radius">4dp</dimen>
+    <dimen name="large_corner_radius">8dp</dimen>
+
+    <dimen name="text_size_regular">18sp</dimen>
+    <dimen name="text_size_large">24sp</dimen>
+    <dimen name="text_size_extra_large">36sp</dimen>
+
+</resources>

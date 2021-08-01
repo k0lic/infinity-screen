@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="ka170130.pmu.infinityscreen.connection.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_deviceListFragment"
+            app:destination="@id/deviceListFragment" />
+        <action
+            android:id="@+id/action_connectedFragment"
+            app:destination="@id/connectedFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/deviceListFragment"
+        android:name="ka170130.pmu.infinityscreen.connection.DeviceListFragment"
+        android:label="fragment_device_list"
+        tools:layout="@layout/fragment_device_list" >
+        <action
+            android:id="@+id/action_layoutFragment"
+            app:destination="@id/layoutFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/connectedFragment"
+        android:name="ka170130.pmu.infinityscreen.connection.ConnectedFragment"
+        android:label="fragment_connected"
+        tools:layout="@layout/fragment_connected" >
+        <action
+            android:id="@+id/action_pop"
+            app:popUpTo="@id/connectedFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_layoutFragment"
+            app:destination="@id/layoutFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/layoutFragment"
+        android:name="ka170130.pmu.infinityscreen.layout.LayoutFragment"
+        android:label="fragment_layout"
+        tools:layout="@layout/fragment_layout" />
+</navigation>

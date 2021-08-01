@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<!-- Device/Host cards -->
+    <style name="StatusCardLayout">
+        <item name="android:padding">@dimen/default_element_padding</item>
+    </style>
+<!-- Shapes -->
+    <style name="ShapeAppearanceOverlay.BottomRightRoundedCorner" parent="">
+        <item name="cornerFamilyBottomRight">rounded</item>
+        <item name="cornerSizeBottomRight">@dimen/default_corner_radius</item>
+    </style>
+    <style name="ShapeAppearanceOverlay.BottomLeftRoundedCorner" parent="">
+        <item name="cornerFamilyBottomLeft">rounded</item>
+        <item name="cornerSizeBottomLeft">@dimen/default_corner_radius</item>
+    </style>
+    <style name="ShapeAppearanceOverlay.CutCorners" parent="">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">@dimen/large_corner_radius</item>
+    </style>
+<!-- Fragment -->
+    <style name="FragmentWithBackground">
+        <item name="android:background">?attr/colorBackground</item>
+    </style>
+    <style name="ContentLayoutStyle">
+        <item name="android:padding">@dimen/default_fragment_padding</item>
+    </style>
+<!-- Text On Background -->
+    <style name="TextOnBackground">
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+    <style name="TextOnBackgroundRegular" parent="TextOnBackground">
+        <item name="android:textSize">@dimen/text_size_regular</item>
+    </style>
+    <style name="TextOnBackgroundLarge" parent="TextOnBackground">
+        <item name="android:textSize">@dimen/text_size_large</item>
+    </style>
+    <style name="TextOnBackgroundExtraLarge" parent="TextOnBackground">
+        <item name="android:textSize">@dimen/text_size_extra_large</item>
+    </style>
+<!-- Buttons -->
+    <style name="PrimaryButton" parent="@style/Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">?attr/colorSecondary</item>
+        <item name="android:textColor">?attr/colorOnSecondary</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.CutCorners</item>
+    </style>
+</resources>

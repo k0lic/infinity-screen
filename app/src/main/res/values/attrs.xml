@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="colorBackground" format="reference" />
+    <attr name="colorOnBackground" format="reference" />
+
+    <attr name="colorNegativePrimary" format="reference" />
+    <attr name="colorNegativeSecondary" format="reference" />
+
+    <attr name="colorNeutral" format="reference" />
+    <attr name="colorOnNeutral" format="reference" />
+
+    <attr name="colorDeviceConnected" format="reference" />
+    <attr name="colorOnDeviceConnected" format="reference" />
+
+    <attr name="colorDeviceAvailable" format="reference" />
+    <attr name="colorOnDeviceAvailable" format="reference" />
+
+    <attr name="colorPlay" format="reference" />
+    <attr name="colorPlayContrast" format="reference" />
+</resources>

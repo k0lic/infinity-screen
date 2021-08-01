@@ -1,16 +1,37 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.InfinityScreen" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.Default" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorPrimary">@color/tangaroa</item>
         <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Background brand color -->
+        <item name="colorBackground">@color/blue_charcoal</item>
+        <item name="colorOnBackground">@color/white</item>
+
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorSecondary">@color/dodger_blue</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Negative brand color -->
+        <item name="colorNegativePrimary">@color/guardsman_red</item>
+        <item name="colorNegativeSecondary">@color/white</item>
+
+        <!-- Neutral brand color -->
+        <item name="colorNeutral">@color/silver_sand</item>
+        <item name="colorOnNeutral">@color/black</item>
+
+        <!-- Device brand colors -->
+        <item name="colorDeviceConnected">@color/chiffon</item>
+        <item name="colorOnDeviceConnected">@color/black</item>
+        <item name="colorDeviceAvailable">@color/amour</item>
+        <item name="colorOnDeviceAvailable">@color/black</item>
+
+        <!-- Play brand color -->
+        <item name="colorPlay">@color/white_transparent</item>
+        <item name="colorPlayContrast">@color/black_transparent</item>
+
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
     </style>
 </resources>
