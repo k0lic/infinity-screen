@@ -42,7 +42,7 @@
             android:id="@+id/device_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="@string/layout_your_device"
+            android:text="@string/layout_your_device"
             style="@style/TextOnBackgroundRegular"
             android:layout_marginEnd="@dimen/horizontal_margin_large"
             app:layout_constraintTop_toTopOf="@id/device_number"

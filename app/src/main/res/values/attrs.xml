@@ -17,4 +17,9 @@
 
     <attr name="colorPlay" format="reference" />
     <attr name="colorPlayContrast" format="reference" />
+
+    <attr name="colorLayoutPrimary" format="reference" />
+    <attr name="colorLayoutBackground" format="reference" />
+    <attr name="colorLayoutAccent" format="reference" />
+    <attr name="colorLayoutHighlight" format="reference" />
 </resources>

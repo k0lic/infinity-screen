@@ -21,6 +21,12 @@
         <item name="colorNeutral">@color/silver_sand</item>
         <item name="colorOnNeutral">@color/black</item>
 
+        <!-- Layout brand colors -->
+        <item name="colorLayoutPrimary">@color/silver_sand</item>
+        <item name="colorLayoutBackground">@color/white</item>
+        <item name="colorLayoutAccent">@color/black</item>
+        <item name="colorLayoutHighlight">@color/chiffon</item>
+
         <!-- Device brand colors -->
         <item name="colorDeviceConnected">@color/chiffon</item>
         <item name="colorOnDeviceConnected">@color/black</item>
