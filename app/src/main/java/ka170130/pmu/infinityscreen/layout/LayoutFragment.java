@@ -40,6 +40,8 @@ public class LayoutFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentLayoutBinding.inflate(inflater, container, false);
 
+        // TODO: everything
+
         return  binding.getRoot();
     }
 

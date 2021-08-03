@@ -33,6 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/DeviceCard"
+        app:cardBackgroundColor="?attr/colorDeviceAvailable"
         app:layout_constraintTop_toBottomOf="@id/top_app_bar_layout"
         app:layout_constraintStart_toStartOf="parent"
         >
@@ -49,14 +50,16 @@
                 android:id="@+id/device_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Galaxy A3 (2017)"
+                tools:text="@string/device_name_2"
+                android:textColor="?attr/colorOnDeviceAvailable"
                 />
 
             <TextView
                 android:id="@+id/device_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Available"
+                tools:text="@string/device_status_available"
+                android:textColor="?attr/colorOnDeviceAvailable"
                 />
 
         </LinearLayout>
@@ -68,6 +71,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/HostCard"
+        app:cardBackgroundColor="?attr/colorNeutral"
         app:layout_constraintTop_toBottomOf="@id/top_app_bar_layout"
         app:layout_constraintEnd_toEndOf="parent"
         >
@@ -85,7 +89,8 @@
                 android:id="@+id/host_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Galaxy A3 (2017)"
+                tools:text="@string/device_name_1"
+                android:textColor="?attr/colorOnNeutral"
                 />
 
             <TextView
@@ -93,6 +98,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/host"
+                android:textColor="?attr/colorOnNeutral"
                 />
 
         </LinearLayout>

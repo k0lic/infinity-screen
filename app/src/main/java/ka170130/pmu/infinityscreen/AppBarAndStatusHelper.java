@@ -108,7 +108,7 @@ public class AppBarAndStatusHelper {
         binding.deviceStatus.setTextColor(textColor);
     }
 
-    private static int resolveRefColor(
+    public static int resolveRefColor(
             Resources.Theme theme,
             int resId
     ) {

@@ -1,14 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".connection.DeviceListFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".connection.DeviceListFragment"
+    style="@style/FragmentWithBackground"
+    >
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <include
+        android:id="@+id/app_bar_and_status"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        layout="@layout/app_bar_and_status"
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
-</FrameLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content_layout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        style="@style/ContentLayoutStyle"
+        app:layout_constraintTop_toBottomOf="@id/app_bar_and_status"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        >
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/inner_layout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="@dimen/default_vertical_margin"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/continue_button"
+            >
+
+            <TextView
+                android:id="@+id/available_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/list_available"
+                style="@style/TextOnBackgroundRegular"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/available_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                tools:listitem="@layout/view_holder_device"
+                tools:itemCount="4"
+                android:layout_marginTop="@dimen/default_vertical_margin"
+                android:layout_marginHorizontal="@dimen/default_horizontal_margin"
+                app:layout_constraintTop_toBottomOf="@id/available_label"
+                app:layout_constraintBottom_toTopOf="@id/guideline"
+                />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_percent="0.5"
+                />
+
+            <TextView
+                android:id="@+id/connected_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/list_connected"
+                style="@style/TextOnBackgroundRegular"
+                android:layout_marginTop="@dimen/default_vertical_margin"
+                app:layout_constraintTop_toBottomOf="@id/guideline"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+            <TextView
+                android:id="@+id/connected_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="4"
+                style="@style/TextOnBackgroundRegular"
+                android:layout_marginStart="@dimen/horizontal_margin_small"
+                app:layout_constraintTop_toTopOf="@id/connected_label"
+                app:layout_constraintStart_toEndOf="@id/connected_label"
+                />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/connected_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                tools:listitem="@layout/view_holder_device"
+                tools:itemCount="4"
+                android:layout_marginTop="@dimen/default_vertical_margin"
+                android:layout_marginHorizontal="@dimen/default_horizontal_margin"
+                app:layout_constraintTop_toBottomOf="@id/connected_label"
+                app:layout_constraintBottom_toBottomOf="parent"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Button
+            android:id="@+id/continue_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/continue_button"
+            style="@style/PrimaryButton"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -49,4 +49,15 @@
         <item name="android:textColor">?attr/colorOnSecondary</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.CutCorners</item>
     </style>
+    <style name="SecondaryButton" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">?attr/colorSecondary</item>
+    </style>
+    <style name="NegativeButton" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">?attr/colorNegativePrimary</item>
+        <item name="strokeColor">?attr/colorNegativeSecondary</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.CutCorners</item>
+    </style>
+    <style name="NegativeTextButton" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">?attr/colorNegativePrimary</item>
+    </style>
 </resources>

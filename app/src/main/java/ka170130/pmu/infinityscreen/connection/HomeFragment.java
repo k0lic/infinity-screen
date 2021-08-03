@@ -57,7 +57,8 @@ public class HomeFragment extends Fragment {
 
         // Find Devices Button
         binding.findDevicesButton.setOnClickListener(view -> {
-            // TODO
+            // TODO: replace dummy code with real code
+            navController.navigate(HomeFragmentDirections.actionDeviceListFragment());
         });
 
         return  binding.getRoot();

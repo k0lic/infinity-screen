@@ -1,14 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".layout.LayoutFragment">
+    tools:context=".layout.LayoutFragment"
+    style="@style/FragmentWithBackground">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <include
+        android:id="@+id/app_bar_and_status"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        layout="@layout/app_bar_and_status"
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
-</FrameLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content_layout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        style="@style/ContentLayoutStyle"
+        app:layout_constraintTop_toBottomOf="@id/app_bar_and_status"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        >
+
+        <TextView
+            android:id="@+id/instructions_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/layout_instructions"
+            style="@style/TextOnBackgroundRegular"
+            android:textAlignment="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/device_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="@string/layout_your_device"
+            style="@style/TextOnBackgroundRegular"
+            android:layout_marginEnd="@dimen/horizontal_margin_large"
+            app:layout_constraintTop_toTopOf="@id/device_number"
+            app:layout_constraintBottom_toBottomOf="@id/device_number"
+            app:layout_constraintEnd_toStartOf="@id/device_number"
+            />
+
+        <TextView
+            android:id="@+id/device_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="3"
+            style="@style/TextOnBackgroundExtraLarge"
+            android:layout_marginTop="@dimen/default_vertical_margin"
+            app:layout_constraintTop_toBottomOf="@id/instructions_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <ka170130.pmu.infinityscreen.layout.DeviceLayoutView
+            android:id="@+id/device_layout_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginVertical="@dimen/default_vertical_margin"
+            app:layout_constraintTop_toBottomOf="@id/device_number"
+            app:layout_constraintBottom_toTopOf="@id/preview_button"
+            />
+
+        <Button
+            android:id="@+id/preview_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/preview"
+            style="@style/SecondaryButton"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/continue_button"
+            />
+
+        <Button
+            android:id="@+id/continue_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/continue_button"
+            style="@style/PrimaryButton"
+            app:layout_constraintTop_toTopOf="@id/preview_button"
+            app:layout_constraintBottom_toBottomOf="@id/preview_button"
+            app:layout_constraintStart_toEndOf="@id/preview_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,6 +5,12 @@
     <dimen name="default_element_padding">8dp</dimen>
 
     <dimen name="default_vertical_margin">16dp</dimen>
+    <dimen name="vertical_margin_extra_large">40dp</dimen>
+    <dimen name="vertical_margin_tiny">2dp</dimen>
+
+    <dimen name="default_horizontal_margin">8dp</dimen>
+    <dimen name="horizontal_margin_small">4dp</dimen>
+    <dimen name="horizontal_margin_large">16dp</dimen>
 
     <dimen name="default_corner_radius">20dp</dimen>
     <dimen name="large_corner_radius">8dp</dimen>
