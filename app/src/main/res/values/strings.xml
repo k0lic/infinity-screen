@@ -9,4 +9,13 @@
     <string name="home_heading">View your favorite images and videos with your friends!</string>
     <string name="home_find_devices">Find Devices</string>
     <string name="home_wait_for_invite">...or wait until you get invited.</string>
+
+    <!-- Device Statuses -->
+    <string name="device_status_available">Available</string>
+    <string name="device_status_invited">Invited</string>
+    <string name="device_status_connected">Connected</string>
+    <string name="device_status_failed">Failed</string>
+    <string name="device_status_unavailable">Unavailable</string>
+    <string name="device_status_unknown">Unknown</string>
+
 </resources>
