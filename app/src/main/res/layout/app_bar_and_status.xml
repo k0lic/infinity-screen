@@ -32,7 +32,6 @@
         android:id="@+id/device_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/DeviceCard"
         app:cardBackgroundColor="?attr/colorDeviceAvailable"
         app:layout_constraintTop_toBottomOf="@id/top_app_bar_layout"
         app:layout_constraintStart_toStartOf="parent"

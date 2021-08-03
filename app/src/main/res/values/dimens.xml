@@ -12,7 +12,7 @@
     <dimen name="horizontal_margin_small">4dp</dimen>
     <dimen name="horizontal_margin_large">16dp</dimen>
 
-    <dimen name="default_corner_radius">20dp</dimen>
+    <dimen name="default_corner_radius">4dp</dimen>
     <dimen name="large_corner_radius">8dp</dimen>
 
     <dimen name="text_size_regular">18sp</dimen>

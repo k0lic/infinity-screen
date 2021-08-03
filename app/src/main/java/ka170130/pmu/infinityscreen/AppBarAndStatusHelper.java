@@ -1,6 +1,7 @@
 package ka170130.pmu.infinityscreen;
 
 import android.content.res.Resources;
+import android.graphics.drawable.GradientDrawable;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.util.Log;
 import android.util.TypedValue;
@@ -28,6 +29,11 @@ public class AppBarAndStatusHelper {
             default:
                 return resources.getString(R.string.device_status_unknown);
         }
+    }
+
+    public static void setupCardShapes(AppBarAndStatusBinding binding) {
+        binding.deviceCard.setBackgroundResource(R.drawable.one_rounded_corner_bottom_right);
+        binding.hostCard.setBackgroundResource(R.drawable.one_rounded_corner_bottom_left);
     }
 
     public static void refreshDeviceCard(
@@ -103,7 +109,7 @@ public class AppBarAndStatusHelper {
         int bgColor = resolveRefColor(theme, bgResId);
         int textColor = resolveRefColor(theme, textResId);
 
-        binding.deviceCard.setBackgroundColor(bgColor);
+        ((GradientDrawable) binding.deviceCard.getBackground()).setColor(bgColor);
         binding.deviceName.setTextColor(textColor);
         binding.deviceStatus.setTextColor(textColor);
     }

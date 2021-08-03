@@ -4,21 +4,7 @@
     <style name="StatusCardLayout">
         <item name="android:padding">@dimen/default_element_padding</item>
     </style>
-    <style name="DeviceCard">
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.BottomRightRoundedCorner</item>
-    </style>
-    <style name="HostCard">
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.BottomLeftRoundedCorner</item>
-    </style>
 <!-- Shapes -->
-    <style name="ShapeAppearanceOverlay.BottomRightRoundedCorner" parent="">
-        <item name="cornerFamilyBottomRight">rounded</item>
-        <item name="cornerSizeBottomRight">@dimen/default_corner_radius</item>
-    </style>
-    <style name="ShapeAppearanceOverlay.BottomLeftRoundedCorner" parent="">
-        <item name="cornerFamilyBottomLeft">rounded</item>
-        <item name="cornerSizeBottomLeft">@dimen/default_corner_radius</item>
-    </style>
     <style name="ShapeAppearanceOverlay.CutCorners" parent="">
         <item name="cornerFamily">cut</item>
         <item name="cornerSize">@dimen/large_corner_radius</item>

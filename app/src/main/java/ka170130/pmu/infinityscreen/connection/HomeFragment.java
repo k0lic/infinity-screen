@@ -43,6 +43,9 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentHomeBinding.inflate(inflater, container, false);
 
+        // Setup Card Shapes
+        AppBarAndStatusHelper.setupCardShapes(binding.appBarAndStatus);
+
         // Update Device card
         connectionViewModel.getSelfDevice().observe(getViewLifecycleOwner(),
                 device -> AppBarAndStatusHelper.refreshDeviceCard(
