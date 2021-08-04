@@ -16,6 +16,7 @@
     <attr name="colorOnDeviceAvailable" format="reference" />
 
     <attr name="colorPlay" format="reference" />
+    <attr name="colorPlayAccent" format="reference" />
     <attr name="colorPlayContrast" format="reference" />
 
     <attr name="colorLayoutPrimary" format="reference" />

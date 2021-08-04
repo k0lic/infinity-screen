@@ -48,4 +48,7 @@
     <!-- File Selection Wait Fragment -->
     <string name="wait_file_selection">Waiting for the host to select files.</string>
 
+    <!-- Play Fragment -->
+    <string name="play_buffering_message">Waiting for video to load.</string>
+
 </resources>

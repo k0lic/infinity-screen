@@ -35,6 +35,7 @@
 
         <!-- Play brand color -->
         <item name="colorPlay">@color/white_transparent</item>
+        <item name="colorPlayAccent">@color/white</item>
         <item name="colorPlayContrast">@color/black_transparent</item>
 
         <!-- Status bar color. -->

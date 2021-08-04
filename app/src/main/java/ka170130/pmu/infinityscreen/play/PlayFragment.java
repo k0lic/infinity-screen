@@ -17,21 +17,13 @@ import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentPlayBinding;
 
-public class PlayFragment extends Fragment {
+public class PlayFragment extends FullScreenFragment {
 
     private FragmentPlayBinding binding;
-    private MainActivity mainActivity;
     private NavController navController;
 
     public PlayFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mainActivity = (MainActivity) requireActivity();
     }
 
     @Override

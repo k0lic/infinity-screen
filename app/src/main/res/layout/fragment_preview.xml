@@ -10,6 +10,7 @@
         android:id="@+id/texture_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        tools:background="@color/black"
         />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -17,7 +18,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:layout_marginTop="@dimen/default_vertical_margin"
         >
 
         <ImageButton

@@ -41,6 +41,9 @@ public class FileSelectionFragment extends Fragment {
         binding = FragmentFileSelectionBinding.inflate(inflater, container, false);
 
         // TODO
+        binding.playButton.setOnClickListener(view -> {
+
+        });
 
         return  binding.getRoot();
     }

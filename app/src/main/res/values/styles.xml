@@ -9,6 +9,10 @@
         <item name="cornerFamily">cut</item>
         <item name="cornerSize">@dimen/large_corner_radius</item>
     </style>
+    <style name="ShapeAppearanceOverlay.RoundedCorners" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/large_corner_radius</item>
+    </style>
 <!-- Fragment -->
     <style name="FragmentWithBackground">
         <item name="android:background">?attr/colorBackground</item>
@@ -31,7 +35,6 @@
     </style>
 <!-- Buttons -->
     <style name="PrimaryButton" parent="@style/Widget.MaterialComponents.Button">
-<!--        <item name="android:backgroundTint">?attr/colorSecondary</item>-->
         <item name="android:backgroundTint">@color/primary_button_color_selector</item>
         <item name="android:textColor">?attr/colorOnSecondary</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.CutCorners</item>
@@ -46,5 +49,12 @@
     </style>
     <style name="NegativeTextButton" parent="@style/Widget.MaterialComponents.Button.TextButton">
         <item name="android:textColor">@color/negative_button_color_selector</item>
+    </style>
+<!-- Play Controls -->
+    <style name="TimeCard" parent="">
+        <item name="android:textColor">?attr/colorPlayAccent</item>
+        <item name="android:background">?attr/colorPlayContrast</item>
+        <item name="android:padding">@dimen/default_element_padding</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.RoundedCorners</item>
     </style>
 </resources>

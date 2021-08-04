@@ -3,12 +3,137 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".play.PlayFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <TextureView
+        android:id="@+id/texture_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        tools:background="@color/black"
+        />
+
+    <ImageButton
+        android:id="@+id/menu_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/outline_more_vert_24"
+        android:background="@color/transparent"
+        android:padding="@dimen/default_element_padding"
+        android:layout_gravity="end"
+        />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/buffering_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        style="@style/TimeCard"
+        >
+
+        <TextView
+            android:id="@+id/buffering_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/play_buffering_message"
+            android:textColor="?attr/colorPlayAccent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/progress_indicator"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progress_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:indicatorColor="?attr/colorPlayAccent"
+            app:layout_constraintTop_toBottomOf="@id/buffering_message"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/controls_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        >
+
+        <ImageButton
+            android:id="@+id/previous_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/outline_skip_previous_24"
+            android:background="@color/transparent"
+            android:padding="@dimen/default_element_padding"
+            android:layout_marginEnd="@dimen/default_horizontal_margin"
+            app:layout_constraintTop_toTopOf="@id/play_button"
+            app:layout_constraintEnd_toStartOf="@id/play_button"
+            />
+
+        <ImageButton
+            android:id="@+id/play_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/outline_play_arrow_24"
+            android:background="@color/transparent"
+            android:padding="@dimen/default_element_padding"
+            android:layout_marginBottom="@dimen/default_vertical_margin"
+            app:layout_constraintBottom_toTopOf="@id/slider"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <ImageButton
+            android:id="@+id/next_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/outline_skip_next_24"
+            android:background="@color/transparent"
+            android:padding="@dimen/default_element_padding"
+            android:layout_marginStart="@dimen/default_horizontal_margin"
+            app:layout_constraintTop_toTopOf="@id/play_button"
+            app:layout_constraintStart_toEndOf="@id/play_button"
+            />
+
+        <TextView
+            android:id="@+id/current_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="36:04"
+            style="@style/TimeCard"
+            app:layout_constraintBottom_toTopOf="@id/slider"
+            app:layout_constraintStart_toStartOf="parent"
+            />
+
+        <TextView
+            android:id="@+id/total_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="3:55:25"
+            style="@style/TimeCard"
+            app:layout_constraintBottom_toBottomOf="@id/current_time"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:valueFrom="0"
+            tools:valueTo="100"
+            tools:value="20"
+            app:thumbColor="?attr/colorPlayAccent"
+            app:trackColorActive="?attr/colorPlayAccent"
+            app:trackColorInactive="?attr/colorPlay"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>
