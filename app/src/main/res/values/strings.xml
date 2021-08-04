@@ -45,4 +45,7 @@
     <string name="files_clear_all">Clear All</string>
     <string name="files_empty">No files selected</string>
 
+    <!-- File Selection Wait Fragment -->
+    <string name="wait_file_selection">Waiting for the host to select files.</string>
+
 </resources>

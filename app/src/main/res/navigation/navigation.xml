@@ -50,6 +50,9 @@
         <action
             android:id="@+id/action_fileSelectionFragment"
             app:destination="@id/fileSelectionFragment" />
+        <action
+            android:id="@+id/action_fileSelectionWaitFragment"
+            app:destination="@id/fileSelectionWaitFragment" />
     </fragment>
     <fragment
         android:id="@+id/previewFragment"
@@ -65,5 +68,34 @@
         android:id="@+id/fileSelectionFragment"
         android:name="ka170130.pmu.infinityscreen.media.FileSelectionFragment"
         android:label="fragment_file_selection"
-        tools:layout="@layout/fragment_file_selection" />
+        tools:layout="@layout/fragment_file_selection" >
+        <action
+            android:id="@+id/action_playFragment"
+            app:destination="@id/playFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/fileSelectionWaitFragment"
+        android:name="ka170130.pmu.infinityscreen.media.FileSelectionWaitFragment"
+        android:label="fragment_file_selection_wait"
+        tools:layout="@layout/fragment_file_selection_wait" >
+        <action
+            android:id="@+id/action_playFragment"
+            app:destination="@id/playFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/playFragment"
+        android:name="ka170130.pmu.infinityscreen.play.PlayFragment"
+        android:label="fragment_play"
+        tools:layout="@layout/fragment_play" >
+        <action
+            android:id="@+id/action_playFragment_pop"
+            app:popUpTo="@id/playFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <action
+        android:id="@+id/global_homeFragment"
+        app:popUpTo="@id/homeFragment"
+        app:popUpToInclusive="false"
+        />
 </navigation>
