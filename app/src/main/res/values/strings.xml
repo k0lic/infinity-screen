@@ -6,6 +6,7 @@
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
     <string name="preview">Preview</string>
+    <string name="play">Play</string>
 
     <!-- Placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
@@ -37,5 +38,11 @@
     <!-- Layout Fragment -->
     <string name="layout_instructions">Please arrange your devices following the proposed layout.</string>
     <string name="layout_your_device">Your device:</string>
+
+    <!-- File Selection Fragment -->
+    <string name="files_instruction">Select the media files you want to view.</string>
+    <string name="files_select">Select Files</string>
+    <string name="files_clear_all">Clear All</string>
+    <string name="files_empty">No files selected</string>
 
 </resources>

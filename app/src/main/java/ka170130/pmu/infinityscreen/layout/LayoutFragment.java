@@ -45,6 +45,10 @@ public class LayoutFragment extends Fragment {
             navController.navigate(LayoutFragmentDirections.actionPreviewFragment());
         });
 
+        binding.continueButton.setOnClickListener(view -> {
+            navController.navigate(LayoutFragmentDirections.actionFileSelectionFragment());
+        });
+
         return  binding.getRoot();
     }
 
