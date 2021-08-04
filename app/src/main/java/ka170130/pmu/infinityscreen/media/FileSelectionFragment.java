@@ -42,7 +42,7 @@ public class FileSelectionFragment extends Fragment {
 
         // TODO
         binding.playButton.setOnClickListener(view -> {
-
+            navController.navigate(FileSelectionFragmentDirections.actionPlayFragment());
         });
 
         return  binding.getRoot();
