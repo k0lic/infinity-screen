@@ -41,6 +41,9 @@ public class LayoutFragment extends Fragment {
         binding = FragmentLayoutBinding.inflate(inflater, container, false);
 
         // TODO: everything
+        binding.previewButton.setOnClickListener(view -> {
+            navController.navigate(LayoutFragmentDirections.actionPreviewFragment());
+        });
 
         return  binding.getRoot();
     }

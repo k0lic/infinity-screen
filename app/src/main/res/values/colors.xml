@@ -27,5 +27,8 @@
 
     <!-- gray -->
     <color name="silver_sand">#FFB3BABE</color>
-    
+
+    <!-- transparent -->
+    <color name="transparent">#00000000</color>
+
 </resources>

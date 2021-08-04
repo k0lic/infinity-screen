@@ -11,16 +11,17 @@ import androidx.navigation.Navigation;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentPreviewBinding;
+import ka170130.pmu.infinityscreen.play.FullScreenFragment;
 
-public class PreviewFragment extends Fragment {
+public class PreviewFragment extends FullScreenFragment {
 
     private FragmentPreviewBinding binding;
-    private MainActivity mainActivity;
     private NavController navController;
 
     public PreviewFragment() {
@@ -28,17 +29,15 @@ public class PreviewFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mainActivity = (MainActivity) requireActivity();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         binding = FragmentPreviewBinding.inflate(inflater, container, false);
+
+        // TODO: everything
+        binding.backButton.setOnClickListener(view -> {
+            navController.navigateUp();
+        });
 
         return  binding.getRoot();
     }

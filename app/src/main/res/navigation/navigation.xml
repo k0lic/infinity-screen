@@ -43,5 +43,19 @@
         android:id="@+id/layoutFragment"
         android:name="ka170130.pmu.infinityscreen.layout.LayoutFragment"
         android:label="fragment_layout"
-        tools:layout="@layout/fragment_layout" />
+        tools:layout="@layout/fragment_layout" >
+        <action
+            android:id="@+id/action_previewFragment"
+            app:destination="@id/previewFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/previewFragment"
+        android:name="ka170130.pmu.infinityscreen.layout.PreviewFragment"
+        android:label="fragment_preview"
+        tools:layout="@layout/fragment_preview" >
+        <action
+            android:id="@+id/action_pop"
+            app:popUpTo="@id/previewFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 </navigation>
