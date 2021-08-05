@@ -27,7 +27,7 @@ public class ConnectionViewModel extends ViewModel {
 
     // Peer Lists
     private MutableLiveData<Collection<WifiP2pDevice>> discoveryList;
-    private MutableLiveData<Collection<WifiP2pDevice>> selectedList;
+    private MutableLiveData<Collection<WifiP2pDevice>> groupList;
     private MediatorLiveData<Collection<WifiP2pDevice>> availableList;
 
     public ConnectionViewModel(SavedStateHandle savedStateHandle) {
@@ -44,11 +44,11 @@ public class ConnectionViewModel extends ViewModel {
 
         // Peer Lists Initialization
         discoveryList = new MutableLiveData<>(new ArrayList<>());
-        selectedList = new MutableLiveData<>(new ArrayList<>());
+        groupList = new MutableLiveData<>(new ArrayList<>());
 
         availableList = new MediatorLiveData<>();
         availableList.addSource(discoveryList, list -> refreshAvailableList());
-        availableList.addSource(selectedList, list -> refreshAvailableList());
+        availableList.addSource(groupList, list -> refreshAvailableList());
     }
 
     private void refreshConnectionStatus() {
@@ -75,7 +75,7 @@ public class ConnectionViewModel extends ViewModel {
 
         Collection<WifiP2pDevice> dList = discoveryList.getValue();
         Iterator<WifiP2pDevice> dit = dList.iterator();
-        Collection<WifiP2pDevice> sList = selectedList.getValue();
+        Collection<WifiP2pDevice> sList = groupList.getValue();
 
         while (dit.hasNext()) {
             WifiP2pDevice next = dit.next();
@@ -103,28 +103,28 @@ public class ConnectionViewModel extends ViewModel {
         this.discoveryList.setValue(discoveryList);
     }
 
-    public LiveData<Collection<WifiP2pDevice>> getSelectedList() {
-        return selectedList;
+    public LiveData<Collection<WifiP2pDevice>> getGroupList() {
+        return groupList;
     }
 
-    public void setSelectedList(Collection<WifiP2pDevice> selectedList) {
-        this.selectedList.setValue(selectedList);
+    public void setGroupList(Collection<WifiP2pDevice> groupList) {
+        this.groupList.setValue(groupList);
     }
 
     public void selectDevice(WifiP2pDevice device) {
-        Collection<WifiP2pDevice> devices = selectedList.getValue();
+        Collection<WifiP2pDevice> devices = groupList.getValue();
         if (!devices.contains(device)) {
             devices.add(device);
         }
-        setSelectedList(devices);
+        setGroupList(devices);
     }
 
     public void unselectDevice(WifiP2pDevice device) {
-        Collection<WifiP2pDevice> devices = selectedList.getValue();
+        Collection<WifiP2pDevice> devices = groupList.getValue();
         if (devices.contains(device)) {
             devices.remove(device);
         }
-        setSelectedList(devices);
+        setGroupList(devices);
     }
 
     public LiveData<Collection<WifiP2pDevice>> getAvailableList() {

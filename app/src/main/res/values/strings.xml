@@ -51,4 +51,12 @@
     <!-- Play Fragment -->
     <string name="play_buffering_message">Waiting for video to load.</string>
 
+    <!-- Dialogs -->
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_finish_title">App will not work</string>
+    <string name="dialog_finish_closing">The application will close.</string>
+    <string name="dialog_settings_title">Adjust system settings</string>
+    <string name="dialog_settings_wifi">Please turn on WiFi to proceed.</string>
+    <string name="dialog_settings_gps">Please turn on GPS to proceed.</string>
+
 </resources>

@@ -33,6 +33,9 @@ public class WifiDirectReceiver extends BroadcastReceiver {
     private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
 
+    private WifiP2pManager manager;
+    private WifiP2pManager.Channel channel;
+
     public WifiDirectReceiver(
         MainActivity mainActivity
     ) {
