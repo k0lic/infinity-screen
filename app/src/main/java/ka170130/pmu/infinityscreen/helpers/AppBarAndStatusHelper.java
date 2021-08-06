@@ -1,4 +1,4 @@
-package ka170130.pmu.infinityscreen;
+package ka170130.pmu.infinityscreen.helpers;
 
 import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
@@ -7,6 +7,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
+import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.databinding.AppBarAndStatusBinding;
 
 public class AppBarAndStatusHelper {

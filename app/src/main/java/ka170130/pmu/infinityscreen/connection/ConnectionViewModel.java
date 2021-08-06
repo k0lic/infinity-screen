@@ -19,6 +19,10 @@ public class ConnectionViewModel extends ViewModel {
 
     private SavedStateHandle savedStateHandle;
 
+    // System info
+    private MutableLiveData<Boolean> wifiEnabled;
+    private MutableLiveData<Boolean> gpsEnabled;
+
     // Device Info
     private MutableLiveData<WifiP2pDevice> selfDevice;
     private MutableLiveData<WifiP2pDevice> hostDevice;
@@ -85,6 +89,22 @@ public class ConnectionViewModel extends ViewModel {
         }
 
         availableList.setValue(devices);
+    }
+
+    public LiveData<Boolean> getWifiEnabled() {
+        return wifiEnabled;
+    }
+
+    public void setWifiEnabled(boolean wifiEnabled) {
+        this.wifiEnabled.setValue(wifiEnabled);
+    }
+
+    public LiveData<Boolean> getGpsEnabled() {
+        return gpsEnabled;
+    }
+
+    public void setGpsEnabled(boolean gpsEnabled) {
+        this.gpsEnabled.setValue(gpsEnabled);
     }
 
     public LiveData<WifiP2pDevice> getSelfDevice() {

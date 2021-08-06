@@ -1,21 +1,27 @@
 package ka170130.pmu.infinityscreen.connection;
 
+import android.content.Context;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import ka170130.pmu.infinityscreen.AppBarAndStatusHelper;
-import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.dialogs.SettingsPanelDialog;
+import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
+import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 
 public class HomeFragment extends Fragment {
@@ -60,8 +66,9 @@ public class HomeFragment extends Fragment {
 
         // Find Devices Button
         binding.findDevicesButton.setOnClickListener(view -> {
-            // TODO: replace dummy code with real code
-            navController.navigate(HomeFragmentDirections.actionDeviceListFragment());
+            if (mainActivity.checkPeerDiscovery()) {
+                navController.navigate(HomeFragmentDirections.actionDeviceListFragment());
+            }
         });
 
         return  binding.getRoot();

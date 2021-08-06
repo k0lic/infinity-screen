@@ -4,20 +4,27 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.location.LocationManagerCompat;
 import androidx.fragment.app.DialogFragment;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
+import android.net.wifi.p2p.WifiP2pConfig;
+import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 
+import ka170130.pmu.infinityscreen.communication.TaskManager;
+import ka170130.pmu.infinityscreen.connection.ConnectionManager;
 import ka170130.pmu.infinityscreen.connection.WifiDirectReceiver;
 import ka170130.pmu.infinityscreen.databinding.ActivityMainBinding;
 import ka170130.pmu.infinityscreen.dialogs.FinishDialog;
 import ka170130.pmu.infinityscreen.dialogs.SettingsPanelDialog;
+import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,21 +32,21 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
+    private ConnectionManager connectionManager;
     private WifiDirectReceiver receiver;
-    private WifiManager wifiManager;
-    private WifiP2pManager manager;
-    private WifiP2pManager.Channel channel;
 
-    public WifiManager getWifiManager() {
-        return wifiManager;
+    private TaskManager taskManager;
+
+    public WifiDirectReceiver getReceiver() {
+        return receiver;
     }
 
-    public WifiP2pManager getManager() {
-        return manager;
+    public ConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
-    public WifiP2pManager.Channel getChannel() {
-        return channel;
+    public TaskManager getTaskManager() {
+        return taskManager;
     }
 
     @Override
@@ -49,8 +56,17 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Initialize Helpers
+        PermissionsHelper.init(this);
+
+        // Setup Task Manager
+        taskManager = new TaskManager();
+
+        // Setup Connection Manager
+        connectionManager = new ConnectionManager(this);
+
         // Initialize P2P connection
-        Pair<Boolean, String> init = initP2p();
+        Pair<Boolean, String> init = connectionManager.initP2p();
         if (!init.first) {
             // Close Application - Device does not meet the specifications
             DialogFragment dialog = new FinishDialog(init.second);
@@ -58,71 +74,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // Turn on WiFi
+        connectionManager.getWifiManager().setWifiEnabled(true);
+        askForWiFi();
+
         // Setup Wifi Direct Broadcast Receiver
         WifiDirectReceiver.initializeIntentFilter();
         receiver = new WifiDirectReceiver(this);
-    }
 
-    private Pair<Boolean, String> initP2p() {
-        Pair<Boolean, String> pair = new Pair<>(false, "");
-
-        // Device capability definition check
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT)) {
-            pair.second = "Wi-Fi Direct is not supported by this device.";
-            return pair;
-        }
-
-        // Hardware capability check
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (wifiManager == null) {
-            pair.second = "Cannot get Wi-Fi system service.";
-            return pair;
-        }
-
-        if (!wifiManager.isP2pSupported()) {
-            pair.second = "Wi-Fi Direct is not supported by the hardware or Wi-Fi is off.";
-            return pair;
-        }
-
-        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        if (manager == null) {
-            pair.second = "Cannot get Wi-Fi Direct system service.";
-            return pair;
-        }
-
-        channel = manager.initialize(this, getMainLooper(), null);
-        if (channel == null) {
-            pair.second = "Cannot initialize Wi-Fi Direct.";
-            return pair;
-        }
-
-        // Turn on WiFi
-        wifiManager.setWifiEnabled(true);
-        if (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED
-                && wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLING
-        ) {
-            String message = getResources().getString(R.string.dialog_settings_wifi);
-            DialogFragment dialog = new SettingsPanelDialog(message, Settings.ACTION_WIFI_SETTINGS);
-            dialog.show(getSupportFragmentManager(), "WiFiSettingsPanelDialog");
-        }
-
-        pair.first = true;
-        return pair;
-    }
-
-    // TODO: move this to appropriate fragment or something
-    public void askForGps() {
-        // Turn on GPS
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            LocationManager locationManager = (LocationManager) getApplicationContext()
-                    .getSystemService(Context.LOCATION_SERVICE);
-            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                String message = getResources().getString(R.string.dialog_settings_gps);
-                DialogFragment dialog =
-                        new SettingsPanelDialog(message, Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                dialog.show(getSupportFragmentManager(), "GPSSettingsPanelDialog");
-            }
-        }
+        // Discover Peers - Become Discoverable
+        connectionManager.discoverPeers();
     }
 
     @Override
@@ -141,7 +102,48 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private static class Pair<T, U> {
+    public boolean askForWiFi() {
+        WifiManager wifiManager = connectionManager.getWifiManager();
+
+        if (wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED
+                && wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLING
+        ) {
+            String message = getResources().getString(R.string.dialog_settings_wifi);
+            DialogFragment dialog = new SettingsPanelDialog(message, Settings.ACTION_WIFI_SETTINGS);
+            dialog.show(getSupportFragmentManager(), "WiFiSettingsPanelDialog");
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean askForGps() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            LocationManager locationManager = (LocationManager) getApplicationContext()
+                    .getSystemService(Context.LOCATION_SERVICE);
+            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                String message = getResources().getString(R.string.dialog_settings_gps);
+                DialogFragment dialog =
+                        new SettingsPanelDialog(message, Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                dialog.show(getSupportFragmentManager(), "GPSSettingsPanelDialog");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean checkPeerDiscovery() {
+        boolean possible = askForWiFi();
+
+        if (possible) {
+            possible = askForGps();
+        }
+
+        return possible;
+    }
+
+    public static class Pair<T, U> {
         public T first;
         public U second;
 
