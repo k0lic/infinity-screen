@@ -18,23 +18,12 @@ import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.databinding.FragmentConnectedBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 
-public class ConnectedFragment extends Fragment {
+public class ConnectedFragment extends ConnectionAwareFragment {
 
     private FragmentConnectedBinding binding;
-    private MainActivity mainActivity;
-    private ConnectionViewModel connectionViewModel;
-    private NavController navController;
 
     public ConnectedFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mainActivity = (MainActivity) requireActivity();
-        connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
     }
 
     @Override
@@ -43,14 +32,14 @@ public class ConnectedFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentConnectedBinding.inflate(inflater, container, false);
 
-        // TODO
+        // Setup Status Cards
+        setupStatusCards(binding.appBarAndStatus);
+
+        // Listen for Disconnect button click
+        binding.disconnectButton.setOnClickListener(view -> {
+            mainActivity.getConnectionManager().disconnect();
+        });
 
         return  binding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        navController = Navigation.findNavController(view);
     }
 }

@@ -1,30 +1,41 @@
 package ka170130.pmu.infinityscreen.communication;
 
-import android.net.wifi.p2p.WifiP2pInfo;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.concurrent.locks.ReentrantLock;
+
+import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.Message;
 
 public class SenderTask implements Runnable {
 
-    private WifiP2pInfo info;
+    private static final ReentrantLock lock = new ReentrantLock();
+
+    private InetAddress address;
     private Message message;
 
-    public SenderTask(WifiP2pInfo info, Message message) {
-        this.info = info;
+    public SenderTask(InetAddress address, Message message) {
+        this.address = address;
         this.message = message;
     }
 
     @Override
     public void run() {
+        lock.lock();
+
+        Log.d(MainActivity.LOG_TAG, "Sending message: " + message.getMessageType().toString());
+
         Socket socket = new Socket();
         OutputStream outputStream = null;
 
         try {
             socket.bind(null);
-            socket.connect((new InetSocketAddress(info.groupOwnerAddress, 8888)), 500);
+            socket.connect((new InetSocketAddress(address, TaskManager.DEFAULT_PORT)), 500);
 
             outputStream = socket.getOutputStream();
 
@@ -52,6 +63,8 @@ public class SenderTask implements Runnable {
                     }
                 }
             }
+
+            lock.unlock();
         }
     }
 }

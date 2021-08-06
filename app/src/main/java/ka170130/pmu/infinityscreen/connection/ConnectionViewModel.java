@@ -1,6 +1,6 @@
 package ka170130.pmu.infinityscreen.connection;
 
-import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pInfo;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -13,6 +13,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
+import ka170130.pmu.infinityscreen.containers.PeerInfo;
+
 public class ConnectionViewModel extends ViewModel {
 
     public enum ConnectionStatus { NOT_CONNECTED, CONNECTED_HOST, CONNECTED_CLIENT };
@@ -20,31 +23,43 @@ public class ConnectionViewModel extends ViewModel {
     private SavedStateHandle savedStateHandle;
 
     // System info
-    private MutableLiveData<Boolean> wifiEnabled;
-    private MutableLiveData<Boolean> gpsEnabled;
+//    private MutableLiveData<Boolean> wifiEnabled; - ONLY SET NEVER READ
+//    private MutableLiveData<Boolean> gpsEnabled; - NOT USED
 
     // Device Info
-    private MutableLiveData<WifiP2pDevice> selfDevice;
-    private MutableLiveData<WifiP2pDevice> hostDevice;
+    private MutableLiveData<PeerInfo> selfDevice;
+    private MutableLiveData<PeerInetAddressInfo> hostDevice;
+    private MutableLiveData<Boolean> isHost;
     private MediatorLiveData<ConnectionStatus> connectionStatus;
-    private MutableLiveData<WifiP2pDevice> groupOwnerDevice;
+//    private MutableLiveData<PeerInfo> groupOwnerDevice; - NOT USED
+
+    // Connection Info
+//    private MutableLiveData<WifiP2pInfo> info; - NOT USED
 
     // Peer Lists
-    private MutableLiveData<Collection<WifiP2pDevice>> discoveryList;
-    private MutableLiveData<Collection<WifiP2pDevice>> groupList;
-    private MediatorLiveData<Collection<WifiP2pDevice>> availableList;
+    private MutableLiveData<Collection<PeerInfo>> discoveryList;
+    private MutableLiveData<Collection<PeerInetAddressInfo>> groupList;
+    private MediatorLiveData<Collection<PeerInfo>> availableList;
 
     public ConnectionViewModel(SavedStateHandle savedStateHandle) {
         this.savedStateHandle = savedStateHandle;
 
+        // System Info Initialization
+//        wifiEnabled = new MutableLiveData<>();
+//        gpsEnabled = new MutableLiveData<>();
+
         // Device Info Initialization
         selfDevice = new MutableLiveData<>();
         hostDevice = new MutableLiveData<>();
-        groupOwnerDevice = new MutableLiveData<>();
+        isHost = new MutableLiveData<>(false);
+//        groupOwnerDevice = new MutableLiveData<>();
 
         connectionStatus = new MediatorLiveData<>();
         connectionStatus.addSource(selfDevice, device -> refreshConnectionStatus());
         connectionStatus.addSource(hostDevice, device -> refreshConnectionStatus());
+
+        // Connection Info Initialization
+//        info = new MutableLiveData<>();
 
         // Peer Lists Initialization
         discoveryList = new MutableLiveData<>(new ArrayList<>());
@@ -56,16 +71,16 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     private void refreshConnectionStatus() {
-        WifiP2pDevice selfDevice = this.selfDevice.getValue();
-        WifiP2pDevice hostDevice = this.hostDevice.getValue();
+        PeerInfo selfDevice = this.selfDevice.getValue();
+        PeerInetAddressInfo hostDevice = this.hostDevice.getValue();
 
         if (selfDevice == null || hostDevice == null) {
             connectionStatus.setValue(ConnectionStatus.NOT_CONNECTED);
             return;
         }
 
-        if (selfDevice.deviceAddress != null
-                && selfDevice.deviceAddress.equals(hostDevice.deviceAddress)
+        if (selfDevice.getDeviceAddress() != null
+                && selfDevice.getDeviceAddress().equals(hostDevice.getDeviceAddress())
         ) {
             connectionStatus.setValue(ConnectionStatus.CONNECTED_HOST);
             return;
@@ -75,15 +90,23 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     private void refreshAvailableList() {
-        List<WifiP2pDevice> devices = new ArrayList<>();
+        List<PeerInfo> devices = new ArrayList<>();
 
-        Collection<WifiP2pDevice> dList = discoveryList.getValue();
-        Iterator<WifiP2pDevice> dit = dList.iterator();
-        Collection<WifiP2pDevice> sList = groupList.getValue();
+        Collection<PeerInfo> dList = discoveryList.getValue();
+        Iterator<PeerInfo> dit = dList.iterator();
+        Collection<PeerInetAddressInfo> group = groupList.getValue();
 
         while (dit.hasNext()) {
-            WifiP2pDevice next = dit.next();
-            if (!sList.contains(next)) {
+            PeerInfo next = dit.next();
+            Iterator<PeerInetAddressInfo> git = group.iterator();
+
+            boolean contains = false;
+            while (!contains && git.hasNext()) {
+                PeerInetAddressInfo groupMember = git.next();
+                contains = next.getDeviceAddress().equals(groupMember.getDeviceAddress());
+            }
+
+            if (!contains) {
                 devices.add(next);
             }
         }
@@ -91,63 +114,87 @@ public class ConnectionViewModel extends ViewModel {
         availableList.setValue(devices);
     }
 
-    public LiveData<Boolean> getWifiEnabled() {
-        return wifiEnabled;
+//    public LiveData<Boolean> getWifiEnabled() {
+//        return wifiEnabled;
+//    }
+//
+//    public void setWifiEnabled(boolean wifiEnabled) {
+//        this.wifiEnabled.postValue(wifiEnabled);
+//    }
+
+//    public LiveData<Boolean> getGpsEnabled() {
+//        return gpsEnabled;
+//    }
+//
+//    public void setGpsEnabled(boolean gpsEnabled) {
+//        this.gpsEnabled.postValue(gpsEnabled);
+//    }
+
+//    public LiveData<WifiP2pInfo> getInfo() {
+//        return info;
+//    }
+//
+//    public void setInfo(WifiP2pInfo info) {
+//        this.info.postValue(info);
+//    }
+
+    public MediatorLiveData<ConnectionStatus> getConnectionStatus() {
+        return connectionStatus;
     }
 
-    public void setWifiEnabled(boolean wifiEnabled) {
-        this.wifiEnabled.setValue(wifiEnabled);
+    public LiveData<Boolean> getIsHost() {
+        return isHost;
     }
 
-    public LiveData<Boolean> getGpsEnabled() {
-        return gpsEnabled;
+    public void setIsHost(Boolean isHost) {
+        this.isHost.postValue(isHost);
     }
 
-    public void setGpsEnabled(boolean gpsEnabled) {
-        this.gpsEnabled.setValue(gpsEnabled);
-    }
-
-    public LiveData<WifiP2pDevice> getSelfDevice() {
+    public LiveData<PeerInfo> getSelfDevice() {
         return selfDevice;
     }
 
-    public void setSelfDevice(WifiP2pDevice selfDevice) {
-        this.selfDevice.setValue(selfDevice);
+    public void setSelfDevice(PeerInfo selfDevice) {
+        this.selfDevice.postValue(selfDevice);
     }
 
-    public LiveData<Collection<WifiP2pDevice>> getDiscoveryList() {
-        return discoveryList;
+    public LiveData<PeerInetAddressInfo> getHostDevice() {
+        return hostDevice;
     }
 
-    public void setDiscoveryList(Collection<WifiP2pDevice> discoveryList) {
-        this.discoveryList.setValue(discoveryList);
+    public void setHostDevice(PeerInetAddressInfo hostDevice) {
+        this.hostDevice.postValue(hostDevice);
     }
 
-    public LiveData<Collection<WifiP2pDevice>> getGroupList() {
+    public void setDiscoveryList(Collection<PeerInfo> discoveryList) {
+        this.discoveryList.postValue(discoveryList);
+    }
+
+    public LiveData<Collection<PeerInetAddressInfo>> getGroupList() {
         return groupList;
     }
 
-    public void setGroupList(Collection<WifiP2pDevice> groupList) {
-        this.groupList.setValue(groupList);
+    public void setGroupList(Collection<PeerInetAddressInfo> groupList) {
+        this.groupList.postValue(groupList);
     }
 
-    public void selectDevice(WifiP2pDevice device) {
-        Collection<WifiP2pDevice> devices = groupList.getValue();
+    public void selectDevice(PeerInetAddressInfo device) {
+        Collection<PeerInetAddressInfo> devices = groupList.getValue();
         if (!devices.contains(device)) {
             devices.add(device);
         }
         setGroupList(devices);
     }
 
-    public void unselectDevice(WifiP2pDevice device) {
-        Collection<WifiP2pDevice> devices = groupList.getValue();
+    public void unselectDevice(PeerInetAddressInfo device) {
+        Collection<PeerInetAddressInfo> devices = groupList.getValue();
         if (devices.contains(device)) {
             devices.remove(device);
         }
         setGroupList(devices);
     }
 
-    public LiveData<Collection<WifiP2pDevice>> getAvailableList() {
+    public LiveData<Collection<PeerInfo>> getAvailableList() {
         return availableList;
     }
 }

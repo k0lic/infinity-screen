@@ -8,16 +8,20 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
 import androidx.lifecycle.ViewModelProvider;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
+import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
 public class WifiDirectReceiver extends BroadcastReceiver {
@@ -77,7 +81,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
 
     private void handleStateChange(Intent intent) {
         int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
-        connectionViewModel.setWifiEnabled(state == WifiP2pManager.WIFI_P2P_STATE_ENABLED);
+//        connectionViewModel.setWifiEnabled(state == WifiP2pManager.WIFI_P2P_STATE_ENABLED);
     }
 
     @SuppressLint("MissingPermission")
@@ -92,15 +96,23 @@ public class WifiDirectReceiver extends BroadcastReceiver {
         PermissionsHelper.request(permissions, s -> {
             Log.d(MainActivity.LOG_TAG, "Going to request peers");
             manager.requestPeers(connectionManager.getChannel(), peers -> {
-                Log.d(MainActivity.LOG_TAG, "Discovered peers:");
-                Log.d(MainActivity.LOG_TAG, peers.getDeviceList().toString());
-                connectionViewModel.setDiscoveryList(peers.getDeviceList());
+                Log.d(MainActivity.LOG_TAG, "Discovered peers: " + peers.getDeviceList().size());
+//                Log.d(MainActivity.LOG_TAG, peers.getDeviceList().toString());
+
+                Iterator<WifiP2pDevice> iterator = peers.getDeviceList().iterator();
+                List<PeerInfo> peerList = new ArrayList<>();
+
+                while (iterator.hasNext()) {
+                    WifiP2pDevice next = iterator.next();
+                    peerList.add(new PeerInfo(next));
+                }
+
+                connectionViewModel.setDiscoveryList(peerList);
             });
         });
     }
 
     private void handleConnectionChange(Intent intent) {
-        // TODO
         WifiP2pManager manager = connectionManager.getManager();
 
         if (manager == null) {
@@ -114,8 +126,25 @@ public class WifiDirectReceiver extends BroadcastReceiver {
             manager.requestConnectionInfo(connectionManager.getChannel(), info -> {
                 Log.d(MainActivity.LOG_TAG, "Connection info available");
                 Log.d(MainActivity.LOG_TAG, info.toString());
-                // TODO
-                taskManager.setInfo(info);
+
+                taskManager.setDefaultAddress(info.groupOwnerAddress);
+
+                Boolean isHost = connectionViewModel.getIsHost().getValue();
+                if (!info.isGroupOwner) {
+                    try {
+                        PeerInfo self = connectionViewModel.getSelfDevice().getValue();
+
+                        if (isHost) {
+                            // request info from the group owner - should only be called once the initial connection is made
+                            taskManager.runSenderTask(Message.newRequestInfoMessage(self));
+                        } else {
+                            // Say HELLO to the group owner
+                            taskManager.runSenderTask(Message.newHelloMessage(self));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             });
         } else {
             // it's a disconnect
@@ -126,6 +155,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
 
     private void handleDeviceChange(Intent intent) {
         WifiP2pDevice device = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
-        connectionViewModel.setSelfDevice(device);
+        PeerInfo self = new PeerInfo(device);
+        connectionViewModel.setSelfDevice(self);
     }
 }

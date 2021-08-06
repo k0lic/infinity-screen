@@ -10,9 +10,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -60,7 +57,10 @@ public class MainActivity extends AppCompatActivity {
         PermissionsHelper.init(this);
 
         // Setup Task Manager
-        taskManager = new TaskManager();
+        taskManager = new TaskManager(this);
+
+        // Setup Server Task
+        taskManager.runServerTask();
 
         // Setup Connection Manager
         connectionManager = new ConnectionManager(this);

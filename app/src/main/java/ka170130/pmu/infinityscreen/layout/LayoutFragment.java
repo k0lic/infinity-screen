@@ -14,24 +14,16 @@ import android.view.ViewGroup;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentLayoutBinding;
 
-public class LayoutFragment extends Fragment {
+public class LayoutFragment extends ConnectionAwareFragment {
 
     private FragmentLayoutBinding binding;
-    private MainActivity mainActivity;
-    private NavController navController;
 
     public LayoutFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mainActivity = (MainActivity) requireActivity();
     }
 
     @Override
@@ -39,6 +31,9 @@ public class LayoutFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         binding = FragmentLayoutBinding.inflate(inflater, container, false);
+
+        // Setup Status Cards
+        setupStatusCards(binding.appBarAndStatus);
 
         // TODO: everything
         binding.previewButton.setOnClickListener(view -> {
@@ -50,11 +45,5 @@ public class LayoutFragment extends Fragment {
         });
 
         return  binding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        navController = Navigation.findNavController(view);
     }
 }

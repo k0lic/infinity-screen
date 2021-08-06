@@ -67,7 +67,16 @@ public class HomeFragment extends Fragment {
         // Find Devices Button
         binding.findDevicesButton.setOnClickListener(view -> {
             if (mainActivity.checkPeerDiscovery()) {
+                connectionViewModel.setIsHost(true);
                 navController.navigate(HomeFragmentDirections.actionDeviceListFragment());
+            }
+        });
+
+        // Listen for connections
+        connectionViewModel.getConnectionStatus().observe(getViewLifecycleOwner(), status -> {
+            // if connected navigate to ConnectedFragment
+            if (status != ConnectionViewModel.ConnectionStatus.NOT_CONNECTED) {
+                navController.navigate(HomeFragmentDirections.actionConnectedFragment());
             }
         });
 

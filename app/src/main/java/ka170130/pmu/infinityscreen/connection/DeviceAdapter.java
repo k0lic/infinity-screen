@@ -1,6 +1,5 @@
 package ka170130.pmu.infinityscreen.connection;
 
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.databinding.ViewHolderDeviceBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.helpers.Callback;
@@ -20,14 +20,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
     private MainActivity mainActivity;
     private boolean hideActionButton;
-    private Callback<WifiP2pDevice> callback;
+    private Callback<PeerInfo> callback;
 
-    private List<WifiP2pDevice> devices = new ArrayList<>();
+    private List<PeerInfo> devices = new ArrayList<>();
 
     public DeviceAdapter(
             MainActivity mainActivity,
             boolean hideActionButton,
-            Callback<WifiP2pDevice> callback
+            Callback<PeerInfo> callback
     ) {
         this.mainActivity = mainActivity;
         this.hideActionButton = hideActionButton;
@@ -56,7 +56,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         return devices.size();
     }
 
-    public void setDevices(List<WifiP2pDevice> devices) {
+    public void setDevices(List<PeerInfo> devices) {
         this.devices = devices;
         notifyDataSetChanged();
     }
@@ -64,7 +64,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
     public class DeviceViewHolder extends RecyclerView.ViewHolder {
 
         private ViewHolderDeviceBinding binding;
-        private WifiP2pDevice device;
+        private PeerInfo device;
 
         public DeviceViewHolder(ViewHolderDeviceBinding binding) {
             super(binding.getRoot());
@@ -79,10 +79,10 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             }
         }
 
-        public void bind(WifiP2pDevice device) {
+        public void bind(PeerInfo device) {
             this.device = device;
 
-            binding.deviceName.setText(device.deviceName);
+            binding.deviceName.setText(device.getDeviceName());
             binding.deviceStatus.setText(AppBarAndStatusHelper.getStatusText(
                     device,
                     DeviceAdapter.this.mainActivity.getResources()

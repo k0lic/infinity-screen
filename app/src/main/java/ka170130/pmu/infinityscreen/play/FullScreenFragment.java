@@ -13,17 +13,9 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 
-public abstract class FullScreenFragment extends Fragment {
-
-    protected MainActivity mainActivity;
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mainActivity = (MainActivity) requireActivity();
-    }
+public abstract class FullScreenFragment extends ConnectionAwareFragment {
 
     @Override
     public void onResume() {

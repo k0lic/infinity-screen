@@ -8,15 +8,16 @@ import android.util.TypedValue;
 import android.view.View;
 
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.databinding.AppBarAndStatusBinding;
 
 public class AppBarAndStatusHelper {
 
     public static String getStatusText(
-            WifiP2pDevice device,
+            PeerInfo device,
             Resources resources
     ) {
-        switch (device.status) {
+        switch (device.getStatus()) {
             case WifiP2pDevice.AVAILABLE:
                 return resources.getString(R.string.device_status_available);
             case WifiP2pDevice.INVITED:
@@ -39,13 +40,13 @@ public class AppBarAndStatusHelper {
 
     public static void refreshDeviceCard(
             AppBarAndStatusBinding binding,
-            WifiP2pDevice device,
+            PeerInfo device,
             Resources resources,
             Resources.Theme theme
     ) {
         setDeviceCardContent(binding, device, resources);
 
-        if (device.status == WifiP2pDevice.CONNECTED) {
+        if (device.getStatus() == WifiP2pDevice.CONNECTED) {
             setDeviceCardStyleConnected(binding, theme);
         } else {
             setDeviceCardStyleAvailable(binding, theme);
@@ -54,25 +55,30 @@ public class AppBarAndStatusHelper {
 
     public static void setDeviceCardContent(
             AppBarAndStatusBinding binding,
-            WifiP2pDevice device,
+            PeerInfo device,
             Resources resources
     ) {
-        binding.deviceName.setText(device.deviceName);
+        binding.deviceName.setText(device.getDeviceName());
         binding.deviceStatus.setText(getStatusText(device, resources));
     }
 
     public static void setHostCardContent(
             AppBarAndStatusBinding binding,
-            WifiP2pDevice device
+            PeerInfo device
     ) {
-        binding.hostName.setText(device.deviceName);
-        binding.hostName.setVisibility(View.VISIBLE);
+        binding.hostName.setText(device.getDeviceName());
     }
 
     public static void hideHostDeviceName(
             AppBarAndStatusBinding binding
     ) {
         binding.hostName.setVisibility(View.GONE);
+    }
+
+    public static void showHostDeviceName(
+            AppBarAndStatusBinding binding
+    ) {
+        binding.hostName.setVisibility(View.VISIBLE);
     }
 
     public static void hideHostCard(AppBarAndStatusBinding binding) {

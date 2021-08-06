@@ -14,24 +14,16 @@ import android.view.ViewGroup;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 import ka170130.pmu.infinityscreen.databinding.FragmentFileSelectionBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 
-public class FileSelectionFragment extends Fragment {
+public class FileSelectionFragment extends ConnectionAwareFragment {
 
     private FragmentFileSelectionBinding binding;
-    private MainActivity mainActivity;
-    private NavController navController;
 
     public FileSelectionFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mainActivity = (MainActivity) requireActivity();
     }
 
     @Override
@@ -40,17 +32,14 @@ public class FileSelectionFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentFileSelectionBinding.inflate(inflater, container, false);
 
+        // Setup Status Cards
+        setupStatusCards(binding.appBarAndStatus);
+
         // TODO
         binding.playButton.setOnClickListener(view -> {
             navController.navigate(FileSelectionFragmentDirections.actionPlayFragment());
         });
 
         return  binding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        navController = Navigation.findNavController(view);
     }
 }

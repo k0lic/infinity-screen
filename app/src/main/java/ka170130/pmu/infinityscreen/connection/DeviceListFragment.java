@@ -30,23 +30,12 @@ import ka170130.pmu.infinityscreen.databinding.FragmentDeviceListBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
-public class DeviceListFragment extends Fragment {
+public class DeviceListFragment extends ConnectionAwareFragment {
 
     private FragmentDeviceListBinding binding;
-    private MainActivity mainActivity;
-    private ConnectionViewModel connectionViewModel;
-    private NavController navController;
 
     public DeviceListFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mainActivity = (MainActivity) requireActivity();
-        connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
     }
 
     @Override
@@ -55,7 +44,12 @@ public class DeviceListFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentDeviceListBinding.inflate(inflater, container, false);
 
-        // TODO
+        // Setup Status Cards
+        setupStatusCards(binding.appBarAndStatus);
+
+        // Discover Peers - in case peers were not discovered once MainActivity was created
+        mainActivity.getConnectionManager().discoverPeers();
+
         // Available Recycler View
         DeviceAdapter availableAdapter = new DeviceAdapter(
                 mainActivity,
@@ -93,11 +87,5 @@ public class DeviceListFragment extends Fragment {
         });
 
         return  binding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        navController = Navigation.findNavController(view);
     }
 }

@@ -6,11 +6,11 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
 public class ConnectionManager {
@@ -96,27 +96,31 @@ public class ConnectionManager {
     }
 
     @SuppressLint("MissingPermission")
-    public void connect(WifiP2pDevice device) {
+    public void connect(PeerInfo device) {
         String[] permissions = { Manifest.permission.ACCESS_FINE_LOCATION };
         PermissionsHelper.request(permissions, s -> {
             Log.d(MainActivity.LOG_TAG, "Connecting");
 
             WifiP2pConfig config = new WifiP2pConfig();
-            config.deviceAddress = device.deviceAddress;
+            config.deviceAddress = device.getDeviceAddress();
 
             manager.connect(channel, config, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
                     Log.d(MainActivity.LOG_TAG,
-                            "Connection to " + device.deviceName + " SUCCEEDED");
+                            "Connection to " + device.getDeviceName() + " SUCCEEDED");
                 }
 
                 @Override
                 public void onFailure(int reason) {
                     Log.d(MainActivity.LOG_TAG,
-                            "Connection to " + device.deviceName + " FAILED");
+                            "Connection to " + device.getDeviceName() + " FAILED");
                 }
             });
         });
+    }
+
+    public void disconnect() {
+        // TODO
     }
 }
