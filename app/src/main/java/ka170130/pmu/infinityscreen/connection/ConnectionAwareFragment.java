@@ -53,15 +53,18 @@ public class ConnectionAwareFragment extends Fragment {
     }
 
     protected void setupStatusCards(AppBarAndStatusBinding binding) {
-        AppBarAndStatusHelper.showHostCard(binding);
-
+        // Set Status Card Background drawables
         AppBarAndStatusHelper.setupCardShapes(binding);
+
+        // Set Host Card Background drawable color
+        AppBarAndStatusHelper.showHostCard(binding, mainActivity.getTheme());
 
         connectionViewModel.getSelfDevice().observe(getViewLifecycleOwner(), device -> {
             if (device == null) {
                 return;
             }
 
+            // Set Device Card Content and Style
             AppBarAndStatusHelper
                     .refreshDeviceCard(binding, device, getResources(), mainActivity.getTheme());
         });

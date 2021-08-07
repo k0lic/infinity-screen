@@ -40,7 +40,7 @@
             />
 
         <TextView
-            android:id="@+id/host_name"
+            android:id="@+id/connected_to_host_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="@string/device_name_1"
@@ -60,7 +60,7 @@
             style="@style/TextOnBackgroundRegular"
             android:textAlignment="center"
             android:layout_marginTop="@dimen/vertical_margin_extra_large"
-            app:layout_constraintTop_toBottomOf="@id/host_name"
+            app:layout_constraintTop_toBottomOf="@id/top_host_name"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             />

@@ -73,9 +73,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
             // hide/setup action button
             if (hideActionButton) {
-                binding.actionButton.setVisibility(View.GONE);
+                binding.holderActionButton.setVisibility(View.GONE);
             } else {
-                binding.actionButton.setOnClickListener(view -> {
+                binding.holderActionButton.setOnClickListener(view -> {
                     callback.invoke(device);
                 });
             }
@@ -88,16 +88,16 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
                 int textColor = AppBarAndStatusHelper
                         .resolveRefColor(mainActivity.getTheme(), R.attr.colorOnDeviceConnected);
-                binding.deviceName.setTextColor(textColor);
-                binding.deviceStatus.setTextColor(textColor);
+                binding.holderDeviceName.setTextColor(textColor);
+                binding.holderDeviceStatus.setTextColor(textColor);
             }
         }
 
         public void bind(PeerInfo device) {
             this.device = device;
 
-            binding.deviceName.setText(device.getDeviceName());
-            binding.deviceStatus.setText(AppBarAndStatusHelper.getStatusText(
+            binding.holderDeviceName.setText(device.getDeviceName());
+            binding.holderDeviceStatus.setText(AppBarAndStatusHelper.getStatusText(
                     device,
                     mainActivity.getResources()
             ));

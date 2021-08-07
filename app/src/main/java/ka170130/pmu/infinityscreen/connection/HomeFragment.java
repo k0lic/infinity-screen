@@ -64,7 +64,7 @@ public class HomeFragment extends Fragment {
         ));
 
         // Host card is not applicable to this fragment since there is no established connection
-//        AppBarAndStatusHelper.hideHostCard(binding.appBarAndStatus);
+        AppBarAndStatusHelper.hideHostCard(binding.appBarAndStatus);
 
         // Find Devices Button
         binding.findDevicesButton.setOnClickListener(view -> {

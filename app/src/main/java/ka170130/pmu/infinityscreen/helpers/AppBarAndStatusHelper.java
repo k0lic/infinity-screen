@@ -34,8 +34,8 @@ public class AppBarAndStatusHelper {
     }
 
     public static void setupCardShapes(AppBarAndStatusBinding binding) {
-        binding.deviceCard.setBackgroundResource(R.drawable.one_rounded_corner_bottom_right);
-        binding.hostCard.setBackgroundResource(R.drawable.one_rounded_corner_bottom_left);
+        binding.topDeviceCard.setBackgroundResource(R.drawable.one_rounded_corner_bottom_right);
+        binding.topHostCard.setBackgroundResource(R.drawable.one_rounded_corner_bottom_left);
     }
 
     public static void refreshDeviceCard(
@@ -58,35 +58,36 @@ public class AppBarAndStatusHelper {
             PeerInfo device,
             Resources resources
     ) {
-        binding.deviceName.setText(device.getDeviceName());
-        binding.deviceStatus.setText(getStatusText(device, resources));
+        binding.topDeviceName.setText(device.getDeviceName());
+        binding.topDeviceStatus.setText(getStatusText(device, resources));
     }
 
     public static void setHostCardContent(
             AppBarAndStatusBinding binding,
             PeerInfo device
     ) {
-        binding.hostName.setText(device.getDeviceName());
+        binding.topHostName.setText(device.getDeviceName());
     }
 
     public static void hideHostDeviceName(
             AppBarAndStatusBinding binding
     ) {
-        binding.hostName.setVisibility(View.GONE);
+        binding.topHostName.setVisibility(View.GONE);
     }
 
     public static void showHostDeviceName(
             AppBarAndStatusBinding binding
     ) {
-        binding.hostName.setVisibility(View.VISIBLE);
+        binding.topHostName.setVisibility(View.VISIBLE);
     }
 
-//    public static void hideHostCard(AppBarAndStatusBinding binding) {
-//        binding.hostCard.setVisibility(View.GONE);
-//    }
+    public static void hideHostCard(AppBarAndStatusBinding binding) {
+        binding.topHostCard.setVisibility(View.GONE);
+    }
 
-    public static void showHostCard(AppBarAndStatusBinding binding) {
-        binding.hostCard.setVisibility(View.VISIBLE);
+    public static void showHostCard(AppBarAndStatusBinding binding, Resources.Theme theme) {
+        int bgColor = resolveRefColor(theme, R.attr.colorNeutral);
+        ((GradientDrawable) binding.topHostCard.getBackground()).setColor(bgColor);
     }
 
     public static void setDeviceCardStyleAvailable(
@@ -120,9 +121,9 @@ public class AppBarAndStatusHelper {
         int bgColor = resolveRefColor(theme, bgResId);
         int textColor = resolveRefColor(theme, textResId);
 
-        ((GradientDrawable) binding.deviceCard.getBackground()).setColor(bgColor);
-        binding.deviceName.setTextColor(textColor);
-        binding.deviceStatus.setTextColor(textColor);
+        ((GradientDrawable) binding.topDeviceCard.getBackground()).setColor(bgColor);
+        binding.topDeviceName.setTextColor(textColor);
+        binding.topDeviceStatus.setTextColor(textColor);
     }
 
     public static int resolveRefColor(

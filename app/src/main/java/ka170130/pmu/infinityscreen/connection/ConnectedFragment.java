@@ -41,7 +41,7 @@ public class ConnectedFragment extends ConnectionAwareFragment {
                 return;
             }
 
-            binding.hostName.setText(device.getDeviceName());
+            binding.connectedToHostName.setText(device.getDeviceName());
         });
 
         // Listen for Disconnect button click

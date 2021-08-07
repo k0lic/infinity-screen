@@ -29,16 +29,16 @@
 
 <!-- Device Card -->
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/device_card"
+        android:id="@+id/top_device_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="?attr/colorDeviceAvailable"
+        tools:cardBackgroundColor="?attr/colorDeviceAvailable"
         app:layout_constraintTop_toBottomOf="@id/top_app_bar_layout"
         app:layout_constraintStart_toStartOf="parent"
         >
 
         <LinearLayout
-            android:id="@+id/device_layout"
+            android:id="@+id/top_device_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -46,7 +46,7 @@
             >
 
             <TextView
-                android:id="@+id/device_name"
+                android:id="@+id/top_device_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 tools:text="@string/device_name_2"
@@ -54,7 +54,7 @@
                 />
 
             <TextView
-                android:id="@+id/device_status"
+                android:id="@+id/top_device_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 tools:text="@string/device_status_available"
@@ -66,16 +66,16 @@
 
 <!-- Host Card -->
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/host_card"
+        android:id="@+id/top_host_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="?attr/colorNeutral"
+        tools:cardBackgroundColor="?attr/colorNeutral"
         app:layout_constraintTop_toBottomOf="@id/top_app_bar_layout"
         app:layout_constraintEnd_toEndOf="parent"
         >
 
         <LinearLayout
-            android:id="@+id/host_container"
+            android:id="@+id/top_host_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -84,7 +84,7 @@
             >
 
             <TextView
-                android:id="@+id/host_name"
+                android:id="@+id/top_host_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 tools:text="@string/device_name_1"
@@ -92,7 +92,7 @@
                 />
 
             <TextView
-                android:id="@+id/host_status"
+                android:id="@+id/top_host_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/host"
