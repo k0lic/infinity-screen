@@ -34,6 +34,7 @@
     <!-- Device List Fragment -->
     <string name="list_available">Available devices</string>
     <string name="list_connected">Connected devices:</string>
+    <string name="list_devices_empty">No devices found</string>
 
     <!-- Layout Fragment -->
     <string name="layout_instructions">Please arrange your devices following the proposed layout.</string>

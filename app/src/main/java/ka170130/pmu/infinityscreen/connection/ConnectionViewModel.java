@@ -1,6 +1,7 @@
 package ka170130.pmu.infinityscreen.connection;
 
 import android.net.wifi.p2p.WifiP2pInfo;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
@@ -13,10 +14,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 
 public class ConnectionViewModel extends ViewModel {
+
+    private static final String SELF_DEVICE_KEY = "connection-self-device-key";
+    private static final String HOST_DEVICE_KEY = "connection-host-device-key";
+    private static final String IS_HOST_KEY = "connection-is-host-key";
 
     public enum ConnectionStatus { NOT_CONNECTED, CONNECTED_HOST, CONNECTED_CLIENT };
 
@@ -49,10 +55,18 @@ public class ConnectionViewModel extends ViewModel {
 //        gpsEnabled = new MutableLiveData<>();
 
         // Device Info Initialization
-        selfDevice = new MutableLiveData<>();
-        hostDevice = new MutableLiveData<>();
-        isHost = new MutableLiveData<>(false);
+        selfDevice = savedStateHandle.getLiveData(SELF_DEVICE_KEY, null);
+//        selfDevice = new MutableLiveData<>();
+        hostDevice = savedStateHandle.getLiveData(HOST_DEVICE_KEY, null);
+//        hostDevice = new MutableLiveData<>();
+        isHost = savedStateHandle.getLiveData(IS_HOST_KEY, false);
+//        isHost = new MutableLiveData<>(false);
 //        groupOwnerDevice = new MutableLiveData<>();
+
+        Log.d(MainActivity.LOG_TAG, "Device Info Init: "
+                + (selfDevice.getValue() == null ? "<NULL>" : selfDevice.getValue().getDeviceName()) + " "
+                + (hostDevice.getValue() == null ? "<NULL>" : hostDevice.getValue().getDeviceName()) + " "
+                + isHost.getValue());
 
         connectionStatus = new MediatorLiveData<>();
         connectionStatus.addSource(selfDevice, device -> refreshConnectionStatus());
@@ -73,6 +87,10 @@ public class ConnectionViewModel extends ViewModel {
     private void refreshConnectionStatus() {
         PeerInfo selfDevice = this.selfDevice.getValue();
         PeerInetAddressInfo hostDevice = this.hostDevice.getValue();
+
+        Log.d(MainActivity.LOG_TAG, "Device Info connection refresh: "
+                + (selfDevice == null ? "<NULL>" : selfDevice.getDeviceName()) + " "
+                + (hostDevice == null ? "<NULL>" : hostDevice.getDeviceName()));
 
         if (selfDevice == null || hostDevice == null) {
             connectionStatus.setValue(ConnectionStatus.NOT_CONNECTED);
@@ -147,7 +165,8 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     public void setIsHost(Boolean isHost) {
-        this.isHost.postValue(isHost);
+        savedStateHandle.set(IS_HOST_KEY, isHost);
+        // this.isHost.postValue(isHost);
     }
 
     public LiveData<PeerInfo> getSelfDevice() {
@@ -155,7 +174,8 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     public void setSelfDevice(PeerInfo selfDevice) {
-        this.selfDevice.postValue(selfDevice);
+        savedStateHandle.set(SELF_DEVICE_KEY, selfDevice);
+//        this.selfDevice.postValue(selfDevice);
     }
 
     public LiveData<PeerInetAddressInfo> getHostDevice() {
@@ -163,7 +183,8 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     public void setHostDevice(PeerInetAddressInfo hostDevice) {
-        this.hostDevice.postValue(hostDevice);
+        savedStateHandle.set(HOST_DEVICE_KEY, hostDevice);
+//        this.hostDevice.postValue(hostDevice);
     }
 
     public void setDiscoveryList(Collection<PeerInfo> discoveryList) {
@@ -180,17 +201,34 @@ public class ConnectionViewModel extends ViewModel {
 
     public void selectDevice(PeerInetAddressInfo device) {
         Collection<PeerInetAddressInfo> devices = groupList.getValue();
-        if (!devices.contains(device)) {
-            devices.add(device);
+
+        boolean contains = false;
+        Iterator<PeerInetAddressInfo> iterator = devices.iterator();
+        while (!contains && iterator.hasNext()) {
+            PeerInetAddressInfo next = iterator.next();
+            contains = device.getDeviceAddress().equals(next.getDeviceAddress());
         }
+
+        if (!contains) {
+            devices.add(device);
+            Log.d(MainActivity.LOG_TAG, "Added to group: " + device.getDeviceName() + " " + device.getDeviceAddress());
+        }
+
         setGroupList(devices);
     }
 
     public void unselectDevice(PeerInetAddressInfo device) {
         Collection<PeerInetAddressInfo> devices = groupList.getValue();
-        if (devices.contains(device)) {
-            devices.remove(device);
+
+        Iterator<PeerInetAddressInfo> iterator = devices.iterator();
+        while (iterator.hasNext()) {
+            PeerInetAddressInfo next = iterator.next();
+            if (device.getDeviceAddress().equals(next.getDeviceAddress())) {
+                devices.remove(next);
+                break;
+            }
         }
+
         setGroupList(devices);
     }
 

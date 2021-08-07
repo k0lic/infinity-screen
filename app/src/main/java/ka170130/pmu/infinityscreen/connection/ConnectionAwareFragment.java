@@ -10,6 +10,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,6 +48,7 @@ public class ConnectionAwareFragment extends Fragment {
         connectionViewModel.getConnectionStatus().observe(getViewLifecycleOwner(), status -> {
             // Navigate to HomeFragment if disconnected
             if (status == ConnectionViewModel.ConnectionStatus.NOT_CONNECTED) {
+                Log.d(MainActivity.LOG_TAG, "ConnectionStatus.NOT_CONNECTED detected");
                 navController.navigate(HomeFragmentDirections.globalHomeFragment());
             }
         });

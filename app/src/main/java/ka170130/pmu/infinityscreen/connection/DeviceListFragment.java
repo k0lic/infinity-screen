@@ -57,6 +57,10 @@ public class DeviceListFragment extends ConnectionAwareFragment {
                 mainActivity,
                 false,
                 device -> {
+                    if (device == null) {
+                        return;
+                    }
+
                     mainActivity.getConnectionManager().connect(device);
                 }
         );
@@ -66,6 +70,12 @@ public class DeviceListFragment extends ConnectionAwareFragment {
 
         connectionViewModel.getAvailableList().observe(getViewLifecycleOwner(), collection -> {
             availableAdapter.setDevices(new ArrayList<>(collection));
+
+            if (collection.size() == 0) {
+                binding.availableEmpty.setVisibility(View.VISIBLE);
+            } else {
+                binding.availableEmpty.setVisibility(View.GONE);
+            }
         });
 
         // Connected Recycler View
@@ -80,6 +90,14 @@ public class DeviceListFragment extends ConnectionAwareFragment {
 
         connectionViewModel.getGroupList().observe(getViewLifecycleOwner(), collection -> {
             connectedAdapter.setDevices(new ArrayList<>(collection));
+
+            binding.connectedCount.setText(String.valueOf(collection.size()));
+
+            if (collection.size() == 0) {
+                binding.connectedEmpty.setVisibility(View.VISIBLE);
+            } else {
+                binding.connectedEmpty.setVisibility(View.GONE);
+            }
         });
 
         // Continue Button

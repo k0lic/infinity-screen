@@ -55,13 +55,18 @@ public class HomeFragment extends Fragment {
         AppBarAndStatusHelper.setupCardShapes(binding.appBarAndStatus);
 
         // Update Device card
-        connectionViewModel.getSelfDevice().observe(getViewLifecycleOwner(),
-                device -> AppBarAndStatusHelper.refreshDeviceCard(
-                        binding.appBarAndStatus,
-                        device,
-                        getResources(),
-                        mainActivity.getTheme()
-        ));
+        connectionViewModel.getSelfDevice().observe(getViewLifecycleOwner(), device -> {
+            if (device == null) {
+                return;
+            }
+
+            AppBarAndStatusHelper.refreshDeviceCard(
+                    binding.appBarAndStatus,
+                    device,
+                    getResources(),
+                    mainActivity.getTheme()
+            );
+        });
 
         // Host card is not applicable to this fragment since there is no established connection
         AppBarAndStatusHelper.hideHostCard(binding.appBarAndStatus);
