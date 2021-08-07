@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Message {
 
@@ -13,7 +14,10 @@ public class Message {
         HELLO,
         PEER_INFO,
         REQUEST_INFO,
-        HOST_ACK
+        HOST_ACK,
+        REQUEST_TRANSFORM,
+        TRANSFORM,
+        TRANSFORM_LIST_UPDATE
     }
 
     private static final MessageType[] MESSAGE_TYPES = MessageType.values();
@@ -54,6 +58,18 @@ public class Message {
 
     public static Message newHostAckMessage(PeerInfo peerInfo) throws IOException {
         return createMessageFromSerializable(MessageType.HOST_ACK, peerInfo);
+    }
+
+    public static Message newRequestTransformMessage() {
+        return new Message(MessageType.REQUEST_TRANSFORM, null);
+    }
+
+    public static Message newTransformMessage(TransformInfo transformInfo) throws IOException {
+        return createMessageFromSerializable(MessageType.TRANSFORM, transformInfo);
+    }
+
+    public static Message newHelloMessage(ArrayList<TransformInfo> transformList) throws IOException {
+        return createMessageFromSerializable(MessageType.TRANSFORM_LIST_UPDATE, transformList);
     }
 
     private static Message createMessageFromSerializable(MessageType type, Serializable serializable) throws IOException {

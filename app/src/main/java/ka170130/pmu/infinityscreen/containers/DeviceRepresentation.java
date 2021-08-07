@@ -1,4 +1,6 @@
-package ka170130.pmu.infinityscreen.layout;
+package ka170130.pmu.infinityscreen.containers;
+
+import java.io.Serializable;
 
 public class DeviceRepresentation {
 
@@ -67,7 +69,7 @@ public class DeviceRepresentation {
         this.repPosition = repPosition;
     }
 
-    public static class Position {
+    public static class Position implements Serializable {
         public float x;
         public float y;
 
