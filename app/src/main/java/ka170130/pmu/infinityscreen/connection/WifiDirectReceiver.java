@@ -150,6 +150,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
             // it's a disconnect
             Log.d(MainActivity.LOG_TAG, "Connection change: DISCONNECT");
             // TODO
+            connectionViewModel.setHostDevice(null);
         }
     }
 

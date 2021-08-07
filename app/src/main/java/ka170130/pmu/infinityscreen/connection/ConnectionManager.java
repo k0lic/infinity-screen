@@ -122,5 +122,16 @@ public class ConnectionManager {
 
     public void disconnect() {
         // TODO
+        manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(MainActivity.LOG_TAG, "Disconnect SUCCESSFUL");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(MainActivity.LOG_TAG, "Disconnect FAILED");
+            }
+        });
     }
 }

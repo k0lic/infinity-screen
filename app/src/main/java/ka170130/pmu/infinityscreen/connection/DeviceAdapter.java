@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.databinding.ViewHolderDeviceBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
@@ -70,12 +71,25 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             super(binding.getRoot());
             this.binding = binding;
 
+            // hide/setup action button
             if (hideActionButton) {
                 binding.actionButton.setVisibility(View.GONE);
             } else {
                 binding.actionButton.setOnClickListener(view -> {
                     callback.invoke(device);
                 });
+            }
+
+            // change colors
+            if (hideActionButton) {
+                int bgColor = AppBarAndStatusHelper
+                        .resolveRefColor(mainActivity.getTheme(), R.attr.colorDeviceConnected);
+                binding.getRoot().setCardBackgroundColor(bgColor);
+
+                int textColor = AppBarAndStatusHelper
+                        .resolveRefColor(mainActivity.getTheme(), R.attr.colorOnDeviceConnected);
+                binding.deviceName.setTextColor(textColor);
+                binding.deviceStatus.setTextColor(textColor);
             }
         }
 
@@ -85,7 +99,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             binding.deviceName.setText(device.getDeviceName());
             binding.deviceStatus.setText(AppBarAndStatusHelper.getStatusText(
                     device,
-                    DeviceAdapter.this.mainActivity.getResources()
+                    mainActivity.getResources()
             ));
         }
     }

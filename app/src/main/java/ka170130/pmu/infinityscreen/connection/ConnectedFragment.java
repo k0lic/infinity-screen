@@ -35,6 +35,15 @@ public class ConnectedFragment extends ConnectionAwareFragment {
         // Setup Status Cards
         setupStatusCards(binding.appBarAndStatus);
 
+        // Setup Host Device Name
+        connectionViewModel.getHostDevice().observe(getViewLifecycleOwner(), device -> {
+            if (device == null) {
+                return;
+            }
+
+            binding.hostName.setText(device.getDeviceName());
+        });
+
         // Listen for Disconnect button click
         binding.disconnectButton.setOnClickListener(view -> {
             mainActivity.getConnectionManager().disconnect();

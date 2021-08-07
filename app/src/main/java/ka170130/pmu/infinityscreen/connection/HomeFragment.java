@@ -19,6 +19,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
+import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.dialogs.SettingsPanelDialog;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.MainActivity;
@@ -62,18 +64,29 @@ public class HomeFragment extends Fragment {
         ));
 
         // Host card is not applicable to this fragment since there is no established connection
-        AppBarAndStatusHelper.hideHostCard(binding.appBarAndStatus);
+//        AppBarAndStatusHelper.hideHostCard(binding.appBarAndStatus);
 
         // Find Devices Button
         binding.findDevicesButton.setOnClickListener(view -> {
             if (mainActivity.checkPeerDiscovery()) {
+                // Set View Model Host info
                 connectionViewModel.setIsHost(true);
+                PeerInfo self = connectionViewModel.getSelfDevice().getValue();
+                PeerInetAddressInfo info = new PeerInetAddressInfo(self, null);
+                connectionViewModel.setHostDevice(info);
+
+                // navigate to Device List Fragment
                 navController.navigate(HomeFragmentDirections.actionDeviceListFragment());
             }
         });
 
         // Listen for connections
         connectionViewModel.getConnectionStatus().observe(getViewLifecycleOwner(), status -> {
+            // ignore for host
+            if (connectionViewModel.getIsHost().getValue()) {
+                return;
+            }
+
             // if connected navigate to ConnectedFragment
             if (status != ConnectionViewModel.ConnectionStatus.NOT_CONNECTED) {
                 navController.navigate(HomeFragmentDirections.actionConnectedFragment());

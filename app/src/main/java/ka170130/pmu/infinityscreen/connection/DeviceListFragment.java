@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
+import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentDeviceListBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
@@ -88,4 +90,7 @@ public class DeviceListFragment extends ConnectionAwareFragment {
 
         return  binding.getRoot();
     }
+
+    // Don't react to connection changes
+
 }

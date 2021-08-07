@@ -81,8 +81,12 @@ public class AppBarAndStatusHelper {
         binding.hostName.setVisibility(View.VISIBLE);
     }
 
-    public static void hideHostCard(AppBarAndStatusBinding binding) {
-        binding.hostCard.setVisibility(View.GONE);
+//    public static void hideHostCard(AppBarAndStatusBinding binding) {
+//        binding.hostCard.setVisibility(View.GONE);
+//    }
+
+    public static void showHostCard(AppBarAndStatusBinding binding) {
+        binding.hostCard.setVisibility(View.VISIBLE);
     }
 
     public static void setDeviceCardStyleAvailable(

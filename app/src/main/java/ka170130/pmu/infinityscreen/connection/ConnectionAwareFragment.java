@@ -53,6 +53,8 @@ public class ConnectionAwareFragment extends Fragment {
     }
 
     protected void setupStatusCards(AppBarAndStatusBinding binding) {
+        AppBarAndStatusHelper.showHostCard(binding);
+
         AppBarAndStatusHelper.setupCardShapes(binding);
 
         connectionViewModel.getSelfDevice().observe(getViewLifecycleOwner(), device -> {
