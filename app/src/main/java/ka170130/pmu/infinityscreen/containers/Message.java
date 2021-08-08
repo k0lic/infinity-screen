@@ -8,6 +8,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
+
 public class Message {
 
     public enum MessageType {
@@ -17,6 +19,8 @@ public class Message {
         REQUEST_INFO,
         HOST_ACK,
         DISCONNECT,
+        STATE_CHANGE_REQUEST,
+        STATE_CHANGE,
         REQUEST_TRANSFORM,
         TRANSFORM,
         TRANSFORM_LIST_UPDATE
@@ -70,6 +74,14 @@ public class Message {
         return new Message(MessageType.DISCONNECT, null);
     }
 
+    public static Message newStateChangeRequestMessage(StateViewModel.AppState state) throws IOException {
+        return createMessageFromSerializable(MessageType.STATE_CHANGE_REQUEST, state);
+    }
+
+    public static Message newStateChangeMessage(StateViewModel.AppState state) throws IOException {
+        return createMessageFromSerializable(MessageType.STATE_CHANGE, state);
+    }
+
     public static Message newRequestTransformMessage() {
         return new Message(MessageType.REQUEST_TRANSFORM, null);
     }
@@ -78,7 +90,7 @@ public class Message {
         return createMessageFromSerializable(MessageType.TRANSFORM, transformInfo);
     }
 
-    public static Message newHelloMessage(ArrayList<TransformInfo> transformList) throws IOException {
+    public static Message newTransformListUpdateMessage(ArrayList<TransformInfo> transformList) throws IOException {
         return createMessageFromSerializable(MessageType.TRANSFORM_LIST_UPDATE, transformList);
     }
 

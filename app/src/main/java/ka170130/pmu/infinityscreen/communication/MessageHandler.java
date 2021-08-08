@@ -11,17 +11,25 @@ import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class MessageHandler {
 
     private TaskManager taskManager;
     private ConnectionManager connectionManager;
     private ConnectionViewModel connectionViewModel;
+    private StateViewModel stateViewModel;
 
-    public MessageHandler(TaskManager taskManager, ConnectionManager connectionManager, ConnectionViewModel connectionViewModel) {
+    public MessageHandler(
+            TaskManager taskManager,
+            ConnectionManager connectionManager,
+            ConnectionViewModel connectionViewModel,
+            StateViewModel stateViewModel
+    ) {
         this.taskManager = taskManager;
         this.connectionManager = connectionManager;
         this.connectionViewModel = connectionViewModel;
+        this.stateViewModel = stateViewModel;
     }
 
     public void handleMessage(Message message, InetAddress inetAddress) {
@@ -45,6 +53,21 @@ public class MessageHandler {
                     break;
                 case DISCONNECT:
                     handleDisconnectMessage();
+                    break;
+                case STATE_CHANGE_REQUEST:
+                    handleStateChangeRequestMessage(message);
+                    break;
+                case STATE_CHANGE:
+                    handleStateChangeMessage(message);
+                    break;
+                case REQUEST_TRANSFORM:
+                    handleRequestTransformMessage();
+                    break;
+                case TRANSFORM:
+                    handleTransformMessage();
+                    break;
+                case TRANSFORM_LIST_UPDATE:
+                    handleTransformListUpdateMessage();
                     break;
             }
         } catch (Exception e) {
@@ -103,6 +126,34 @@ public class MessageHandler {
     // handle DISCONNECT message
     private void handleDisconnectMessage() {
         connectionManager.disconnect();
+    }
+
+    // handle STATE_CHANGE_REQUEST message
+    private void handleStateChangeRequestMessage(Message message) throws IOException, ClassNotFoundException {
+        StateViewModel.AppState state = (StateViewModel.AppState) message.extractObject();
+        // TODO: check if change request should be granted
+        taskManager.runBroadcastTask(Message.newStateChangeMessage(state));
+    }
+
+    // handle STATE_CHANGE message
+    private void handleStateChangeMessage(Message message) throws IOException, ClassNotFoundException {
+        StateViewModel.AppState state = (StateViewModel.AppState) message.extractObject();
+        stateViewModel.setState(state);
+    }
+
+    // handle REQUEST_TRANSFORM message
+    private void handleRequestTransformMessage() {
+        // TODO
+    }
+
+    // handle TRANSFORM message
+    private void handleTransformMessage() {
+        // TODO
+    }
+
+    // handle TRANSFORM_LIST_UPDATE message
+    private void handleTransformListUpdateMessage() {
+        // TODO
     }
 
     private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {

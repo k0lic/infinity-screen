@@ -17,13 +17,23 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.databinding.FragmentConnectedBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
+import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
+import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class ConnectedFragment extends ConnectionAwareFragment {
 
     private FragmentConnectedBinding binding;
+    private StateViewModel stateViewModel;
 
     public ConnectedFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        stateViewModel = new ViewModelProvider(mainActivity).get(StateViewModel.class);
     }
 
     @Override
@@ -49,6 +59,22 @@ public class ConnectedFragment extends ConnectionAwareFragment {
             mainActivity.getConnectionManager().disconnect();
         });
 
+        // Listen for App State change
+        stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
+            if (state == StateViewModel.AppState.LAYOUT) {
+                navController.navigate(ConnectedFragmentDirections.actionLayoutFragment());
+            }
+        });
+
         return  binding.getRoot();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // sync App State - necessary for the Back button to work
+//        StateChangeHelper.requestStateChange(
+//                mainActivity, connectionViewModel, StateViewModel.AppState.CONNECTION);
     }
 }

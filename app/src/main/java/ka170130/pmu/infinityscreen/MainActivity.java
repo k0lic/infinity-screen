@@ -10,6 +10,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
@@ -91,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Discover Peers - Become Discoverable
         connectionManager.discoverPeers();
+
+        // logging
+        stateViewModel.getState().observe(this, state -> {
+            String s = state == null ? "<NULL>" : state.toString();
+            Log.d(LOG_TAG, "AppState changed to " + s);
+        });
     }
 
     public void reset() {

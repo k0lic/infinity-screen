@@ -15,12 +15,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
+import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class HomeFragment extends Fragment {
 
@@ -113,6 +116,17 @@ public class HomeFragment extends Fragment {
         super.onResume();
         handler = new Handler(Looper.getMainLooper());
         checkAgain();
+
+        // sync App State - necessary for the Back button to work
+        ConnectionViewModel.ConnectionStatus status =
+                connectionViewModel.getConnectionStatus().getValue();
+        if (status == ConnectionViewModel.ConnectionStatus.CONNECTED_HOST) {
+            // disconnect all
+            mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
+        } else if (status == ConnectionViewModel.ConnectionStatus.CONNECTED_CLIENT) {
+            // disconnect self
+            mainActivity.getConnectionManager().disconnect();
+        }
     }
 
     @Override

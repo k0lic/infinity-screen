@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class TaskManager {
 
@@ -29,10 +30,15 @@ public class TaskManager {
         this.mainActivity = mainActivity;
         connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         executorService = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
+
+        StateViewModel stateViewModel =
+                new ViewModelProvider(mainActivity).get(StateViewModel.class);
+
         messageHandler = new MessageHandler(
                 this,
                 mainActivity.getConnectionManager(),
-                connectionViewModel
+                connectionViewModel,
+                stateViewModel
         );
     }
 

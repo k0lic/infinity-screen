@@ -2,23 +2,38 @@ package ka170130.pmu.infinityscreen.connection;
 
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
+import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.databinding.FragmentDeviceListBinding;
+import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
+import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class DeviceListFragment extends ConnectionAwareFragment {
 
     private FragmentDeviceListBinding binding;
+    private StateViewModel stateViewModel;
 
     public DeviceListFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        stateViewModel = new ViewModelProvider(mainActivity).get(StateViewModel.class);
     }
 
     @Override
@@ -91,20 +106,35 @@ public class DeviceListFragment extends ConnectionAwareFragment {
         // Continue Button
         binding.continueButton.setOnClickListener(view -> {
             // TODO: replace dummy code with real code
-//            try {
-//                InetAddress broadcastAddress = InetAddress.getByName("192.168.49.255");
-//                mainActivity.getTaskManager().runSenderTask(broadcastAddress, Message.newTestMessage());
-//            } catch (UnknownHostException e) {
-//                Log.d(MainActivity.LOG_TAG, e.toString());
-//                e.printStackTrace();
-//            }
-            mainActivity.getTaskManager().runBroadcastTask(Message.newTestMessage());
-            navController.navigate(DeviceListFragmentDirections.actionLayoutFragment());
+//            mainActivity.getTaskManager().runBroadcastTask(Message.newTestMessage());
+//            navController.navigate(DeviceListFragmentDirections.actionLayoutFragment());
+            StateChangeHelper.requestStateChange(
+                    mainActivity, connectionViewModel, StateViewModel.AppState.LAYOUT);
+        });
+
+        // Listen for App State change
+        stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
+            String s = state == null ? "<NULL>" : state.toString();
+            Log.d(MainActivity.LOG_TAG, "Maybe navigate? " + s);
+            if (state == StateViewModel.AppState.LAYOUT) {
+                Log.d(MainActivity.LOG_TAG, "YES navigate");
+                navController.navigate(DeviceListFragmentDirections.actionLayoutFragment());
+            }
         });
 
         return  binding.getRoot();
     }
 
+    // TODO: remove this comment
     // Don't react to connection changes
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // sync App State - necessary for the Back button to work
+//        StateChangeHelper.requestStateChange(
+//                mainActivity, connectionViewModel, StateViewModel.AppState.CONNECTION);
+    }
 }
