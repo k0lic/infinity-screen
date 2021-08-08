@@ -143,6 +143,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
                             taskManager.runSenderTask(Message.newHelloMessage(self));
                         }
                     } catch (IOException e) {
+                        Log.d(MainActivity.LOG_TAG, e.toString());
                         e.printStackTrace();
                     }
                 }

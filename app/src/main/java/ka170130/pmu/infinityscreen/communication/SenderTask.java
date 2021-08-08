@@ -41,14 +41,14 @@ public class SenderTask implements Runnable {
 
             outputStream.write(message.getBytes());
         } catch (Exception e) {
-            // catch logic
+            Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
         } finally {
             if (outputStream != null) {
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    // catch logic
+                    Log.d(MainActivity.LOG_TAG, e.toString());
                     e.printStackTrace();
                 }
             }
@@ -58,7 +58,7 @@ public class SenderTask implements Runnable {
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        // catch logic
+                        Log.d(MainActivity.LOG_TAG, e.toString());
                         e.printStackTrace();
                     }
                 }

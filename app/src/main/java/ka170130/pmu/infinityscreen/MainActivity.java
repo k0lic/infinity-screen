@@ -63,9 +63,6 @@ public class MainActivity extends AppCompatActivity {
         // Initialize Helpers
         PermissionsHelper.init(this);
 
-        // Setup Task Manager
-        taskManager = new TaskManager(this);
-
         // Setup Connection Manager
         connectionManager = new ConnectionManager(this);
 
@@ -81,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
         // Turn on WiFi
         connectionManager.getWifiManager().setWifiEnabled(true);
         askForWiFi();
+
+        // Setup Task Manager
+        taskManager = new TaskManager(this);
 
         // Setup Multicast
         WifiManager.MulticastLock multicastLock =

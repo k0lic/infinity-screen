@@ -29,12 +29,14 @@ public class ServerTask implements Runnable {
                 taskManager.runReceiverTask(client);
             }
         } catch (IOException e) {
+            Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
         } finally {
             if (serverSocket != null) {
                 try {
                     serverSocket.close();
                 } catch (IOException e) {
+                    Log.d(MainActivity.LOG_TAG, e.toString());
                     e.printStackTrace();
                 }
             }

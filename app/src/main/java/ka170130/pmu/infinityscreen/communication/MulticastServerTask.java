@@ -1,5 +1,7 @@
 package ka170130.pmu.infinityscreen.communication;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,6 +9,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.Arrays;
 
+import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
 
 public class MulticastServerTask implements Runnable {
@@ -38,6 +41,7 @@ public class MulticastServerTask implements Runnable {
 //                messageHandler.handleMessage(message, packet.getAddress());
 //            }
 //        } catch (Exception e) {
+//            Log.d(MainActivity.LOG_TAG, e.toString());
 //            e.printStackTrace();
 //        } finally {
 //            if (socket != null) {
@@ -45,6 +49,7 @@ public class MulticastServerTask implements Runnable {
 //                    try {
 //                        socket.leaveGroup(group);
 //                    } catch (IOException e) {
+//                        Log.d(MainActivity.LOG_TAG, e.toString());
 //                        e.printStackTrace();
 //                    }
 //                }
@@ -68,6 +73,7 @@ public class MulticastServerTask implements Runnable {
                 messageHandler.handleMessage(message, packet.getAddress());
             }
         } catch (Exception e) {
+            Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
         }
     }

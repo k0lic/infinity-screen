@@ -38,6 +38,7 @@ public class MulticastTask implements Runnable {
 //            socket.send(packet);
 //            Log.d(MainActivity.LOG_TAG, "Multicast message " + message.getMessageType().toString() + " sent");
 //        } catch (Exception e) {
+//            Log.d(MainActivity.LOG_TAG, e.toString());
 //            e.printStackTrace();
 //        } finally {
 //            if (socket != null) {
@@ -45,6 +46,7 @@ public class MulticastTask implements Runnable {
 //                    try {
 //                        socket.leaveGroup(group);
 //                    } catch (IOException e) {
+//                        Log.d(MainActivity.LOG_TAG, e.toString());
 //                        e.printStackTrace();
 //                    }
 //                }
@@ -74,6 +76,7 @@ public class MulticastTask implements Runnable {
             socket.send(packet);
             Log.d(MainActivity.LOG_TAG, "Broadcast message " + message.getMessageType().toString() + " sent");
         } catch (Exception e) {
+            Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
         } finally {
             SenderTask.lock.unlock();

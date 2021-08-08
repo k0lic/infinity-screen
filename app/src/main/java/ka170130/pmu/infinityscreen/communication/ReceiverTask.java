@@ -66,13 +66,14 @@ public class ReceiverTask implements Runnable {
             Message message = new Message(byteArray);
             messageHandler.handleMessage(message, inetAddress);
         } catch (Exception e) {
+            Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
         } finally {
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    // catch logic
+                    Log.d(MainActivity.LOG_TAG, e.toString());
                     e.printStackTrace();
                 }
             }
@@ -82,7 +83,7 @@ public class ReceiverTask implements Runnable {
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        // catch logic
+                        Log.d(MainActivity.LOG_TAG, e.toString());
                         e.printStackTrace();
                     }
                 }

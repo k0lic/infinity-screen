@@ -48,6 +48,7 @@ public class MessageHandler {
                     break;
             }
         } catch (Exception e) {
+            Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
         }
     }
