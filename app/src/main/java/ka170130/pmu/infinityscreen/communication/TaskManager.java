@@ -14,18 +14,27 @@ import ka170130.pmu.infinityscreen.containers.Message;
 public class TaskManager {
 
     public static final int DEFAULT_PORT = 8888;
+    public static final int MULTICAST_PORT = 8889;
+    public static final String MULTICAST_ADDRESS = "224.61.70.52";
 
     private static final int THREAD_POOL_COUNT = 4;
 
     private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
     private ExecutorService executorService;
+    private MessageHandler messageHandler;
+
     private InetAddress defaultAddress;
 
     public TaskManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
         connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         executorService = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
+        messageHandler = new MessageHandler(
+                this,
+                mainActivity.getConnectionManager(),
+                connectionViewModel
+        );
     }
 
     public MainActivity getMainActivity() {
@@ -41,7 +50,9 @@ public class TaskManager {
     }
 
     public void runReceiverTask(Socket socket) {
-        executorService.submit(new ReceiverTask(this, connectionViewModel, socket));
+        executorService.submit(
+                new ReceiverTask(this, connectionViewModel, messageHandler, socket)
+        );
     }
 
     public void runSenderTask(Message message) {
@@ -50,5 +61,13 @@ public class TaskManager {
 
     public void runSenderTask(InetAddress address, Message message) {
         executorService.submit(new SenderTask(address, message));
+    }
+
+    public void runMulticastServerTask() {
+        executorService.submit(new MulticastServerTask(messageHandler));
+    }
+
+    public void runMulticastTask(Message message) {
+        executorService.submit(new MulticastTask(message));
     }
 }

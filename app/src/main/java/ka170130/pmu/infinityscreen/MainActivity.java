@@ -20,15 +20,18 @@ import ka170130.pmu.infinityscreen.dialogs.FinishDialog;
 import ka170130.pmu.infinityscreen.dialogs.SettingsPanelDialog;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class MainActivity extends AppCompatActivity {
 
     public final static String LOG_TAG = "default-log-tag";
+    private final static String MULTICAST_LOCK = "infinity-screen-multicast";
 
     private ActivityMainBinding binding;
 
     private ConnectionViewModel connectionViewModel;
     private LayoutViewModel layoutViewModel;
+    private StateViewModel stateViewModel;
 
     private ConnectionManager connectionManager;
     private WifiDirectReceiver receiver;
@@ -55,15 +58,13 @@ public class MainActivity extends AppCompatActivity {
 
         connectionViewModel = new ViewModelProvider(this).get(ConnectionViewModel.class);
         layoutViewModel = new ViewModelProvider(this).get(LayoutViewModel.class);
+        stateViewModel = new ViewModelProvider(this).get(StateViewModel.class);
 
         // Initialize Helpers
         PermissionsHelper.init(this);
 
         // Setup Task Manager
         taskManager = new TaskManager(this);
-
-        // Setup Server Task
-        taskManager.runServerTask();
 
         // Setup Connection Manager
         connectionManager = new ConnectionManager(this);
@@ -81,6 +82,15 @@ public class MainActivity extends AppCompatActivity {
         connectionManager.getWifiManager().setWifiEnabled(true);
         askForWiFi();
 
+        // Setup Multicast
+        WifiManager.MulticastLock multicastLock =
+                connectionManager.getWifiManager().createMulticastLock(MULTICAST_LOCK);
+        multicastLock.acquire();
+
+        // Setup Server Tasks
+        taskManager.runServerTask();
+        taskManager.runMulticastServerTask();
+
         // Setup Wifi Direct Broadcast Receiver
         WifiDirectReceiver.initializeIntentFilter();
         receiver = new WifiDirectReceiver(this);
@@ -92,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
     public void reset() {
         connectionViewModel.reset();
         layoutViewModel.reset();
+        stateViewModel.reset();
     }
 
     @Override

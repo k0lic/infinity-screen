@@ -14,7 +14,7 @@ import ka170130.pmu.infinityscreen.containers.Message;
 
 public class SenderTask implements Runnable {
 
-    private static final ReentrantLock lock = new ReentrantLock();
+    public static final ReentrantLock lock = new ReentrantLock();
 
     private InetAddress address;
     private Message message;

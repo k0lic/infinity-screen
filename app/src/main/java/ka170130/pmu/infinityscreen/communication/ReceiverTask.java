@@ -21,17 +21,21 @@ public class ReceiverTask implements Runnable {
     private TaskManager taskManager;
     private ConnectionManager connectionManager;
     private ConnectionViewModel connectionViewModel;
+    private MessageHandler messageHandler;
+
     private Socket socket;
     private InetAddress inetAddress;
 
     public ReceiverTask(
             TaskManager taskManager,
             ConnectionViewModel connectionViewModel,
+            MessageHandler messageHandler,
             Socket socket
     ) {
         this.taskManager = taskManager;
         this.connectionManager = taskManager.getMainActivity().getConnectionManager();
         this.connectionViewModel = connectionViewModel;
+        this.messageHandler = messageHandler;
         this.socket = socket;
 
         this.inetAddress = socket.getInetAddress();
@@ -60,7 +64,7 @@ public class ReceiverTask implements Runnable {
             }
 
             Message message = new Message(byteArray);
-            handleMessage(message);
+            messageHandler.handleMessage(message, inetAddress);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -84,91 +88,5 @@ public class ReceiverTask implements Runnable {
                 }
             }
         }
-    }
-
-    private void handleMessage(Message message) {
-        Log.d(MainActivity.LOG_TAG, "Message received: " + message.getMessageType().toString());
-        try {
-            switch (message.getMessageType()) {
-                case HELLO:
-                    handleHelloMessage(message);
-                    break;
-                case PEER_INFO:
-                    handlePeerInfoMessage(message);
-                    break;
-                case REQUEST_INFO:
-                    handleRequestInfoMessage(message);
-                    break;
-                case HOST_ACK:
-                    handleHostAckMessage(message);
-                    break;
-                case DISCONNECT:
-                    handleDisconnectMessage();
-                    break;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // handle HELLO message
-    private void handleHelloMessage(Message message) throws IOException, ClassNotFoundException {
-        PeerInfo receivedInfo = (PeerInfo) message.extractObject();
-        PeerInetAddressInfo moreInfo =
-                new PeerInetAddressInfo(receivedInfo, inetAddress);
-
-        Boolean isHost = connectionViewModel.getIsHost().getValue();
-        if (isHost) {
-            // remember the peer
-            rememberPeer(moreInfo);
-        } else {
-            // forward the peer info to the host
-            PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
-            Message forward = Message.newPeerInfoMessage(moreInfo);
-            taskManager.runSenderTask(host.getInetAddress(), forward);
-        }
-    }
-
-    // handle PEER_INFO message
-    private void handlePeerInfoMessage(Message message) throws IOException, ClassNotFoundException {
-        PeerInetAddressInfo peerInfo = (PeerInetAddressInfo) message.extractObject();
-        rememberPeer(peerInfo);
-    }
-
-    // handle REQUEST_INFO message
-    private void handleRequestInfoMessage(Message message) throws IOException, ClassNotFoundException {
-        // remember host device
-        rememberHost(message);
-
-        // respond with HELLO message
-        PeerInfo self = connectionViewModel.getSelfDevice().getValue();
-        Message response = Message.newHelloMessage(self);
-        taskManager.runSenderTask(inetAddress, response);
-    }
-
-    // handle HOST_ACK message
-    private void handleHostAckMessage(Message message) throws IOException, ClassNotFoundException {
-        rememberHost(message);
-    }
-
-    // handle DISCONNECT message
-    private void handleDisconnectMessage() {
-        connectionManager.disconnect();
-    }
-
-    private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {
-        connectionViewModel.selectDevice(peerInfo);
-
-        // respond with HOST_ACK
-        PeerInfo self = connectionViewModel.getSelfDevice().getValue();
-        Message response = Message.newHostAckMessage(self);
-        taskManager.runSenderTask(peerInfo.getInetAddress(), response);
-    }
-
-    private void rememberHost(Message message) throws IOException, ClassNotFoundException {
-        PeerInfo receivedInfo = (PeerInfo) message.extractObject();
-        PeerInetAddressInfo hostInfo =
-                new PeerInetAddressInfo(receivedInfo, inetAddress);
-        connectionViewModel.setHostDevice(hostInfo);
     }
 }

@@ -8,6 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import ka170130.pmu.infinityscreen.containers.Message;
@@ -92,6 +94,13 @@ public class DeviceListFragment extends ConnectionAwareFragment {
         // Continue Button
         binding.continueButton.setOnClickListener(view -> {
             // TODO: replace dummy code with real code
+//            try {
+//                InetAddress broadcastAddress = InetAddress.getByName("192.168.49.255");
+//                mainActivity.getTaskManager().runSenderTask(broadcastAddress, Message.newTestMessage());
+//            } catch (UnknownHostException e) {
+//                e.printStackTrace();
+//            }
+            mainActivity.getTaskManager().runMulticastTask(Message.newTestMessage());
             navController.navigate(DeviceListFragmentDirections.actionLayoutFragment());
         });
 

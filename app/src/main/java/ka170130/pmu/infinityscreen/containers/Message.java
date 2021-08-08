@@ -11,6 +11,7 @@ import java.util.ArrayList;
 public class Message {
 
     public enum MessageType {
+        TEST,
         HELLO,
         PEER_INFO,
         REQUEST_INFO,
@@ -44,6 +45,10 @@ public class Message {
 //    public static Message newHelloMessage(byte[] content) {
 //        return new Message(MessageType.HELLO, content);
 //    }
+
+    public static Message newTestMessage() {
+        return new Message(MessageType.TEST, null);
+    }
 
     public static Message newHelloMessage(PeerInfo peerInfo) throws IOException {
         return createMessageFromSerializable(MessageType.HELLO, peerInfo);
