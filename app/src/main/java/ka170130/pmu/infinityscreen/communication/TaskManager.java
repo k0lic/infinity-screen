@@ -8,7 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import ka170130.pmu.infinityscreen.MainActivity;
-import ka170130.pmu.infinityscreen.connection.ConnectionViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
 
 public class TaskManager {
@@ -17,13 +17,19 @@ public class TaskManager {
 
     private static final int THREAD_POOL_COUNT = 4;
 
+    private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
     private ExecutorService executorService;
     private InetAddress defaultAddress;
 
     public TaskManager(MainActivity mainActivity) {
+        this.mainActivity = mainActivity;
         connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         executorService = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
+    }
+
+    public MainActivity getMainActivity() {
+        return mainActivity;
     }
 
     public void setDefaultAddress(InetAddress defaultAddress) {

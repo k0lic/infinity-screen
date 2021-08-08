@@ -1,4 +1,4 @@
-package ka170130.pmu.infinityscreen.connection;
+package ka170130.pmu.infinityscreen.viewmodels;
 
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.util.Log;
@@ -13,16 +13,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Handler;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
+import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 
 public class ConnectionViewModel extends ViewModel {
 
     private static final String SELF_DEVICE_KEY = "connection-self-device-key";
     private static final String HOST_DEVICE_KEY = "connection-host-device-key";
     private static final String IS_HOST_KEY = "connection-is-host-key";
+    private static final String GROUP_LIST_KEY = "connection-group-list-key";
 
     public enum ConnectionStatus { NOT_CONNECTED, CONNECTED_HOST, CONNECTED_CLIENT };
 
@@ -77,7 +80,8 @@ public class ConnectionViewModel extends ViewModel {
 
         // Peer Lists Initialization
         discoveryList = new MutableLiveData<>(new ArrayList<>());
-        groupList = new MutableLiveData<>(new ArrayList<>());
+        groupList = savedStateHandle.getLiveData(GROUP_LIST_KEY, new ArrayList<>());
+//        groupList = new MutableLiveData<>(new ArrayList<>());
 
         availableList = new MediatorLiveData<>();
         availableList.addSource(discoveryList, list -> refreshAvailableList());
@@ -132,6 +136,12 @@ public class ConnectionViewModel extends ViewModel {
         availableList.setValue(devices);
     }
 
+    public void reset() {
+        setHostDevice(null);
+        setIsHost(false);
+        setGroupList(new ArrayList<>());
+    }
+
 //    public LiveData<Boolean> getWifiEnabled() {
 //        return wifiEnabled;
 //    }
@@ -165,7 +175,7 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     public void setIsHost(Boolean isHost) {
-        savedStateHandle.set(IS_HOST_KEY, isHost);
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(IS_HOST_KEY, isHost));
         // this.isHost.postValue(isHost);
     }
 
@@ -174,7 +184,7 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     public void setSelfDevice(PeerInfo selfDevice) {
-        savedStateHandle.set(SELF_DEVICE_KEY, selfDevice);
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(SELF_DEVICE_KEY, selfDevice));
 //        this.selfDevice.postValue(selfDevice);
     }
 
@@ -183,7 +193,7 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     public void setHostDevice(PeerInetAddressInfo hostDevice) {
-        savedStateHandle.set(HOST_DEVICE_KEY, hostDevice);
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(HOST_DEVICE_KEY, hostDevice));
 //        this.hostDevice.postValue(hostDevice);
     }
 
@@ -196,7 +206,8 @@ public class ConnectionViewModel extends ViewModel {
     }
 
     public void setGroupList(Collection<PeerInetAddressInfo> groupList) {
-        this.groupList.postValue(groupList);
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(GROUP_LIST_KEY, groupList));
+//        this.groupList.postValue(groupList);
     }
 
     public void selectDevice(PeerInetAddressInfo device) {

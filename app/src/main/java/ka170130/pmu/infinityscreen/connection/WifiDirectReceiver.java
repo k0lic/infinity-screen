@@ -23,6 +23,7 @@ import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 
 public class WifiDirectReceiver extends BroadcastReceiver {
 
@@ -42,7 +43,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
         return intentFilter;
     }
 
-    private ConnectionManager connectionManager;
+    private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
 
     private TaskManager taskManager;
@@ -50,7 +51,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
     public WifiDirectReceiver(
         MainActivity mainActivity
     ) {
-        connectionManager = mainActivity.getConnectionManager();
+        this.mainActivity = mainActivity;
         connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
 
         taskManager = mainActivity.getTaskManager();
@@ -86,7 +87,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
 
     @SuppressLint("MissingPermission")
     private void handlePeersChange() {
-        WifiP2pManager manager = connectionManager.getManager();
+        WifiP2pManager manager = mainActivity.getConnectionManager().getManager();
 
         if (manager == null) {
             return;
@@ -95,7 +96,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
         String[] permissions = { Manifest.permission.ACCESS_FINE_LOCATION };
         PermissionsHelper.request(permissions, s -> {
             Log.d(MainActivity.LOG_TAG, "Going to request peers");
-            manager.requestPeers(connectionManager.getChannel(), peers -> {
+            manager.requestPeers(mainActivity.getConnectionManager().getChannel(), peers -> {
                 Log.d(MainActivity.LOG_TAG, "Discovered peers: " + peers.getDeviceList().size());
 //                Log.d(MainActivity.LOG_TAG, peers.getDeviceList().toString());
 
@@ -113,7 +114,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
     }
 
     private void handleConnectionChange(Intent intent) {
-        WifiP2pManager manager = connectionManager.getManager();
+        WifiP2pManager manager = mainActivity.getConnectionManager().getManager();
 
         if (manager == null) {
             return;
@@ -123,7 +124,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
                 (NetworkInfo) intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
 
         if (networkInfo.isConnected()) {
-            manager.requestConnectionInfo(connectionManager.getChannel(), info -> {
+            manager.requestConnectionInfo(mainActivity.getConnectionManager().getChannel(), info -> {
                 Log.d(MainActivity.LOG_TAG, "Connection info available");
                 Log.d(MainActivity.LOG_TAG, info.toString());
 
@@ -149,8 +150,7 @@ public class WifiDirectReceiver extends BroadcastReceiver {
         } else {
             // it's a disconnect
             Log.d(MainActivity.LOG_TAG, "Connection change: DISCONNECT");
-            // TODO
-            connectionViewModel.setHostDevice(null);
+            mainActivity.reset();
         }
     }
 

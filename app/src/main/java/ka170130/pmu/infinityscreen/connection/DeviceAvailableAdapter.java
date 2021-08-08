@@ -13,42 +13,39 @@ import java.util.List;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
-import ka170130.pmu.infinityscreen.databinding.ViewHolderDeviceBinding;
+import ka170130.pmu.infinityscreen.databinding.ViewHolderDeviceAvailableBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.helpers.Callback;
 
-public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder> {
+public class DeviceAvailableAdapter extends RecyclerView.Adapter<DeviceAvailableAdapter.DeviceAvailableViewHolder> {
 
     private MainActivity mainActivity;
-    private boolean hideActionButton;
     private Callback<PeerInfo> callback;
 
     private List<PeerInfo> devices = new ArrayList<>();
 
-    public DeviceAdapter(
+    public DeviceAvailableAdapter(
             MainActivity mainActivity,
-            boolean hideActionButton,
             Callback<PeerInfo> callback
     ) {
         this.mainActivity = mainActivity;
-        this.hideActionButton = hideActionButton;
         this.callback = callback;
     }
 
     @NonNull
     @Override
-    public DeviceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public DeviceAvailableViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-        ViewHolderDeviceBinding binding = ViewHolderDeviceBinding.inflate(
+        ViewHolderDeviceAvailableBinding binding = ViewHolderDeviceAvailableBinding.inflate(
                 layoutInflater,
                 parent,
                 false
         );
-        return new DeviceViewHolder(binding);
+        return new DeviceAvailableViewHolder(binding);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull DeviceViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull DeviceAvailableViewHolder holder, int position) {
         holder.bind(devices.get(position));
     }
 
@@ -62,35 +59,18 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
         notifyDataSetChanged();
     }
 
-    public class DeviceViewHolder extends RecyclerView.ViewHolder {
+    public class DeviceAvailableViewHolder extends RecyclerView.ViewHolder {
 
-        private ViewHolderDeviceBinding binding;
+        private ViewHolderDeviceAvailableBinding binding;
         private PeerInfo device;
 
-        public DeviceViewHolder(ViewHolderDeviceBinding binding) {
+        public DeviceAvailableViewHolder(ViewHolderDeviceAvailableBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
 
-            // hide/setup action button
-            if (hideActionButton) {
-                binding.holderActionButton.setVisibility(View.GONE);
-            } else {
-                binding.holderActionButton.setOnClickListener(view -> {
-                    callback.invoke(device);
-                });
-            }
-
-            // change colors
-            if (hideActionButton) {
-                int bgColor = AppBarAndStatusHelper
-                        .resolveRefColor(mainActivity.getTheme(), R.attr.colorDeviceConnected);
-                binding.getRoot().setCardBackgroundColor(bgColor);
-
-                int textColor = AppBarAndStatusHelper
-                        .resolveRefColor(mainActivity.getTheme(), R.attr.colorOnDeviceConnected);
-                binding.holderDeviceName.setTextColor(textColor);
-                binding.holderDeviceStatus.setTextColor(textColor);
-            }
+            binding.holderActionButton.setOnClickListener(view -> {
+                callback.invoke(device);
+            });
         }
 
         public void bind(PeerInfo device) {

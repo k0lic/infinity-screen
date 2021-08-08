@@ -15,6 +15,7 @@ public class Message {
         PEER_INFO,
         REQUEST_INFO,
         HOST_ACK,
+        DISCONNECT,
         REQUEST_TRANSFORM,
         TRANSFORM,
         TRANSFORM_LIST_UPDATE
@@ -58,6 +59,10 @@ public class Message {
 
     public static Message newHostAckMessage(PeerInfo peerInfo) throws IOException {
         return createMessageFromSerializable(MessageType.HOST_ACK, peerInfo);
+    }
+
+    public static Message newDisconnectMessage() {
+        return new Message(MessageType.DISCONNECT, null);
     }
 
     public static Message newRequestTransformMessage() {

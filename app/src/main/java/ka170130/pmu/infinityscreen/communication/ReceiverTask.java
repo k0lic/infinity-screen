@@ -10,7 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ka170130.pmu.infinityscreen.MainActivity;
-import ka170130.pmu.infinityscreen.connection.ConnectionViewModel;
+import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
@@ -18,6 +19,7 @@ import ka170130.pmu.infinityscreen.containers.PeerInfo;
 public class ReceiverTask implements Runnable {
 
     private TaskManager taskManager;
+    private ConnectionManager connectionManager;
     private ConnectionViewModel connectionViewModel;
     private Socket socket;
     private InetAddress inetAddress;
@@ -28,6 +30,7 @@ public class ReceiverTask implements Runnable {
             Socket socket
     ) {
         this.taskManager = taskManager;
+        this.connectionManager = taskManager.getMainActivity().getConnectionManager();
         this.connectionViewModel = connectionViewModel;
         this.socket = socket;
 
@@ -99,8 +102,11 @@ public class ReceiverTask implements Runnable {
                 case HOST_ACK:
                     handleHostAckMessage(message);
                     break;
+                case DISCONNECT:
+                    handleDisconnectMessage();
+                    break;
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -143,6 +149,11 @@ public class ReceiverTask implements Runnable {
     // handle HOST_ACK message
     private void handleHostAckMessage(Message message) throws IOException, ClassNotFoundException {
         rememberHost(message);
+    }
+
+    // handle DISCONNECT message
+    private void handleDisconnectMessage() {
+        connectionManager.disconnect();
     }
 
     private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {

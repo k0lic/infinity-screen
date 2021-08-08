@@ -1,37 +1,37 @@
 package ka170130.pmu.infinityscreen.connection;
 
-import android.content.Context;
-import android.location.LocationManager;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
-import android.provider.Settings;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
-import ka170130.pmu.infinityscreen.dialogs.SettingsPanelDialog;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 
 public class HomeFragment extends Fragment {
+
+    private static final int CHECK_PEERS_PERIOD = 10000;
 
     private FragmentHomeBinding binding;
     private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
     private NavController navController;
+
+    private Handler handler;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -105,5 +105,29 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         navController = Navigation.findNavController(view);
+    }
+
+    // Periodically discover WiFi peers - necessary since device is not visible after some time
+    @Override
+    public void onResume() {
+        super.onResume();
+        handler = new Handler(Looper.getMainLooper());
+        checkAgain();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        handler.removeCallbacksAndMessages(null);
+        handler = null;
+    }
+
+    private void checkAgain() {
+        handler.postDelayed(() -> checkPeers(), CHECK_PEERS_PERIOD);
+    }
+
+    private void checkPeers() {
+        mainActivity.getConnectionManager().discoverPeers();
+        checkAgain();
     }
 }

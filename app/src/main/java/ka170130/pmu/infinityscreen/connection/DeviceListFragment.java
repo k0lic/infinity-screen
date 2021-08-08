@@ -1,36 +1,18 @@
 package ka170130.pmu.infinityscreen.connection;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import ka170130.pmu.infinityscreen.MainActivity;
-import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
-import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentDeviceListBinding;
-import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
-import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
 public class DeviceListFragment extends ConnectionAwareFragment {
 
@@ -53,9 +35,8 @@ public class DeviceListFragment extends ConnectionAwareFragment {
         mainActivity.getConnectionManager().discoverPeers();
 
         // Available Recycler View
-        DeviceAdapter availableAdapter = new DeviceAdapter(
+        DeviceAvailableAdapter availableAdapter = new DeviceAvailableAdapter(
                 mainActivity,
-                false,
                 device -> {
                     if (device == null) {
                         return;
@@ -79,10 +60,18 @@ public class DeviceListFragment extends ConnectionAwareFragment {
         });
 
         // Connected Recycler View
-        DeviceAdapter connectedAdapter = new DeviceAdapter(
+        DeviceConnectedAdapter connectedAdapter = new DeviceConnectedAdapter(
                 mainActivity,
-                true,
-                null
+                device -> {
+                    if (device == null) {
+                        return;
+                    }
+
+                    mainActivity.getTaskManager()
+                            .runSenderTask(device.getInetAddress(), Message.newDisconnectMessage());
+
+                    connectionViewModel.unselectDevice(device);
+                }
         );
         binding.connectedRecyclerView.setHasFixedSize(false);
         binding.connectedRecyclerView.setAdapter(connectedAdapter);

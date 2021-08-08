@@ -1,27 +1,25 @@
 package ka170130.pmu.infinityscreen;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.location.LocationManagerCompat;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.connection.WifiDirectReceiver;
 import ka170130.pmu.infinityscreen.databinding.ActivityMainBinding;
 import ka170130.pmu.infinityscreen.dialogs.FinishDialog;
 import ka170130.pmu.infinityscreen.dialogs.SettingsPanelDialog;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
+import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,9 +27,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
+    private ConnectionViewModel connectionViewModel;
+    private LayoutViewModel layoutViewModel;
+
     private ConnectionManager connectionManager;
     private WifiDirectReceiver receiver;
-
     private TaskManager taskManager;
 
     public WifiDirectReceiver getReceiver() {
@@ -52,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        connectionViewModel = new ViewModelProvider(this).get(ConnectionViewModel.class);
+        layoutViewModel = new ViewModelProvider(this).get(LayoutViewModel.class);
 
         // Initialize Helpers
         PermissionsHelper.init(this);
@@ -84,6 +87,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Discover Peers - Become Discoverable
         connectionManager.discoverPeers();
+    }
+
+    public void reset() {
+        connectionViewModel.reset();
+        layoutViewModel.reset();
     }
 
     @Override

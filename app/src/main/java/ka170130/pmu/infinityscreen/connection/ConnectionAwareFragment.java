@@ -7,19 +7,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
-import androidx.navigation.NavDirections;
 import androidx.navigation.Navigation;
 
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import ka170130.pmu.infinityscreen.MainActivity;
-import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.databinding.AppBarAndStatusBinding;
-import ka170130.pmu.infinityscreen.databinding.FragmentPreviewBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 
 public class ConnectionAwareFragment extends Fragment {
 
