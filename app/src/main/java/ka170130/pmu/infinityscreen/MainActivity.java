@@ -25,7 +25,6 @@ import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 public class MainActivity extends AppCompatActivity {
 
     public final static String LOG_TAG = "default-log-tag";
-    private final static String MULTICAST_LOCK = "infinity-screen-multicast";
 
     private ActivityMainBinding binding;
 
@@ -82,14 +81,9 @@ public class MainActivity extends AppCompatActivity {
         // Setup Task Manager
         taskManager = new TaskManager(this);
 
-        // Setup Multicast
-        WifiManager.MulticastLock multicastLock =
-                connectionManager.getWifiManager().createMulticastLock(MULTICAST_LOCK);
-        multicastLock.acquire();
-
         // Setup Server Tasks
         taskManager.runServerTask();
-        taskManager.runMulticastServerTask();
+        taskManager.runBroadcastServerTask();
 
         // Setup Wifi Direct Broadcast Receiver
         WifiDirectReceiver.initializeIntentFilter();

@@ -14,8 +14,7 @@ import ka170130.pmu.infinityscreen.containers.Message;
 public class TaskManager {
 
     public static final int DEFAULT_PORT = 8888;
-    public static final int MULTICAST_PORT = 8889;
-    public static final String MULTICAST_ADDRESS = "224.61.70.52";
+    public static final int BROADCAST_PORT = 8889;
 
     private static final int THREAD_POOL_COUNT = 4;
 
@@ -63,11 +62,11 @@ public class TaskManager {
         executorService.submit(new SenderTask(address, message));
     }
 
-    public void runMulticastServerTask() {
-        executorService.submit(new MulticastServerTask(messageHandler));
+    public void runBroadcastServerTask() {
+        executorService.submit(new BroadcastServerTask(messageHandler));
     }
 
-    public void runMulticastTask(Message message) {
-        executorService.submit(new MulticastTask(message));
+    public void runBroadcastTask(Message message) {
+        executorService.submit(new BroadcastTask(message));
     }
 }

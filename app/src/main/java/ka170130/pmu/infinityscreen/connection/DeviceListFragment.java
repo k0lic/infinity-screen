@@ -4,18 +4,13 @@ import android.os.Bundle;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
-import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentDeviceListBinding;
 
 public class DeviceListFragment extends ConnectionAwareFragment {
@@ -103,7 +98,7 @@ public class DeviceListFragment extends ConnectionAwareFragment {
 //                Log.d(MainActivity.LOG_TAG, e.toString());
 //                e.printStackTrace();
 //            }
-            mainActivity.getTaskManager().runMulticastTask(Message.newTestMessage());
+            mainActivity.getTaskManager().runBroadcastTask(Message.newTestMessage());
             navController.navigate(DeviceListFragmentDirections.actionLayoutFragment());
         });
 
