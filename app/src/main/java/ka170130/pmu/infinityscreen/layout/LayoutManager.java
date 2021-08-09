@@ -114,27 +114,7 @@ public class LayoutManager {
 
         WindowManager windowManager = mainActivity.getWindowManager();
         Display display = windowManager.getDefaultDisplay();
-//        DisplayMetrics displayMetrics = new DisplayMetrics();
-//        display.getMetrics(displayMetrics);
 
-
-        // since SDK_INT = 1;
-//        pixelCount[PIXEL_COUNT_WIDTH_INDEX] = displayMetrics.widthPixels;
-//        pixelCount[PIXEL_COUNT_HEIGHT_INDEX] = displayMetrics.heightPixels;
-
-        // includes window decorations (statusbar bar/menu bar)
-//        if (Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 17) {
-//            try {
-//                pixelCount[PIXEL_COUNT_WIDTH_INDEX] =
-//                        (Integer) Display.class.getMethod("getRawWidth").invoke(display);
-//                pixelCount[PIXEL_COUNT_HEIGHT_INDEX] =
-//                        (Integer) Display.class.getMethod("getRawHeight").invoke(display);
-//            } catch (Exception ignored) {
-//            }
-//        }
-
-        // includes window decorations (statusbar bar/menu bar)
-//        if (Build.VERSION.SDK_INT >= 17) {
         try {
             Point realSize = new Point();
             Display.class
@@ -146,7 +126,6 @@ public class LayoutManager {
             Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
         }
-//        }
 
         Log.d(
                 MainActivity.LOG_TAG,
