@@ -18,26 +18,18 @@ import ka170130.pmu.infinityscreen.containers.PeerInfo;
 
 public class ReceiverTask implements Runnable {
 
-    private TaskManager taskManager;
-    private ConnectionManager connectionManager;
-    private ConnectionViewModel connectionViewModel;
     private MessageHandler messageHandler;
 
     private Socket socket;
     private InetAddress inetAddress;
 
     public ReceiverTask(
-            TaskManager taskManager,
-            ConnectionViewModel connectionViewModel,
             MessageHandler messageHandler,
             Socket socket
     ) {
-        this.taskManager = taskManager;
-        this.connectionManager = taskManager.getMainActivity().getConnectionManager();
-        this.connectionViewModel = connectionViewModel;
         this.messageHandler = messageHandler;
-        this.socket = socket;
 
+        this.socket = socket;
         this.inetAddress = socket.getInetAddress();
     }
 

@@ -16,12 +16,15 @@ public class LayoutViewModel extends ViewModel {
 
     private static final String SELF_KEY = "layout-self-key";
     private static final String TRANSFORM_LIST_KEY = "layout-transform-list-key";
+    private static final String GENERATOR_EXECUTED_KEY = "layout-generator-executed-key";
 
     private SavedStateHandle savedStateHandle;
 
     private MutableLiveData<TransformInfo> selfTransform;
     private MutableLiveData<ArrayList<TransformInfo>> transformList;
     private MediatorLiveData<TransformInfo> selfAuto;
+
+    private Boolean layoutGeneratorExecuted;
 
     public LayoutViewModel(SavedStateHandle savedStateHandle) {
         this.savedStateHandle = savedStateHandle;
@@ -33,6 +36,11 @@ public class LayoutViewModel extends ViewModel {
 
         selfAuto = new MediatorLiveData<>();
         selfAuto.addSource(transformList, this::refreshSelfAuto);
+
+        layoutGeneratorExecuted = savedStateHandle.get(GENERATOR_EXECUTED_KEY);
+        if (layoutGeneratorExecuted == null) {
+            layoutGeneratorExecuted = false;
+        }
     }
 
     private void refreshSelfAuto(ArrayList<TransformInfo> list) {
@@ -78,7 +86,32 @@ public class LayoutViewModel extends ViewModel {
 //        this.transformList.postValue(transformList);
     }
 
+    // TODO: maybe guard for concurrent calls?
+    public void addTransform(TransformInfo transformInfo) {
+        ArrayList<TransformInfo> list = transformList.getValue();
+        int size = list.size();
+
+        TransformInfo toAdd = new TransformInfo(
+                transformInfo.getDeviceAddress(),
+                size + 1,
+                transformInfo.getScreenWidth(),
+                transformInfo.getScreenHeight()
+        );
+
+        list.add(toAdd);
+        setTransformList(list);
+    }
+
     public LiveData<TransformInfo> getSelfAuto() {
         return selfAuto;
+    }
+
+    public Boolean getLayoutGeneratorExecuted() {
+        return layoutGeneratorExecuted;
+    }
+
+    public void setLayoutGeneratorExecuted(Boolean layoutGeneratorExecuted) {
+        this.layoutGeneratorExecuted = layoutGeneratorExecuted;
+        savedStateHandle.set(GENERATOR_EXECUTED_KEY, layoutGeneratorExecuted);
     }
 }

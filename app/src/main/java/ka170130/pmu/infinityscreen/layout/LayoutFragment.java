@@ -2,35 +2,35 @@ package ka170130.pmu.infinityscreen.layout;
 
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.io.IOException;
+import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
-import ka170130.pmu.infinityscreen.connection.DeviceListFragmentDirections;
+import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.Message;
-import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
-import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
+import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentLayoutBinding;
+import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
+import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class LayoutFragment extends ConnectionAwareFragment {
 
     private FragmentLayoutBinding binding;
     private StateViewModel stateViewModel;
+    private LayoutViewModel layoutViewModel;
+
+    private LayoutManager layoutManager;
 
     public LayoutFragment() {
         // Required empty public constructor
@@ -41,6 +41,9 @@ public class LayoutFragment extends ConnectionAwareFragment {
         super.onCreate(savedInstanceState);
 
         stateViewModel = new ViewModelProvider(mainActivity).get(StateViewModel.class);
+        layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
+
+        layoutManager = new LayoutManager(mainActivity);
     }
 
     @Override
@@ -52,7 +55,70 @@ public class LayoutFragment extends ConnectionAwareFragment {
         // Setup Status Cards
         setupStatusCards(binding.appBarAndStatus);
 
-        // TODO: everything
+        // Inflate Top App Bar Menu
+        AppBarAndStatusHelper.inflateMenu(binding.appBarAndStatus, R.menu.app_bar_menu, item -> {
+            if (item.getItemId() == R.id.option_disconnect) {
+                Boolean isHost = connectionViewModel.getIsHost().getValue();
+
+                if (isHost) {
+                    // disconnect all
+                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
+                } else {
+                    // disconnect self
+                    mainActivity.getConnectionManager().disconnect();
+                }
+                return true;
+            }
+
+            return false;
+        });
+
+        // Calculate Transform Info
+        TransformInfo selfTransform = layoutManager.calculateSelfTransform();
+        layoutViewModel.setSelfTransform(selfTransform);
+        layoutManager.reportSelfTransform(selfTransform);
+
+        // Attach Host Transform List listener
+        layoutViewModel.getTransformList().observe(getViewLifecycleOwner(),
+                list -> layoutManager.hostTransformListListener(list));
+
+        // Listen for Layout Change - update and redraw DeviceLayoutView on change
+        layoutViewModel.getTransformList().observe(getViewLifecycleOwner(), list -> {
+            Log.d(MainActivity.LOG_TAG, "Update and Redraw DeviceLayoutView");
+
+            DeviceLayoutView deviceLayoutView = binding.deviceLayoutView;
+
+            // set device list
+            deviceLayoutView.clearDevices();
+            Iterator<TransformInfo> iterator = list.iterator();
+            while (iterator.hasNext()) {
+                TransformInfo next = iterator.next();
+                DeviceRepresentation deviceRep = new DeviceRepresentation(next);
+                deviceLayoutView.registerDevice(deviceRep);
+            }
+
+            // set self index
+            TransformInfo selfAuto = layoutViewModel.getSelfAuto().getValue();
+            if (selfAuto != null) {
+                deviceLayoutView.setSelf(selfAuto.getNumberId());
+            }
+
+            // redraw component
+            deviceLayoutView.redraw();
+        });
+
+        layoutViewModel.getSelfAuto().observe(getViewLifecycleOwner(), auto -> {
+            if (auto == null) {
+                return;
+            }
+
+            binding.deviceNumber.setText(String.valueOf(auto.getNumberId()));
+
+            // redraw component :(
+            binding.deviceLayoutView.setSelf(auto.getNumberId());
+            binding.deviceLayoutView.redraw();
+        });
+
         binding.previewButton.setOnClickListener(view -> {
             StateChangeHelper.requestStateChange(
                     mainActivity, connectionViewModel, StateViewModel.AppState.PREVIEW);

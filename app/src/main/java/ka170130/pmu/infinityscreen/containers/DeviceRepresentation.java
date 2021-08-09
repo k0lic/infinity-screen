@@ -20,9 +20,22 @@ public class DeviceRepresentation {
         this.height = height;
         this.position = position;
 
+        // placeholder values - to be overwritten
         this.repWidth = width;
         this.repHeight = height;
         this.repPosition = new Position(position.x, position.y);
+    }
+
+    public DeviceRepresentation(TransformInfo transformInfo) {
+        numberId = transformInfo.getNumberId();
+        width = (float) transformInfo.getScreenWidth();
+        height = (float) transformInfo.getScreenHeight();
+        position = transformInfo.getPosition();
+
+        // placeholder values - to be overwritten
+        repWidth = width;
+        repHeight = height;
+        repPosition = new Position(position.x, position.y);
     }
 
     public int getNumberId() {

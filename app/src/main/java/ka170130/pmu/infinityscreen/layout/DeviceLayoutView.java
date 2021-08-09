@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,6 +16,7 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.R;
@@ -42,11 +44,11 @@ public class DeviceLayoutView extends View {
         deviceLayoutView.setSelf(3);
     }
 
-    private static final float MINIMUM_AREA_WIDTH = 100;
-    private static final float MINIMUM_AREA_HEIGHT = 100;
+    private static final float MINIMUM_AREA_WIDTH = 10;
+    private static final float MINIMUM_AREA_HEIGHT = 10;
     private static final float BUFFER_FACTOR = 0.1f;
-    private static final float STROKE_WIDTH = 3;
-    private static final float TEXT_SIZE = 40;
+    private static final float STROKE_WIDTH = 0.2f;
+    private static final float TEXT_SIZE = 2.5f;
 
     private Paint paintPrimary;
     private Paint paintPrimaryText;
@@ -69,6 +71,7 @@ public class DeviceLayoutView extends View {
     private float realToViewFactor = 1;
 
     private GestureDetector detector;
+    // TODO: remove placeholder counter code
     private int counter = 0;
 
     public DeviceLayoutView(Context context, @Nullable AttributeSet attrs) {
@@ -145,16 +148,22 @@ public class DeviceLayoutView extends View {
                 return false;
             }
         });
-
-        setupDummyDevices(this);
     }
 
     public void registerDevice(DeviceRepresentation device) {
         devices.add(device);
     }
 
+    public void clearDevices() {
+        devices = new ArrayList<>();
+    }
+
     public void setSelf(int num) {
         self = num;
+    }
+
+    public void redraw() {
+        invalidate();
     }
 
     @Override
@@ -168,7 +177,8 @@ public class DeviceLayoutView extends View {
 
         DeviceRepresentation ownDevice = null;
         for (DeviceRepresentation device : devices) {
-            if (counter % devices.size() + 1 == device.getNumberId()) {
+            // for 0 all devices are visible
+            if (counter % (devices.size() + 1) == device.getNumberId()) {
                 continue;
             }
 
@@ -278,6 +288,7 @@ public class DeviceLayoutView extends View {
         float xMax = 0;
         float yMax = 0;
 
+        Log.d(MainActivity.LOG_TAG, "Device Representations:");
         for (DeviceRepresentation device : devices) {
             device.setRepWidth(device.getWidth() * realToViewFactor);
             device.setRepHeight(device.getHeight() * realToViewFactor);
@@ -290,6 +301,20 @@ public class DeviceLayoutView extends View {
 
             xMax = Math.max(position.x + device.getRepWidth(), xMax);
             yMax = Math.max(position.y + device.getRepHeight(), yMax);
+
+            Log.d(
+                    MainActivity.LOG_TAG,
+                    device.getNumberId()
+                            + " w: " + device.getWidth()
+                            + " h: " + device.getHeight()
+                            + " pos: (" + device.getPosition().x
+                            + ", " + device.getPosition().y
+                            + ") rw: " + device.getRepWidth()
+                            + " rh: " + device.getRepHeight()
+                            + " rpos: (" + device.getRepPosition().x
+                            + ", " + device.getRepPosition().y
+                            + ")"
+            );
         }
 
         // Calculate Auto Margins so content is centered

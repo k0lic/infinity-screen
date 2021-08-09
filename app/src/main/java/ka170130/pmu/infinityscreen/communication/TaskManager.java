@@ -20,7 +20,6 @@ public class TaskManager {
     private static final int THREAD_POOL_COUNT = 4;
 
     private MainActivity mainActivity;
-    private ConnectionViewModel connectionViewModel;
     private ExecutorService executorService;
     private MessageHandler messageHandler;
 
@@ -28,17 +27,11 @@ public class TaskManager {
 
     public TaskManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
-        connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         executorService = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
-
-        StateViewModel stateViewModel =
-                new ViewModelProvider(mainActivity).get(StateViewModel.class);
 
         messageHandler = new MessageHandler(
                 this,
-                mainActivity.getConnectionManager(),
-                connectionViewModel,
-                stateViewModel
+                mainActivity
         );
     }
 
@@ -55,9 +48,7 @@ public class TaskManager {
     }
 
     public void runReceiverTask(Socket socket) {
-        executorService.submit(
-                new ReceiverTask(this, connectionViewModel, messageHandler, socket)
-        );
+        executorService.submit(new ReceiverTask(messageHandler, socket));
     }
 
     public void runSenderTask(Message message) {

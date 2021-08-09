@@ -3,9 +3,10 @@ package ka170130.pmu.infinityscreen.helpers;
 import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+
+import androidx.appcompat.widget.Toolbar;
 
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
@@ -51,6 +52,15 @@ public class AppBarAndStatusHelper {
         } else {
             setDeviceCardStyleAvailable(binding, theme);
         }
+    }
+
+    public static void inflateMenu(
+            AppBarAndStatusBinding binding,
+            int menuId,
+            Toolbar.OnMenuItemClickListener listener
+    ) {
+        binding.topAppBar.inflateMenu(menuId);
+        binding.topAppBar.setOnMenuItemClickListener(listener);
     }
 
     public static void setDeviceCardContent(
