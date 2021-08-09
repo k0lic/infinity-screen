@@ -16,6 +16,7 @@ public class LayoutViewModel extends ViewModel {
 
     private static final String SELF_KEY = "layout-self-key";
     private static final String TRANSFORM_LIST_KEY = "layout-transform-list-key";
+    private static final String VIEWPORT_KEY = "layout-viewport-key";
     private static final String GENERATOR_EXECUTED_KEY = "layout-generator-executed-key";
 
     private SavedStateHandle savedStateHandle;
@@ -23,6 +24,8 @@ public class LayoutViewModel extends ViewModel {
     private MutableLiveData<TransformInfo> selfTransform;
     private MutableLiveData<ArrayList<TransformInfo>> transformList;
     private MediatorLiveData<TransformInfo> selfAuto;
+
+    private MutableLiveData<TransformInfo> viewport;
 
     private Boolean layoutGeneratorExecuted;
 
@@ -36,6 +39,8 @@ public class LayoutViewModel extends ViewModel {
 
         selfAuto = new MediatorLiveData<>();
         selfAuto.addSource(transformList, this::refreshSelfAuto);
+
+        viewport = savedStateHandle.getLiveData(VIEWPORT_KEY, null);
 
         layoutGeneratorExecuted = savedStateHandle.get(GENERATOR_EXECUTED_KEY);
         if (layoutGeneratorExecuted == null) {
@@ -66,6 +71,8 @@ public class LayoutViewModel extends ViewModel {
 
     public void reset() {
         setTransformList(new ArrayList<>());
+        setViewport(null);
+        setLayoutGeneratorExecuted(false);
     }
 
     public LiveData<TransformInfo> getSelfTransform() {
@@ -91,6 +98,18 @@ public class LayoutViewModel extends ViewModel {
         ArrayList<TransformInfo> list = transformList.getValue();
         int size = list.size();
 
+        boolean contains = false;
+        Iterator<TransformInfo> iterator = list.iterator();
+        while (!contains && iterator.hasNext()) {
+            TransformInfo next = iterator.next();
+            contains = transformInfo.getDeviceAddress().equals(next.getDeviceAddress());
+        }
+
+        if (contains) {
+            // skip - device already added
+            return;
+        }
+
         TransformInfo toAdd = new TransformInfo(
                 transformInfo.getDeviceAddress(),
                 size + 1,
@@ -104,6 +123,14 @@ public class LayoutViewModel extends ViewModel {
 
     public LiveData<TransformInfo> getSelfAuto() {
         return selfAuto;
+    }
+
+    public LiveData<TransformInfo> getViewport() {
+        return viewport;
+    }
+
+    public void setViewport(TransformInfo viewport) {
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(VIEWPORT_KEY, viewport));
     }
 
     public Boolean getLayoutGeneratorExecuted() {

@@ -26,6 +26,7 @@
         <item name="colorLayoutBackground">@color/white</item>
         <item name="colorLayoutAccent">@color/black</item>
         <item name="colorLayoutHighlight">@color/chiffon</item>
+        <item name="colorLayoutViewport">@color/guardsman_red</item>
 
         <!-- Device brand colors -->
         <item name="colorDeviceConnected">@color/chiffon</item>

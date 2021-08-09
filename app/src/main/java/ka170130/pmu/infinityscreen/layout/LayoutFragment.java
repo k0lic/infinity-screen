@@ -52,14 +52,14 @@ public class LayoutFragment extends ConnectionAwareFragment {
         // Inflate the layout for this fragment
         binding = FragmentLayoutBinding.inflate(inflater, container, false);
 
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+
         // Setup Status Cards
         setupStatusCards(binding.appBarAndStatus);
 
         // Inflate Top App Bar Menu
         AppBarAndStatusHelper.inflateMenu(binding.appBarAndStatus, R.menu.app_bar_menu, item -> {
             if (item.getItemId() == R.id.option_disconnect) {
-                Boolean isHost = connectionViewModel.getIsHost().getValue();
-
                 if (isHost) {
                     // disconnect all
                     mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
@@ -78,9 +78,14 @@ public class LayoutFragment extends ConnectionAwareFragment {
         layoutViewModel.setSelfTransform(selfTransform);
         layoutManager.reportSelfTransform(selfTransform);
 
-        // Attach Host Transform List listener
-        layoutViewModel.getTransformList().observe(getViewLifecycleOwner(),
-                list -> layoutManager.hostTransformListListener(list));
+        // Attach Host Listeners - broadcast layout changes
+        if (isHost) {
+            layoutViewModel.getTransformList().observe(getViewLifecycleOwner(),
+                    list -> layoutManager.hostTransformListListener(list));
+
+            layoutViewModel.getViewport().observe(getViewLifecycleOwner(),
+                    viewport -> layoutManager.hostViewportListener(viewport));
+        }
 
         // Listen for Layout Change - update and redraw DeviceLayoutView on change
         layoutViewModel.getTransformList().observe(getViewLifecycleOwner(), list -> {
@@ -97,14 +102,21 @@ public class LayoutFragment extends ConnectionAwareFragment {
                 deviceLayoutView.registerDevice(deviceRep);
             }
 
-            // set self index
-            TransformInfo selfAuto = layoutViewModel.getSelfAuto().getValue();
-            if (selfAuto != null) {
-                deviceLayoutView.setSelf(selfAuto.getNumberId());
-            }
-
             // redraw component
             deviceLayoutView.redraw();
+        });
+
+        layoutViewModel.getViewport().observe(getViewLifecycleOwner(), viewport -> {
+            if (viewport == null) {
+                return;
+            }
+
+            // Repackage viewport
+            DeviceRepresentation viewportRep = new DeviceRepresentation(viewport);
+            binding.deviceLayoutView.setViewport(viewportRep);
+
+            // redraw component
+            binding.deviceLayoutView.redraw();
         });
 
         layoutViewModel.getSelfAuto().observe(getViewLifecycleOwner(), auto -> {
@@ -114,7 +126,7 @@ public class LayoutFragment extends ConnectionAwareFragment {
 
             binding.deviceNumber.setText(String.valueOf(auto.getNumberId()));
 
-            // redraw component :(
+            // redraw component
             binding.deviceLayoutView.setSelf(auto.getNumberId());
             binding.deviceLayoutView.redraw();
         });
@@ -133,8 +145,6 @@ public class LayoutFragment extends ConnectionAwareFragment {
 
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
-            Boolean isHost = connectionViewModel.getIsHost().getValue();
-
             if (state == StateViewModel.AppState.CONNECTION) {
                 navController.navigateUp();
             } else if (state == StateViewModel.AppState.PREVIEW) {

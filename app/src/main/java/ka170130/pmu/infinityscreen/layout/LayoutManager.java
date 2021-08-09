@@ -66,13 +66,26 @@ public class LayoutManager {
 
         // Execute Layout generation
         if (!layoutViewModel.getLayoutGeneratorExecuted()) {
-            simpleLayoutGenerator(list);
+            TransformInfo viewport = simpleLayoutGenerator(list);
+            layoutViewModel.setLayoutGeneratorExecuted(true);
+            layoutViewModel.setViewport(viewport);
         }
 
         // Broadcast Transform List Update
         try {
             mainActivity.getTaskManager()
                     .runBroadcastTask(Message.newTransformListUpdateMessage(list));
+        } catch (Exception e) {
+            Log.d(MainActivity.LOG_TAG, e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    public void hostViewportListener(TransformInfo viewport) {
+        // Broadcast Viewport Update
+        try {
+            mainActivity.getTaskManager()
+                    .runBroadcastTask(Message.newViewportUpdateMessage(viewport));
         } catch (Exception e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
@@ -100,13 +113,19 @@ public class LayoutManager {
     }
 
     // place all devices in order, side by side, no rotation
-    private void simpleLayoutGenerator(ArrayList<TransformInfo> transformInfos) {
+    private TransformInfo simpleLayoutGenerator(ArrayList<TransformInfo> transformInfos) {
         double x = transformInfos.get(0).getScreenWidth();
         for (int i = 1; i < transformInfos.size(); i++) {
             TransformInfo info = transformInfos.get(i);
             info.setPosition(new DeviceRepresentation.Position((float) x, 0));
             x += info.getScreenWidth();
         }
+
+        double viewportWidth = x;
+        double viewportHeight = x / 1.78;
+
+        return new TransformInfo(
+                "viewport", -1, viewportWidth, viewportHeight);
     }
 
     private Integer[] getPixelCount() {

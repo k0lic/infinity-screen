@@ -23,4 +23,5 @@
     <attr name="colorLayoutBackground" format="reference" />
     <attr name="colorLayoutAccent" format="reference" />
     <attr name="colorLayoutHighlight" format="reference" />
+    <attr name="colorLayoutViewport" format="reference" />
 </resources>

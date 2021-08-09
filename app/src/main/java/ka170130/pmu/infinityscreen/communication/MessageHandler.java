@@ -78,6 +78,9 @@ public class MessageHandler {
                 case TRANSFORM_LIST_UPDATE:
                     handleTransformListUpdateMessage(message);
                     break;
+                case VIEWPORT_UPDATE:
+                    handleViewportUpdateMessage(message);
+                    break;
             }
         } catch (Exception e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
@@ -169,6 +172,17 @@ public class MessageHandler {
         if (!isHost) {
             ArrayList<TransformInfo> list = (ArrayList<TransformInfo>) message.extractObject();
             layoutViewModel.setTransformList(list);
+        }
+    }
+
+    // handle VIEWPORT_UPDATE message
+    private void handleViewportUpdateMessage(Message message) throws IOException, ClassNotFoundException {
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+
+        // Host should not react to Viewport Updates as he is the one that issues them upon change
+        if (!isHost) {
+            TransformInfo viewport = (TransformInfo) message.extractObject();
+            layoutViewModel.setViewport(viewport);
         }
     }
 

@@ -23,7 +23,8 @@ public class Message {
         STATE_CHANGE,
         REQUEST_TRANSFORM,
         TRANSFORM,
-        TRANSFORM_LIST_UPDATE
+        TRANSFORM_LIST_UPDATE,
+        VIEWPORT_UPDATE
     }
 
     private static final MessageType[] MESSAGE_TYPES = MessageType.values();
@@ -92,6 +93,10 @@ public class Message {
 
     public static Message newTransformListUpdateMessage(ArrayList<TransformInfo> transformList) throws IOException {
         return createMessageFromSerializable(MessageType.TRANSFORM_LIST_UPDATE, transformList);
+    }
+
+    public static Message newViewportUpdateMessage(TransformInfo transformInfo) throws IOException {
+        return createMessageFromSerializable(MessageType.VIEWPORT_UPDATE, transformInfo);
     }
 
     private static Message createMessageFromSerializable(MessageType type, Serializable serializable) throws IOException {

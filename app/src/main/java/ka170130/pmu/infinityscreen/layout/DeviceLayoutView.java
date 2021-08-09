@@ -41,14 +41,22 @@ public class DeviceLayoutView extends View {
             deviceLayoutView.registerDevice(device);
         }
 
+        position = new DeviceRepresentation.Position(posX[0], posY[0] + 35);
+        device = new DeviceRepresentation(-1, 210, 118, position);
+        deviceLayoutView.setViewport(device);
+
         deviceLayoutView.setSelf(3);
     }
 
     private static final float MINIMUM_AREA_WIDTH = 10;
     private static final float MINIMUM_AREA_HEIGHT = 10;
     private static final float BUFFER_FACTOR = 0.1f;
+
     private static final float STROKE_WIDTH = 0.2f;
     private static final float TEXT_SIZE = 2.5f;
+
+    private static final int VIEWPORT_BORDER_ALPHA = 128;
+    private static final int VIEWPORT_BACKGROUND_ALPHA = 32;
 
     private Paint paintPrimary;
     private Paint paintPrimaryText;
@@ -56,8 +64,11 @@ public class DeviceLayoutView extends View {
     private Paint paintAccentText;
     private Paint paintHighlight;
     private Paint paintBackground;
+    private Paint paintViewportBorders;
+    private Paint paintViewportBackground;
 
     private List<DeviceRepresentation> devices;
+    private DeviceRepresentation viewport;
     private int self;
 
     private float areaWidth;
@@ -113,6 +124,17 @@ public class DeviceLayoutView extends View {
         paintBackground.setColor(color);
         paintBackground.setStyle(Paint.Style.FILL);
 
+        paintViewportBorders = new Paint();
+        color = AppBarAndStatusHelper.resolveRefColor(theme, R.attr.colorNegativePrimary);
+        paintViewportBorders.setColor(color);
+        paintViewportBorders.setAlpha(VIEWPORT_BORDER_ALPHA);
+        paintViewportBorders.setStyle(Paint.Style.STROKE);
+
+        paintViewportBackground = new Paint();
+        paintViewportBackground.setColor(color);
+        paintViewportBackground.setAlpha(VIEWPORT_BACKGROUND_ALPHA);
+        paintViewportBackground.setStyle(Paint.Style.FILL);
+
         // TODO: implement OnGestureListener methods
         // Setup Gesture Detector
         detector = new GestureDetector(context, new GestureDetector.OnGestureListener() {
@@ -148,6 +170,8 @@ public class DeviceLayoutView extends View {
                 return false;
             }
         });
+
+//        setupDummyDevices(this);
     }
 
     public void registerDevice(DeviceRepresentation device) {
@@ -156,6 +180,10 @@ public class DeviceLayoutView extends View {
 
     public void clearDevices() {
         devices = new ArrayList<>();
+    }
+
+    public void setViewport(DeviceRepresentation viewport) {
+        this.viewport = viewport;
     }
 
     public void setSelf(int num) {
@@ -172,8 +200,9 @@ public class DeviceLayoutView extends View {
 
         recalculateArea();
         recalculateFactor();
-        recalculateDevices();
         adjustPaint();
+        recalculateDevices();
+        recalculateViewport();
 
         DeviceRepresentation ownDevice = null;
         for (DeviceRepresentation device : devices) {
@@ -194,6 +223,9 @@ public class DeviceLayoutView extends View {
         if (ownDevice != null) {
             drawDevice(canvas, ownDevice);
         }
+
+        // Paint viewport
+        drawViewport(canvas);
     }
 
     @Override
@@ -233,6 +265,31 @@ public class DeviceLayoutView extends View {
                 textY,
                 paintText
         );
+    }
+
+    private void drawViewport(Canvas canvas) {
+        if (viewport == null) {
+            return;
+        }
+
+        // Paint selection
+        Paint paintBorders = paintViewportBorders;
+        Paint paintFill = paintViewportBackground;
+
+        // Calculate Edges
+        float fix = paintBorders.getStrokeWidth();
+        float left = viewport.getRepPosition().x + buffer + autoMarginLeft + fix;
+        float top = viewport.getRepPosition().y + buffer + autoMarginTop + fix;
+        float right = left + viewport.getRepWidth() - fix;
+        float bottom = top + viewport.getRepHeight() - fix;
+
+        RectF rect = new RectF(left, top, right, bottom);
+
+        // Fill Rectangle
+        canvas.drawRect(rect, paintFill);
+
+        // Draw Rectangle Borders
+        canvas.drawRect(rect, paintBorders);
     }
 
     private void recalculateArea() {
@@ -325,11 +382,45 @@ public class DeviceLayoutView extends View {
         autoMarginTop = Math.max((viewHeight - yMax - 2 * buffer) / 2, 0);
     }
 
-    private void adjustPaint() {
-        paintPrimary.setStrokeWidth(STROKE_WIDTH * realToViewFactor);
-        paintAccent.setStrokeWidth(STROKE_WIDTH * realToViewFactor);
+    private void recalculateViewport() {
+        if (viewport == null) {
+            return;
+        }
 
-        paintPrimaryText.setTextSize(TEXT_SIZE * realToViewFactor);
-        paintAccentText.setTextSize(TEXT_SIZE * realToViewFactor);
+        viewport.setRepWidth(viewport.getWidth() * realToViewFactor);
+        viewport.setRepHeight(viewport.getHeight() * realToViewFactor);
+
+        DeviceRepresentation.Position actual = viewport.getPosition();
+        DeviceRepresentation.Position position = new DeviceRepresentation.Position();
+        position.x = (actual.x - areaOrigin.x) * realToViewFactor;
+        position.y = (actual.y - areaOrigin.y) * realToViewFactor;
+        viewport.setRepPosition(position);
+
+        Log.d(MainActivity.LOG_TAG, "Viewport Representation:");
+        Log.d(
+                MainActivity.LOG_TAG,
+                viewport.getNumberId()
+                        + " w: " + viewport.getWidth()
+                        + " h: " + viewport.getHeight()
+                        + " pos: (" + viewport.getPosition().x
+                        + ", " + viewport.getPosition().y
+                        + ") rw: " + viewport.getRepWidth()
+                        + " rh: " + viewport.getRepHeight()
+                        + " rpos: (" + viewport.getRepPosition().x
+                        + ", " + viewport.getRepPosition().y
+                        + ")"
+        );
+    }
+
+    private void adjustPaint() {
+        float strokeWidth = STROKE_WIDTH * realToViewFactor;
+        float textSize = TEXT_SIZE * realToViewFactor;
+
+        paintPrimary.setStrokeWidth(strokeWidth);
+        paintAccent.setStrokeWidth(strokeWidth);
+        paintViewportBorders.setStrokeWidth(strokeWidth);
+
+        paintPrimaryText.setTextSize(textSize);
+        paintAccentText.setTextSize(textSize);
     }
 }
