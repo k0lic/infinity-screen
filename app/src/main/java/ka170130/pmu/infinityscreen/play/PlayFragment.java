@@ -44,6 +44,10 @@ public class PlayFragment extends FullScreenFragment {
         binding = FragmentPlayBinding.inflate(inflater, container, false);
 
         // TODO
+        binding.nextButton.setOnClickListener(view -> {
+            StateChangeHelper.requestStateChange(
+                    mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
+        });
 
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {

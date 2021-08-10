@@ -20,7 +20,7 @@ import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 
-public class ConnectionViewModel extends ViewModel {
+public class ConnectionViewModel extends ViewModel implements Resettable {
 
     private static final String SELF_DEVICE_KEY = "connection-self-device-key";
     private static final String HOST_DEVICE_KEY = "connection-host-device-key";
@@ -136,6 +136,7 @@ public class ConnectionViewModel extends ViewModel {
         availableList.setValue(devices);
     }
 
+    @Override
     public void reset() {
         setHostDevice(null);
         setIsHost(false);

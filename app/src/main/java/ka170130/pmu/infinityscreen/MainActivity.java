@@ -2,6 +2,7 @@ package ka170130.pmu.infinityscreen;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Context;
@@ -12,8 +13,14 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.helpers.FileSelectionHelper;
+import ka170130.pmu.infinityscreen.media.MediaManager;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.connection.WifiDirectReceiver;
 import ka170130.pmu.infinityscreen.databinding.ActivityMainBinding;
@@ -21,6 +28,8 @@ import ka170130.pmu.infinityscreen.dialogs.FinishDialog;
 import ka170130.pmu.infinityscreen.dialogs.SettingsPanelDialog;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.Resettable;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,13 +38,13 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
-    private ConnectionViewModel connectionViewModel;
-    private LayoutViewModel layoutViewModel;
     private StateViewModel stateViewModel;
+    private List<Resettable> resettables;
 
     private ConnectionManager connectionManager;
     private WifiDirectReceiver receiver;
     private TaskManager taskManager;
+    private MediaManager mediaManager;
 
     public WifiDirectReceiver getReceiver() {
         return receiver;
@@ -49,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
         return taskManager;
     }
 
+    public MediaManager getMediaManager() {
+        return mediaManager;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,12 +69,17 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        connectionViewModel = new ViewModelProvider(this).get(ConnectionViewModel.class);
-        layoutViewModel = new ViewModelProvider(this).get(LayoutViewModel.class);
-        stateViewModel = new ViewModelProvider(this).get(StateViewModel.class);
+        // Initialize all the Resettable View Models
+        resettables = new ArrayList<>();
+        resettables.add(new ViewModelProvider(this).get(ConnectionViewModel.class));
+        resettables.add(new ViewModelProvider(this).get(LayoutViewModel.class));
+        resettables.add(
+                stateViewModel = new ViewModelProvider(this).get(StateViewModel.class));
+        resettables.add(new ViewModelProvider(this).get(MediaViewModel.class));
 
         // Initialize Helpers
         PermissionsHelper.init(this);
+        FileSelectionHelper.init(this);
 
         // Setup Connection Manager
         connectionManager = new ConnectionManager(this);
@@ -90,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
         WifiDirectReceiver.initializeIntentFilter();
         receiver = new WifiDirectReceiver(this);
 
+        // Setup Media Manager
+        mediaManager = new MediaManager(this);
+
         // Discover Peers - Become Discoverable
         connectionManager.discoverPeers();
 
@@ -101,9 +122,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void reset() {
-        connectionViewModel.reset();
-        layoutViewModel.reset();
-        stateViewModel.reset();
+        Iterator<Resettable> iterator = resettables.iterator();
+        while (iterator.hasNext()) {
+            Resettable next = iterator.next();
+            next.reset();
+        }
     }
 
     @Override

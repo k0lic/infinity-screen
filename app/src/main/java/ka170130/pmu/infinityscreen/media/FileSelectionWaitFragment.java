@@ -16,8 +16,10 @@ import android.view.ViewGroup;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
+import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.databinding.FragmentFileSelectionBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentFileSelectionWaitBinding;
+import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
@@ -45,6 +47,23 @@ public class FileSelectionWaitFragment extends ConnectionAwareFragment {
 
         // Setup Status Cards
         setupStatusCards(binding.appBarAndStatus);
+
+        // Inflate Top App Bar Menu
+        AppBarAndStatusHelper.inflateMenu(binding.appBarAndStatus, R.menu.app_bar_menu, item -> {
+            if (item.getItemId() == R.id.option_disconnect) {
+                Boolean isHost = connectionViewModel.getIsHost().getValue();
+                if (isHost) {
+                    // disconnect all
+                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
+                } else {
+                    // disconnect self
+                    mainActivity.getConnectionManager().disconnect();
+                }
+                return true;
+            }
+
+            return false;
+        });
 
         // TODO
 

@@ -12,7 +12,7 @@ import java.util.Iterator;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 
-public class LayoutViewModel extends ViewModel {
+public class LayoutViewModel extends ViewModel implements Resettable {
 
     private static final String SELF_KEY = "layout-self-key";
     private static final String TRANSFORM_LIST_KEY = "layout-transform-list-key";
@@ -69,6 +69,7 @@ public class LayoutViewModel extends ViewModel {
         selfAuto.setValue(self);
     }
 
+    @Override
     public void reset() {
         setTransformList(new ArrayList<>());
         setViewport(null);

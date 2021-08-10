@@ -9,7 +9,7 @@ import java.util.Date;
 
 import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 
-public class StateViewModel extends ViewModel {
+public class StateViewModel extends ViewModel implements Resettable {
 
     private static final String STATE_KEY = "state-state-key";
     private static final String LAST_UPDATE_KEY = "state-last-update-key";
@@ -40,6 +40,7 @@ public class StateViewModel extends ViewModel {
         }
     }
 
+    @Override
     public void reset() {
         setState(null);
     }
