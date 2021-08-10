@@ -21,8 +21,8 @@ import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 public class LayoutManager {
 
     private static final double INCH_TO_CM = 2.54;
-    private static final int PIXEL_COUNT_WIDTH_INDEX = 0;
-    private static final int PIXEL_COUNT_HEIGHT_INDEX = 1;
+    public static final int PIXEL_COUNT_WIDTH_INDEX = 0;
+    public static final int PIXEL_COUNT_HEIGHT_INDEX = 1;
 
     private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
@@ -128,7 +128,7 @@ public class LayoutManager {
                 "viewport", -1, viewportWidth, viewportHeight);
     }
 
-    private Integer[] getPixelCount() {
+    public Integer[] getPixelCount() {
         Integer[] pixelCount = {0, 0};
 
         WindowManager windowManager = mainActivity.getWindowManager();
