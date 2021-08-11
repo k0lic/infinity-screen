@@ -10,12 +10,14 @@ import java.util.ArrayList;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class MessageHandler {
@@ -25,6 +27,7 @@ public class MessageHandler {
     private ConnectionViewModel connectionViewModel;
     private StateViewModel stateViewModel;
     private LayoutViewModel layoutViewModel;
+    private MediaViewModel mediaViewModel;
 
     public MessageHandler(
             TaskManager taskManager,
@@ -39,6 +42,8 @@ public class MessageHandler {
                 new ViewModelProvider(mainActivity).get(StateViewModel.class);
         this.layoutViewModel =
                 new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
+        this.mediaViewModel =
+                new ViewModelProvider(mainActivity).get(MediaViewModel.class);
     }
 
     public void handleMessage(Message message, InetAddress inetAddress) {
@@ -80,6 +85,15 @@ public class MessageHandler {
                     break;
                 case VIEWPORT_UPDATE:
                     handleViewportUpdateMessage(message);
+                    break;
+                case FILE_INFO_LIST_UPDATE:
+                    handleFileInfoListUpdateMessage(message);
+                    break;
+                case FILE_INDEX_UPDATE:
+                    handleFileIndexUpdateMessage(message);
+                    break;
+                case FILE_INDEX_UPDATE_REQUEST:
+                    handleFileIndexUpdateRequestMessage(message);
                     break;
             }
         } catch (Exception e) {
@@ -184,6 +198,30 @@ public class MessageHandler {
             TransformInfo viewport = (TransformInfo) message.extractObject();
             layoutViewModel.setViewport(viewport);
         }
+    }
+
+    // handle FILE_INFO_LIST_UPDATE message
+    private void handleFileInfoListUpdateMessage(Message message) throws IOException, ClassNotFoundException {
+        ArrayList<FileInfo> fileInfos = (ArrayList<FileInfo>) message.extractObject();
+        mediaViewModel.setFileInfoList(fileInfos);
+    }
+
+    // handle FILE_INDEX_UPDATE message
+    private void handleFileIndexUpdateMessage(Message message) throws IOException, ClassNotFoundException {
+        Integer index = (Integer) message.extractObject();
+        mediaViewModel.setCurrentFileIndex(index);
+    }
+
+    // handle FILE_INDEX_UPDATE_REQUEST message
+    private void handleFileIndexUpdateRequestMessage(Message message) throws IOException, ClassNotFoundException {
+        Integer index = (Integer) message.extractObject();
+
+        ArrayList<FileInfo> fileInfos = mediaViewModel.getFileInfoList().getValue();
+        if (index < 0 || index >= fileInfos.size()) {
+            return;
+        }
+
+        taskManager.runBroadcastTask(Message.newFileIndexUpdateMessage(index));
     }
 
     private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {

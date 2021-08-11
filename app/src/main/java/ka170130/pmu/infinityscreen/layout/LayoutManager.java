@@ -1,6 +1,8 @@
 package ka170130.pmu.infinityscreen.layout;
 
+import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -33,6 +35,36 @@ public class LayoutManager {
 
         connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
+    }
+
+    public Matrix getMatrix(
+            TransformInfo self,
+            TransformInfo viewport,
+            int drawableWidth,
+            int drawableHeight
+    ) {
+        Integer[] pixelCount = getPixelCount();
+
+        Matrix matrix = new Matrix();
+        float widthRatio =
+                pixelCount[LayoutManager.PIXEL_COUNT_WIDTH_INDEX] / (float) drawableWidth;
+        widthRatio *= viewport.getScreenWidth() / self.getScreenWidth();
+        float heightRatio =
+                pixelCount[LayoutManager.PIXEL_COUNT_HEIGHT_INDEX] / (float) drawableHeight;
+        heightRatio *= viewport.getScreenHeight() / self.getScreenHeight();
+        float ratio = Math.min(widthRatio, heightRatio);
+        matrix.postScale(ratio, ratio);
+
+        float horizontal = -drawableWidth * widthRatio;
+        horizontal *=
+                (self.getPosition().x - viewport.getPosition().x) / viewport.getScreenWidth();
+        float vertical = -drawableHeight * heightRatio;
+        vertical *=
+                (self.getPosition().y - viewport.getPosition().y) / viewport.getScreenHeight();
+        matrix.postTranslate(horizontal, vertical);
+
+        Log.d(MainActivity.LOG_TAG, "Matrix: wr: " + widthRatio + " hr: " + heightRatio + " dx: " + horizontal + " dy: " + vertical);
+        return matrix;
     }
 
     public void reportSelfTransform(TransformInfo selfTransform) {

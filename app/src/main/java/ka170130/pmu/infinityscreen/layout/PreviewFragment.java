@@ -56,7 +56,7 @@ public class PreviewFragment extends FullScreenFragment {
         stateViewModel = new ViewModelProvider(mainActivity).get(StateViewModel.class);
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
 
-        layoutManager = new LayoutManager(mainActivity);
+        layoutManager = mainActivity.getLayoutManager();
     }
 
     @Override
@@ -75,31 +75,11 @@ public class PreviewFragment extends FullScreenFragment {
             TransformInfo self = layoutViewModel.getSelfAuto().getValue();
             TransformInfo viewport = layoutViewModel.getViewport().getValue();
 
-            Integer[] pixelCount = layoutManager.getPixelCount();
-
             int drawableWidth = drawable.getIntrinsicWidth();
             int drawableHeight = drawable.getIntrinsicHeight();
 
-            Matrix matrix = new Matrix();
-            float widthRatio =
-                    pixelCount[LayoutManager.PIXEL_COUNT_WIDTH_INDEX] / (float) drawableWidth;
-            widthRatio *= viewport.getScreenWidth() / self.getScreenWidth();
-            float heightRatio =
-                    pixelCount[LayoutManager.PIXEL_COUNT_HEIGHT_INDEX] / (float) drawableHeight;
-            heightRatio *= viewport.getScreenHeight() / self.getScreenHeight();
-            float ratio = Math.min(widthRatio, heightRatio);
-            matrix.postScale(ratio, ratio);
-
-            float horizontal = -drawableWidth * widthRatio;
-            horizontal *=
-                    (self.getPosition().x - viewport.getPosition().x) / viewport.getScreenWidth();
-            float vertical = -drawableHeight * heightRatio;
-            vertical *=
-                    (self.getPosition().y - viewport.getPosition().y) / viewport.getScreenHeight();
-            matrix.postTranslate(horizontal, vertical);
-
+            Matrix matrix = layoutManager.getMatrix(self, viewport, drawableWidth, drawableHeight);
             binding.imageView.setImageMatrix(matrix);
-            Log.d(MainActivity.LOG_TAG, "Matrix: wr: " + widthRatio + " hr: " + heightRatio + " dx: " + horizontal + " dy: " + vertical);
         } catch (Exception e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();

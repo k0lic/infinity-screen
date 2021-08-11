@@ -16,9 +16,11 @@ import android.util.Size;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.helpers.Callback;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
@@ -28,6 +30,38 @@ public class MediaManager {
 
     public MediaManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
+    }
+
+    public FileInfo fileInfoFromUri(Uri uri) {
+        String mimeType = getMimeType(uri);
+        FileInfo.FileType fileType = null;
+        if (isImage(mimeType)) {
+            fileType = FileInfo.FileType.IMAGE;
+        } else if (isVideo(mimeType)) {
+            fileType = FileInfo.FileType.VIDEO;
+        } else {
+            return null;
+        }
+
+        int imageWidth = 0;
+        int imageHeight = 0;
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(
+                    mainActivity.getContentResolver().openInputStream(uri),
+                    null,
+                    options
+            );
+            imageWidth = options.outWidth;
+            imageHeight = options.outHeight;
+        } catch (FileNotFoundException exception) {
+            Log.d(MainActivity.LOG_TAG, exception.toString());
+            exception.printStackTrace();
+            return null;
+        }
+
+        return new FileInfo(fileType, imageWidth, imageHeight);
     }
 
     public void getVideoThumbnail(Uri uri, Size size, Callback<Bitmap> callback) {

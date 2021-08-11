@@ -24,7 +24,10 @@ public class Message {
         REQUEST_TRANSFORM,
         TRANSFORM,
         TRANSFORM_LIST_UPDATE,
-        VIEWPORT_UPDATE
+        VIEWPORT_UPDATE,
+        FILE_INFO_LIST_UPDATE,
+        FILE_INDEX_UPDATE,
+        FILE_INDEX_UPDATE_REQUEST
     }
 
     private static final MessageType[] MESSAGE_TYPES = MessageType.values();
@@ -97,6 +100,18 @@ public class Message {
 
     public static Message newViewportUpdateMessage(TransformInfo transformInfo) throws IOException {
         return createMessageFromSerializable(MessageType.VIEWPORT_UPDATE, transformInfo);
+    }
+
+    public static Message newFileInfoListUpdateMessage(ArrayList<FileInfo> fileInfos) throws IOException {
+        return createMessageFromSerializable(MessageType.FILE_INFO_LIST_UPDATE, fileInfos);
+    }
+
+    public static Message newFileIndexUpdateMessage(Integer index) throws IOException {
+        return createMessageFromSerializable(MessageType.FILE_INDEX_UPDATE, index);
+    }
+
+    public static Message newFileIndexUpdateRequestMessage(Integer index) throws IOException {
+        return createMessageFromSerializable(MessageType.FILE_INDEX_UPDATE_REQUEST, index);
     }
 
     private static Message createMessageFromSerializable(MessageType type, Serializable serializable) throws IOException {

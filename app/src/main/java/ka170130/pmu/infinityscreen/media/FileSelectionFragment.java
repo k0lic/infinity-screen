@@ -1,5 +1,7 @@
 package ka170130.pmu.infinityscreen.media;
 
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -11,16 +13,21 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 import ka170130.pmu.infinityscreen.connection.DeviceConnectedAdapter;
+import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.databinding.FragmentFileSelectionBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
@@ -125,6 +132,27 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
 
         // Play Selected Files
         binding.playButton.setOnClickListener(view -> {
+            ArrayList<FileInfo> fileInfos = new ArrayList<>();
+
+            Iterator<String> iterator = mediaViewModel.getSelectedMedia().getValue().iterator();
+            while (iterator.hasNext()) {
+                String next = iterator.next();
+                Uri uri = Uri.parse(next);
+
+                FileInfo fileInfo = mainActivity.getMediaManager().fileInfoFromUri(uri);
+                fileInfos.add(fileInfo);
+            }
+
+            try {
+                mainActivity.getTaskManager()
+                        .runBroadcastTask(Message.newFileIndexUpdateMessage(0));
+                mainActivity.getTaskManager()
+                        .runBroadcastTask(Message.newFileInfoListUpdateMessage(fileInfos));
+            } catch (IOException e) {
+                Log.d(MainActivity.LOG_TAG, e.toString());
+                e.printStackTrace();
+            }
+
             StateChangeHelper.requestStateChange(
                     mainActivity, connectionViewModel, StateViewModel.AppState.PLAY);
 //            navController.navigate(FileSelectionFragmentDirections.actionPlayFragment());

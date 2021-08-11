@@ -20,6 +20,7 @@ import java.util.List;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
 import ka170130.pmu.infinityscreen.helpers.FileSelectionHelper;
+import ka170130.pmu.infinityscreen.layout.LayoutManager;
 import ka170130.pmu.infinityscreen.media.MediaManager;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.connection.WifiDirectReceiver;
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     private ConnectionManager connectionManager;
     private WifiDirectReceiver receiver;
     private TaskManager taskManager;
+    private LayoutManager layoutManager;
     private MediaManager mediaManager;
 
     public WifiDirectReceiver getReceiver() {
@@ -56,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
 
     public TaskManager getTaskManager() {
         return taskManager;
+    }
+
+    public LayoutManager getLayoutManager() {
+        return layoutManager;
     }
 
     public MediaManager getMediaManager() {
@@ -108,7 +114,8 @@ public class MainActivity extends AppCompatActivity {
         WifiDirectReceiver.initializeIntentFilter();
         receiver = new WifiDirectReceiver(this);
 
-        // Setup Media Manager
+        // Setup Managers
+        layoutManager = new LayoutManager(this);
         mediaManager = new MediaManager(this);
 
         // Discover Peers - Become Discoverable
