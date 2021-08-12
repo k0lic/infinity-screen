@@ -1,19 +1,26 @@
 package ka170130.pmu.infinityscreen.communication;
 
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.lifecycle.ViewModelProvider;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.containers.FileContentPackage;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
+import ka170130.pmu.infinityscreen.containers.FileOnDeviceReady;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
+import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
@@ -94,6 +101,15 @@ public class MessageHandler {
                     break;
                 case FILE_INDEX_UPDATE_REQUEST:
                     handleFileIndexUpdateRequestMessage(message);
+                    break;
+                case CONTENT:
+                    handleContentMessage(message);
+                    break;
+                case FILE_READY:
+                    handleFileReadyMessage(message);
+                    break;
+                case PLAYBACK_STATUS_COMMAND:
+                    handlePlaybackStatusCommandMessage(message);
                     break;
             }
         } catch (Exception e) {
@@ -204,6 +220,25 @@ public class MessageHandler {
     private void handleFileInfoListUpdateMessage(Message message) throws IOException, ClassNotFoundException {
         ArrayList<FileInfo> fileInfos = (ArrayList<FileInfo>) message.extractObject();
         mediaViewModel.setFileInfoList(fileInfos);
+
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+        int numberOfFiles = fileInfos.size();
+
+        if (isHost) {
+            int numberOfDevices = connectionViewModel.getGroupList().getValue().size() + 1;
+            mediaViewModel.setReadyMatrix(new boolean[numberOfFiles][numberOfDevices]);
+
+            int deviceIndex = layoutViewModel.getSelfAuto().getValue().getNumberId() - 1;
+            for (int i = 0; i < numberOfFiles; i++) {
+                mediaViewModel.setReadyMatrixElement(i, deviceIndex, true);
+            }
+        } else {
+            ArrayList<File> listOfNulls = new ArrayList<>();
+            for (int i = 0; i < numberOfFiles; i++) {
+                listOfNulls.add(null);
+            }
+            mediaViewModel.setCreatedFiles(listOfNulls);
+        }
     }
 
     // handle FILE_INDEX_UPDATE message
@@ -216,12 +251,104 @@ public class MessageHandler {
     private void handleFileIndexUpdateRequestMessage(Message message) throws IOException, ClassNotFoundException {
         Integer index = (Integer) message.extractObject();
 
-        ArrayList<FileInfo> fileInfos = mediaViewModel.getFileInfoList().getValue();
-        if (index < 0 || index >= fileInfos.size()) {
+        if (mediaViewModel.isFileInfoListIndexOutOfBounds(index)) {
+            // ignore
             return;
         }
 
         taskManager.runBroadcastTask(Message.newFileIndexUpdateMessage(index));
+    }
+
+    // handle CONTENT message
+    private void handleContentMessage(Message message) throws IOException, ClassNotFoundException {
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+        if (isHost) {
+            // ignore
+            return;
+        }
+
+        FileContentPackage contentPackage = (FileContentPackage) message.extractObject();
+        int fileIndex = contentPackage.getFileIndex();
+
+        // handle empty content
+        ArrayList<File> createdFiles = mediaViewModel.getCreatedFiles();
+        if (contentPackage.getContent() == null) {
+            if (contentPackage.isLastPackage()) {
+                // Remember file as uri
+                File file = createdFiles.get(fileIndex);
+                Uri uri = Uri.fromFile(file);
+                mediaViewModel.setFileInfoListElementContent(fileIndex, uri.toString());
+
+                // send message to host to let him know file is ready on this device
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
+                int deviceIndex = layoutViewModel.getSelfAuto().getValue().getNumberId() - 1;
+
+                FileOnDeviceReady fileOnDeviceReady =
+                        new FileOnDeviceReady(deviceIndex, fileIndex);
+                taskManager.runSenderTask(
+                        hostAddress, Message.newFileReadyMessage(fileOnDeviceReady));
+            } else {
+                Log.d(MainActivity.LOG_TAG, "Received non-final CONTENT message without content");
+            }
+
+            return;
+        }
+
+        // handle non-empty content
+        File file = createdFiles.get(fileIndex);
+        FileInfo fileInfo = mediaViewModel.getFileInfoList().getValue().get(fileIndex);
+
+        // if file was not already created - create new file
+        if (file == null) {
+            String fileName =
+                    "infinity-screen-"
+                            + System.currentTimeMillis()
+                            + "." + fileInfo.getExtension();
+            file = new File(
+                    taskManager.getMainActivity().getApplicationContext()
+                            .getExternalFilesDir("InfinityScreen"),
+                    fileName
+            );
+
+            // if directory was not already created - create directory
+            File dirs = new File(file.getParent());
+            if (!dirs.exists()) {
+                dirs.mkdirs();
+            }
+
+            file.createNewFile();
+
+            // remember file
+            createdFiles.set(fileIndex, file);
+            mediaViewModel.setCreatedFiles(createdFiles);
+        }
+
+        // Append content to file
+        OutputStream outputStream = new FileOutputStream(file, true);
+        outputStream.write(contentPackage.getContent());
+        outputStream.close();
+    }
+
+    // handle FILE_READY message
+    private void handleFileReadyMessage(Message message) throws IOException, ClassNotFoundException {
+        FileOnDeviceReady fileOnDeviceReady = (FileOnDeviceReady) message.extractObject();
+
+        boolean readyOnAll = mediaViewModel.readyMatrixUpdate(fileOnDeviceReady);
+        if (readyOnAll) {
+            PlaybackStatusCommand command = new PlaybackStatusCommand(
+                    fileOnDeviceReady.getFileIndex(),
+                    FileInfo.PlaybackStatus.PLAY
+            );
+            taskManager.runBroadcastTask(Message.newPlaybackStatusCommandMessage(command));
+        }
+    }
+
+    // handle PLAYBACK_STATUS_COMMAND message
+    private void handlePlaybackStatusCommandMessage(Message message) throws IOException, ClassNotFoundException {
+        PlaybackStatusCommand command = (PlaybackStatusCommand) message.extractObject();
+
+        mediaViewModel.setFileInfoListElementPlaybackStatus(command.getFileIndex(), command.getPlaybackStatus());
     }
 
     private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {

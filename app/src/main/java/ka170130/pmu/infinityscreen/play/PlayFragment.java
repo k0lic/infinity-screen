@@ -75,17 +75,28 @@ public class PlayFragment extends FullScreenFragment {
                 binding.textureView.setVisibility(View.INVISIBLE);
                 binding.imageView.setVisibility(View.VISIBLE);
 
-                Boolean isHost = connectionViewModel.getIsHost().getValue();
-
-                if (!isHost) {
-                    return;
-                }
+//                Boolean isHost = connectionViewModel.getIsHost().getValue();
+//                if (!isHost) {
+//                    return;
+//                }
 
                 // set content
-                ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
-                Integer index = mediaViewModel.getCurrentFileIndex().getValue();
-                Uri uri = Uri.parse(selectedUris.get(index));
-                binding.imageView.setImageURI(uri);
+                Log.d(MainActivity.LOG_TAG, "Active FileInfo: " + fileInfo.getFileType().toString() + " " + fileInfo.getWidth() + " " + fileInfo.getHeight() + " " + fileInfo.getExtension() + " " + fileInfo.getPlaybackStatus() + " " + fileInfo.getContentUri());
+                if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
+//                    Uri uri = Uri.parse(fileInfo.getContentUri());
+//                    binding.imageView.setImageURI(uri);
+                    Boolean isHost = connectionViewModel.getIsHost().getValue();
+                    Uri uri = null;
+
+                    if (isHost) {
+                        ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
+                        Integer index = mediaViewModel.getCurrentFileIndex().getValue();
+                        uri = Uri.parse(selectedUris.get(index));
+                    } else {
+                        uri = Uri.parse(fileInfo.getContentUri());
+                    }
+                    binding.imageView.setImageURI(uri);
+                }
 
                 // set matrix
                 TransformInfo self = layoutViewModel.getSelfAuto().getValue();
@@ -134,11 +145,12 @@ public class PlayFragment extends FullScreenFragment {
         index += delta;
 
         try {
+            if (mediaViewModel.isFileInfoListIndexOutOfBounds(index)) {
+                // ignore
+                return;
+            }
+
             if (isHost) {
-                ArrayList<FileInfo> fileInfos = mediaViewModel.getFileInfoList().getValue();
-                if (index < 0 || index >= fileInfos.size()) {
-                    return;
-                }
                 mainActivity.getTaskManager()
                         .runBroadcastTask(Message.newFileIndexUpdateMessage(index));
             } else {

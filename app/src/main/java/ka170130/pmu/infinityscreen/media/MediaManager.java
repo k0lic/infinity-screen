@@ -5,6 +5,7 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
@@ -40,7 +41,7 @@ public class MediaManager {
         } else if (isVideo(mimeType)) {
             fileType = FileInfo.FileType.VIDEO;
         } else {
-            return null;
+            fileType =  null;
         }
 
         int imageWidth = 0;
@@ -61,7 +62,24 @@ public class MediaManager {
             return null;
         }
 
-        return new FileInfo(fileType, imageWidth, imageHeight);
+        String extension = getExtension(uri);
+        Log.d(MainActivity.LOG_TAG,
+                "FileInfo (from Uri): ["
+                        + "type: " + (fileType == null ? "<NULL>" : fileType.toString())
+                        + ", width: " + imageWidth
+                        + ", height: " + imageHeight
+                        + ", extension: " + extension
+                        + "]"
+        );
+
+        return new FileInfo(
+                fileType,
+                imageWidth,
+                imageHeight,
+                extension,
+                FileInfo.PlaybackStatus.WAIT,
+                null
+        );
     }
 
     public void getVideoThumbnail(Uri uri, Size size, Callback<Bitmap> callback) {
@@ -107,5 +125,9 @@ public class MediaManager {
                     fileExtension.toLowerCase());
         }
         return mimeType;
+    }
+
+    public String getExtension(Uri uri) {
+        return MimeTypeMap.getFileExtensionFromUrl(uri.toString());
     }
 }

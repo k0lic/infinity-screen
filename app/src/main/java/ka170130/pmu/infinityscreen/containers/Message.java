@@ -12,6 +12,9 @@ import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class Message {
 
+    public static final int MESSAGE_MAX_SIZE = 65_536;
+    public static final int JIC_BUFFER = 1000;
+
     public enum MessageType {
         TEST,
         HELLO,
@@ -27,7 +30,10 @@ public class Message {
         VIEWPORT_UPDATE,
         FILE_INFO_LIST_UPDATE,
         FILE_INDEX_UPDATE,
-        FILE_INDEX_UPDATE_REQUEST
+        FILE_INDEX_UPDATE_REQUEST,
+        CONTENT,
+        FILE_READY,
+        PLAYBACK_STATUS_COMMAND
     }
 
     private static final MessageType[] MESSAGE_TYPES = MessageType.values();
@@ -112,6 +118,18 @@ public class Message {
 
     public static Message newFileIndexUpdateRequestMessage(Integer index) throws IOException {
         return createMessageFromSerializable(MessageType.FILE_INDEX_UPDATE_REQUEST, index);
+    }
+
+    public static Message newContentMessage(FileContentPackage fileContentPackage) throws IOException {
+        return createMessageFromSerializable(MessageType.CONTENT, fileContentPackage);
+    }
+
+    public static Message newFileReadyMessage(FileOnDeviceReady fileOnDeviceReady) throws IOException {
+        return createMessageFromSerializable(MessageType.FILE_READY, fileOnDeviceReady);
+    }
+
+    public static Message newPlaybackStatusCommandMessage(PlaybackStatusCommand command) throws IOException {
+        return createMessageFromSerializable(MessageType.PLAYBACK_STATUS_COMMAND, command);
     }
 
     private static Message createMessageFromSerializable(MessageType type, Serializable serializable) throws IOException {

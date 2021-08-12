@@ -21,7 +21,7 @@ public class BroadcastServerTask implements Runnable {
         try (DatagramSocket socket = new DatagramSocket(TaskManager.BROADCAST_PORT)) {
             socket.setBroadcast(true);
 
-            byte[] buf = new byte[1024];
+            byte[] buf = new byte[Message.MESSAGE_MAX_SIZE];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
 
             while (true) {

@@ -153,6 +153,12 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
                 e.printStackTrace();
             }
 
+            boolean contentTaskCreated = mediaViewModel.isContentTaskCreated();
+            if (!contentTaskCreated) {
+                mainActivity.getTaskManager().runContentTask();
+                mediaViewModel.setContentTaskCreated(true);
+            }
+
             StateChangeHelper.requestStateChange(
                     mainActivity, connectionViewModel, StateViewModel.AppState.PLAY);
 //            navController.navigate(FileSelectionFragmentDirections.actionPlayFragment());

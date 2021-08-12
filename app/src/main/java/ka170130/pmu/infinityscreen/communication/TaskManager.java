@@ -66,4 +66,8 @@ public class TaskManager {
     public void runBroadcastTask(Message message) {
         executorService.submit(new BroadcastTask(message));
     }
+
+    public void runContentTask() {
+        executorService.submit(new ContentTask(this));
+    }
 }
