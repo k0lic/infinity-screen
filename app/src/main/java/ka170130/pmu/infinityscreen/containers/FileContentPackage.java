@@ -4,25 +4,33 @@ import java.io.Serializable;
 
 public class FileContentPackage implements Serializable {
 
-    private int fileIndex;
-    private byte[] content;
-    private boolean lastPackage;
+    public static final int INIT_PACKAGE_ID = 1;
 
-    public FileContentPackage(int fileIndex, byte[] content, boolean lastPackage) {
+    private int fileIndex;
+    private int packageId;
+    private boolean lastPackage;
+    private byte[] content;
+
+    public FileContentPackage(int fileIndex, int packageId, boolean lastPackage, byte[] content) {
         this.fileIndex = fileIndex;
-        this.content = content;
+        this.packageId = packageId;
         this.lastPackage = lastPackage;
+        this.content = content;
     }
 
     public int getFileIndex() {
         return fileIndex;
     }
 
-    public byte[] getContent() {
-        return content;
+    public int getPackageId() {
+        return packageId;
     }
 
     public boolean isLastPackage() {
         return lastPackage;
+    }
+
+    public byte[] getContent() {
+        return content;
     }
 }

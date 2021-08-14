@@ -23,6 +23,8 @@ public class FileInfo implements Serializable {
     private int height;
     private String extension;
 
+    private int nextPackage;
+
     private PlaybackStatus playbackStatus;
     private String contentUri;
 
@@ -38,6 +40,7 @@ public class FileInfo implements Serializable {
         this.width = width;
         this.height = height;
         this.extension = extension;
+        this.nextPackage = FileContentPackage.INIT_PACKAGE_ID;
         this.playbackStatus = playbackStatus;
         this.contentUri = contentUri;
     }
@@ -54,12 +57,20 @@ public class FileInfo implements Serializable {
         return height;
     }
 
-    public PlaybackStatus getPlaybackStatus() {
-        return playbackStatus;
-    }
-
     public String getExtension() {
         return extension;
+    }
+
+    public int getNextPackage() {
+        return nextPackage;
+    }
+
+    public void setNextPackage(int nextPackage) {
+        this.nextPackage = nextPackage;
+    }
+
+    public PlaybackStatus getPlaybackStatus() {
+        return playbackStatus;
     }
 
     public void setPlaybackStatus(PlaybackStatus playbackStatus) {

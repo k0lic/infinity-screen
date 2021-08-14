@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
@@ -26,6 +27,7 @@ import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.UdpViewModel;
 
 public class MessageHandler {
 
@@ -35,6 +37,7 @@ public class MessageHandler {
     private StateViewModel stateViewModel;
     private LayoutViewModel layoutViewModel;
     private MediaViewModel mediaViewModel;
+    private UdpViewModel udpViewModel;
 
     public MessageHandler(
             TaskManager taskManager,
@@ -51,6 +54,8 @@ public class MessageHandler {
                 new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
         this.mediaViewModel =
                 new ViewModelProvider(mainActivity).get(MediaViewModel.class);
+        this.udpViewModel =
+                new ViewModelProvider(mainActivity).get(UdpViewModel.class);
     }
 
     public void handleMessage(Message message, InetAddress inetAddress) {
@@ -104,6 +109,9 @@ public class MessageHandler {
                     break;
                 case CONTENT:
                     handleContentMessage(message);
+                    break;
+                case CONTENT_ACK:
+                    handleContentAckMessage(message);
                     break;
                 case FILE_READY:
                     handleFileReadyMessage(message);
@@ -269,8 +277,21 @@ public class MessageHandler {
 
         FileContentPackage contentPackage = (FileContentPackage) message.extractObject();
         int fileIndex = contentPackage.getFileIndex();
+        int packageId = contentPackage.getPackageId();
+
+        FileInfo fileInfo = mediaViewModel.getFileInfoList().getValue().get(fileIndex);
+        int nextPackage = fileInfo.getNextPackage();
+
+        // check if this is the expected package
+        if (nextPackage != packageId) {
+            // wrong package - dump
+            Log.d(MainActivity.LOG_TAG, "WRONG PACKAGE! Expected packageId " + nextPackage + " but instead received " + packageId);
+            return;
+        }
 
         // handle empty content
+        InetAddress hostAddress =
+                connectionViewModel.getHostDevice().getValue().getInetAddress();
         ArrayList<File> createdFiles = mediaViewModel.getCreatedFiles();
         if (contentPackage.getContent() == null) {
             if (contentPackage.isLastPackage()) {
@@ -280,14 +301,15 @@ public class MessageHandler {
                 mediaViewModel.setFileInfoListElementContent(fileIndex, uri.toString());
 
                 // send message to host to let him know file is ready on this device
-                InetAddress hostAddress =
-                        connectionViewModel.getHostDevice().getValue().getInetAddress();
                 int deviceIndex = layoutViewModel.getSelfAuto().getValue().getNumberId() - 1;
 
                 FileOnDeviceReady fileOnDeviceReady =
                         new FileOnDeviceReady(deviceIndex, fileIndex);
                 taskManager.runSenderTask(
                         hostAddress, Message.newFileReadyMessage(fileOnDeviceReady));
+
+                // success
+                contentMessageHandled(fileIndex, hostAddress, packageId);
             } else {
                 Log.d(MainActivity.LOG_TAG, "Received non-final CONTENT message without content");
             }
@@ -297,7 +319,6 @@ public class MessageHandler {
 
         // handle non-empty content
         File file = createdFiles.get(fileIndex);
-        FileInfo fileInfo = mediaViewModel.getFileInfoList().getValue().get(fileIndex);
 
         // if file was not already created - create new file
         if (file == null) {
@@ -328,6 +349,27 @@ public class MessageHandler {
         OutputStream outputStream = new FileOutputStream(file, true);
         outputStream.write(contentPackage.getContent());
         outputStream.close();
+
+        // success
+        contentMessageHandled(fileIndex, hostAddress, packageId);
+    }
+
+    private void contentMessageHandled(int fileIndex, InetAddress hostAddress, int packageId) throws IOException {
+        // increment nextPackage
+        mediaViewModel.incrementFileInfoListElementNextPackage(fileIndex);
+
+        // send delivery confirmation
+        taskManager.runSenderTask(hostAddress, Message.newContentAckMessage(packageId));
+    }
+
+    // handle CONTENT_ACK message
+    private void handleContentAckMessage(Message message) throws IOException, ClassNotFoundException {
+        Integer packageId = (Integer) message.extractObject();
+        Semaphore sem = udpViewModel.getSemaphore(packageId);
+        if (sem != null) {
+            sem.release();
+            Log.d(MainActivity.LOG_TAG, "Semaphore#" + packageId + " released");
+        }
     }
 
     // handle FILE_READY message

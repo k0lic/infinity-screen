@@ -1,8 +1,10 @@
 package ka170130.pmu.infinityscreen.play;
 
+import android.content.ContentResolver;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -17,7 +19,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import ka170130.pmu.infinityscreen.MainActivity;
@@ -72,42 +76,7 @@ public class PlayFragment extends FullScreenFragment {
             }
 
             if (fileInfo.getFileType() == FileInfo.FileType.IMAGE) {
-                binding.textureView.setVisibility(View.INVISIBLE);
-                binding.imageView.setVisibility(View.VISIBLE);
-
-//                Boolean isHost = connectionViewModel.getIsHost().getValue();
-//                if (!isHost) {
-//                    return;
-//                }
-
-                // set content
-                Log.d(MainActivity.LOG_TAG, "Active FileInfo: " + fileInfo.getFileType().toString() + " " + fileInfo.getWidth() + " " + fileInfo.getHeight() + " " + fileInfo.getExtension() + " " + fileInfo.getPlaybackStatus() + " " + fileInfo.getContentUri());
-                if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
-//                    Uri uri = Uri.parse(fileInfo.getContentUri());
-//                    binding.imageView.setImageURI(uri);
-                    Boolean isHost = connectionViewModel.getIsHost().getValue();
-                    Uri uri = null;
-
-                    if (isHost) {
-                        ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
-                        Integer index = mediaViewModel.getCurrentFileIndex().getValue();
-                        uri = Uri.parse(selectedUris.get(index));
-                    } else {
-                        uri = Uri.parse(fileInfo.getContentUri());
-                    }
-                    binding.imageView.setImageURI(uri);
-                }
-
-                // set matrix
-                TransformInfo self = layoutViewModel.getSelfAuto().getValue();
-                TransformInfo viewport = layoutViewModel.getViewport().getValue();
-
-                int drawableWidth = fileInfo.getWidth();
-                int drawableHeight = fileInfo.getHeight();
-
-                Matrix matrix = mainActivity.getLayoutManager()
-                        .getMatrix(self, viewport, drawableWidth, drawableHeight);
-                binding.imageView.setImageMatrix(matrix);
+               handleImage(fileInfo);
             }
 
             // TODO: handle FileType.VIDEO
@@ -122,6 +91,7 @@ public class PlayFragment extends FullScreenFragment {
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             if (state == StateViewModel.AppState.FILE_SELECTION) {
+                mediaViewModel.reset();
                 navController.navigate(PlayFragmentDirections.actionPlayFragmentPop());
             }
         });
@@ -160,6 +130,74 @@ public class PlayFragment extends FullScreenFragment {
         } catch (IOException e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
+        }
+    }
+
+    private void handleImage(FileInfo fileInfo) {
+        binding.textureView.setVisibility(View.INVISIBLE);
+        binding.imageView.setVisibility(View.VISIBLE);
+
+        Log.d(MainActivity.LOG_TAG,
+                "Active FileInfo: " + fileInfo.getFileType().toString()
+                        + " " + fileInfo.getWidth()
+                        + " " + fileInfo.getHeight()
+                        + " " + fileInfo.getExtension()
+                        + " " + fileInfo.getPlaybackStatus()
+                        + " " + fileInfo.getContentUri()
+        );
+        if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
+            binding.bufferingLayout.setVisibility(View.INVISIBLE);
+
+            Boolean isHost = connectionViewModel.getIsHost().getValue();
+            Uri uri = null;
+
+            // fetch image uri
+            if (isHost) {
+                ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
+                Integer index = mediaViewModel.getCurrentFileIndex().getValue();
+                uri = Uri.parse(selectedUris.get(index));
+            } else {
+                uri = Uri.parse(fileInfo.getContentUri());
+            }
+
+            ContentResolver contentResolver =
+                    mainActivity.getApplicationContext().getContentResolver();
+            int drawableWidth = fileInfo.getWidth();
+            int drawableHeight = fileInfo.getHeight();
+            // have to extract drawable to insure SDK < 24 devices are compatible
+            // ImageView.setImageUri() does not work properly on SDK < 24
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                try {
+                    InputStream inputStream = contentResolver.openInputStream(uri);
+
+                    Drawable drawable = Drawable.createFromStream(inputStream, null);
+
+                    drawableWidth = drawable.getIntrinsicWidth();
+                    drawableHeight = drawable.getIntrinsicHeight();
+
+                    binding.imageView.setImageDrawable(drawable);
+
+                    Log.d(MainActivity.LOG_TAG, "TESTING: w: " + drawableWidth + " h: " + drawableHeight);
+                    inputStream.close();
+                } catch (IOException e) {
+                    Log.d(MainActivity.LOG_TAG, e.toString());
+                    e.printStackTrace();
+                }
+            } else {
+                binding.imageView.setImageURI(uri);
+            }
+
+            // set matrix
+            TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+            TransformInfo viewport = layoutViewModel.getViewport().getValue();
+
+            Matrix matrix = mainActivity.getLayoutManager()
+                    .getMatrix(self, viewport, drawableWidth, drawableHeight);
+            binding.imageView.setImageMatrix(matrix);
+        } else {
+            binding.bufferingLayout.setVisibility(View.VISIBLE);
+
+            binding.imageView.setImageDrawable(null);
         }
     }
 }

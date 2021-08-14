@@ -2,10 +2,12 @@ package ka170130.pmu.infinityscreen.layout;
 
 import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.Window;
 import android.view.WindowManager;
 
 import androidx.lifecycle.ViewModelProvider;
@@ -132,9 +134,14 @@ public class LayoutManager {
         DisplayMetrics dm = new DisplayMetrics();
         mainActivity.getWindowManager().getDefaultDisplay().getMetrics(dm);
         double screenWidth = pixelCount[PIXEL_COUNT_WIDTH_INDEX] / dm.xdpi * INCH_TO_CM;
+        pixelCount[PIXEL_COUNT_HEIGHT_INDEX] += statusBarHeight();
+        pixelCount[PIXEL_COUNT_HEIGHT_INDEX] += softKeyButtonsBarHeight();
         double screenHeight = pixelCount[PIXEL_COUNT_HEIGHT_INDEX] / dm.ydpi * INCH_TO_CM;
         Log.d(MainActivity.LOG_TAG,
                 "Screen dimensions : (" + screenWidth + ", " + screenHeight + ")");
+
+        statusBarHeight();
+        softKeyButtonsBarHeight();
 
         return new TransformInfo(
                 deviceAddress,
@@ -185,5 +192,31 @@ public class LayoutManager {
                         pixelCount[PIXEL_COUNT_HEIGHT_INDEX] + ")"
         );
         return pixelCount;
+    }
+
+    public int statusBarHeight() {
+        Rect rectangle = new Rect();
+        Window window = mainActivity.getWindow();
+        window.getDecorView().getWindowVisibleDisplayFrame(rectangle);
+        int statusBarHeight = rectangle.top;
+
+        Log.d(MainActivity.LOG_TAG, "StatusBar Height = " + statusBarHeight);
+        return statusBarHeight;
+    }
+
+    public int softKeyButtonsBarHeight() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        mainActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int usableHeight = metrics.heightPixels;
+        mainActivity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+        int realHeight = metrics.heightPixels;
+        if (realHeight > usableHeight) {
+            int softKeysHeight = realHeight - usableHeight;
+            Log.d(MainActivity.LOG_TAG, "Soft Keys Height: " + softKeysHeight);
+            return softKeysHeight;
+        } else {
+            Log.d(MainActivity.LOG_TAG, "No Soft Keys");
+        }
+        return 0;
     }
 }

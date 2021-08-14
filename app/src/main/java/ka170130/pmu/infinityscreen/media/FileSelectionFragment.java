@@ -155,7 +155,8 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
 
             boolean contentTaskCreated = mediaViewModel.isContentTaskCreated();
             if (!contentTaskCreated) {
-                mainActivity.getTaskManager().runContentTask();
+                int numberOfClients = connectionViewModel.getGroupList().getValue().size();
+                mainActivity.getTaskManager().runContentTask(numberOfClients);
                 mediaViewModel.setContentTaskCreated(true);
             }
 

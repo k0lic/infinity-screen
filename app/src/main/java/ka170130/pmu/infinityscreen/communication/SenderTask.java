@@ -40,6 +40,7 @@ public class SenderTask implements Runnable {
             outputStream = socket.getOutputStream();
 
             outputStream.write(message.getBytes());
+            Log.d(MainActivity.LOG_TAG, "Message sent: " + message.getMessageType().toString());
         } catch (Exception e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();

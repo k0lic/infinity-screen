@@ -32,6 +32,7 @@ public class Message {
         FILE_INDEX_UPDATE,
         FILE_INDEX_UPDATE_REQUEST,
         CONTENT,
+        CONTENT_ACK,
         FILE_READY,
         PLAYBACK_STATUS_COMMAND
     }
@@ -122,6 +123,10 @@ public class Message {
 
     public static Message newContentMessage(FileContentPackage fileContentPackage) throws IOException {
         return createMessageFromSerializable(MessageType.CONTENT, fileContentPackage);
+    }
+
+    public static Message newContentAckMessage(Integer packageId) throws IOException {
+        return createMessageFromSerializable(MessageType.CONTENT_ACK, packageId);
     }
 
     public static Message newFileReadyMessage(FileOnDeviceReady fileOnDeviceReady) throws IOException {

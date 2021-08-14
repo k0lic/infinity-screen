@@ -32,6 +32,7 @@ import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.Resettable;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.UdpViewModel;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         resettables.add(
                 stateViewModel = new ViewModelProvider(this).get(StateViewModel.class));
         resettables.add(new ViewModelProvider(this).get(MediaViewModel.class));
+        resettables.add(new ViewModelProvider(this).get(UdpViewModel.class));
 
         // Initialize Helpers
         PermissionsHelper.init(this);

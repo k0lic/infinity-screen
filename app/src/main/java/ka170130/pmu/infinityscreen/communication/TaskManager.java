@@ -1,11 +1,14 @@
 package ka170130.pmu.infinityscreen.communication;
 
+import android.util.Log;
+
 import androidx.lifecycle.ViewModelProvider;
 
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
@@ -17,7 +20,7 @@ public class TaskManager {
     public static final int DEFAULT_PORT = 8888;
     public static final int BROADCAST_PORT = 8889;
 
-    private static final int THREAD_POOL_COUNT = 4;
+    private static final int THREAD_POOL_COUNT = 8;
 
     private MainActivity mainActivity;
     private ExecutorService executorService;
@@ -67,7 +70,15 @@ public class TaskManager {
         executorService.submit(new BroadcastTask(message));
     }
 
-    public void runContentTask() {
-        executorService.submit(new ContentTask(this));
+    public void runContentTask(int numberOfClients) {
+        executorService.submit(new ContentTask(this, numberOfClients));
+    }
+
+    public void runBroadcastConfirmationTask(
+            Message message,
+            Semaphore master,
+            Semaphore clientSem
+    ) {
+        executorService.submit(new BroadcastConfirmationTask(message, master, clientSem));
     }
 }

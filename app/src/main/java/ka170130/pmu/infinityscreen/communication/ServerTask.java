@@ -26,6 +26,7 @@ public class ServerTask implements Runnable {
 
             while (true) {
                 Socket client = serverSocket.accept();
+                Log.d(MainActivity.LOG_TAG, "ServerTask client " + client.getInetAddress().getHostName() + " accepted");
                 taskManager.runReceiverTask(client);
             }
         } catch (IOException e) {
