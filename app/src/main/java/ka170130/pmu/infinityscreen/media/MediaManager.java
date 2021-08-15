@@ -58,7 +58,7 @@ public class MediaManager {
             imageWidth = options.outWidth;
             imageHeight = options.outHeight;
         } catch (FileNotFoundException exception) {
-            LogHelper.error(e);
+            LogHelper.error(exception);
             return null;
         }
 

@@ -42,6 +42,10 @@ public class LogHelper {
     public static void log(String message) {
         Log.d(MainActivity.LOG_TAG, message);
 
+        if (mainActivity == null) {
+            return;
+        }
+
         try {
             String s = message + "\n";
             WriteTask.WriteCommand command =

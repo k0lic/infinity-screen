@@ -95,7 +95,7 @@ public class ContentTask implements Runnable {
                     FileContentPackage content =
                             new FileContentPackage(fileIndex, packageId, lastPackage, readResult.getContent());
 //                            new FileContentPackage(fileIndex, packageId, lastPackage, copy);
-//                    Log.d(MainActivity.LOG_TAG, "BroadcastConfirmationTask: " + packageId);
+//                    LogHelper.log("BroadcastConfirmationTask: " + packageId);
 //                    taskManager.runBroadcastConfirmationTask(
 //                            Message.newContentMessage(content),
 //                            udpViewModel.getSemaphore(SEMAPHORE_KEY),
