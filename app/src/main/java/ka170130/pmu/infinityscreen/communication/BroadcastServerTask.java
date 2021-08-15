@@ -7,6 +7,7 @@ import java.net.DatagramSocket;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class BroadcastServerTask implements Runnable {
 
@@ -31,8 +32,7 @@ public class BroadcastServerTask implements Runnable {
                 messageHandler.handleMessage(message, packet.getAddress());
             }
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
     }
 }

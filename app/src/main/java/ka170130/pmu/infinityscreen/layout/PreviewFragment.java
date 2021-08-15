@@ -32,6 +32,7 @@ import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentPreviewBinding;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.play.FullScreenFragment;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
@@ -81,13 +82,12 @@ public class PreviewFragment extends FullScreenFragment {
             Matrix matrix = layoutManager.getMatrix(self, viewport, drawableWidth, drawableHeight);
             binding.imageView.setImageMatrix(matrix);
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
 
         binding.backButton.setOnClickListener(view -> {
             Rect rect = binding.imageView.getDrawable().copyBounds();
-            Log.d(MainActivity.LOG_TAG, "RECT: " + rect.left + " " + rect.right + " " + rect.top + " " + rect.bottom);
+            LogHelper.log("RECT: " + rect.left + " " + rect.right + " " + rect.top + " " + rect.bottom);
 
             StateChangeHelper.requestStateChange(
                     mainActivity, connectionViewModel, StateViewModel.AppState.LAYOUT);

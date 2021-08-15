@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.databinding.FragmentDeviceListBinding;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
@@ -115,9 +116,9 @@ public class DeviceListFragment extends ConnectionAwareFragment {
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             String s = state == null ? "<NULL>" : state.toString();
-            Log.d(MainActivity.LOG_TAG, "Maybe navigate? " + s);
+            LogHelper.log("Maybe navigate? " + s);
             if (state == StateViewModel.AppState.LAYOUT) {
-                Log.d(MainActivity.LOG_TAG, "YES navigate");
+                LogHelper.log("YES navigate");
                 navController.navigate(DeviceListFragmentDirections.actionLayoutFragment());
             }
         });

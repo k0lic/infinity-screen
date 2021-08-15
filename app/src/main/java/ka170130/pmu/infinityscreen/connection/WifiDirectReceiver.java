@@ -22,6 +22,7 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 
@@ -63,19 +64,19 @@ public class WifiDirectReceiver extends BroadcastReceiver {
 
         if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
             // Check to see if Wi-Fi is enabled and notify appropriate activity
-            Log.d(MainActivity.LOG_TAG, "WIFI_P2P_STATE_CHANGED_ACTION");
+            LogHelper.log("WIFI_P2P_STATE_CHANGED_ACTION");
             handleStateChange(intent);
         } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
             // Call WifiP2pManager.requestPeers() to get a list of current peers
-            Log.d(MainActivity.LOG_TAG, "WIFI_P2P_PEERS_CHANGED_ACTION");
+            LogHelper.log("WIFI_P2P_PEERS_CHANGED_ACTION");
             handlePeersChange();
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
             // Respond to new connection or disconnections
-            Log.d(MainActivity.LOG_TAG, "WIFI_P2P_CONNECTION_CHANGED_ACTION");
+            LogHelper.log("WIFI_P2P_CONNECTION_CHANGED_ACTION");
             handleConnectionChange(intent);
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             // Respond to this device's wifi state changing
-            Log.d(MainActivity.LOG_TAG, "WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
+            LogHelper.log("WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
             handleDeviceChange(intent);
         }
     }
@@ -95,10 +96,9 @@ public class WifiDirectReceiver extends BroadcastReceiver {
 
         String[] permissions = { Manifest.permission.ACCESS_FINE_LOCATION };
         PermissionsHelper.request(permissions, s -> {
-            Log.d(MainActivity.LOG_TAG, "Going to request peers");
+            LogHelper.log("Going to request peers");
             manager.requestPeers(mainActivity.getConnectionManager().getChannel(), peers -> {
-                Log.d(MainActivity.LOG_TAG, "Discovered peers: " + peers.getDeviceList().size());
-//                Log.d(MainActivity.LOG_TAG, peers.getDeviceList().toString());
+                LogHelper.log("Discovered peers: " + peers.getDeviceList().size());
 
                 Iterator<WifiP2pDevice> iterator = peers.getDeviceList().iterator();
                 List<PeerInfo> peerList = new ArrayList<>();
@@ -125,8 +125,8 @@ public class WifiDirectReceiver extends BroadcastReceiver {
 
         if (networkInfo.isConnected()) {
             manager.requestConnectionInfo(mainActivity.getConnectionManager().getChannel(), info -> {
-                Log.d(MainActivity.LOG_TAG, "Connection info available");
-                Log.d(MainActivity.LOG_TAG, info.toString());
+                LogHelper.log("Connection info available");
+                LogHelper.log(info.toString());
 
                 taskManager.setDefaultAddress(info.groupOwnerAddress);
 
@@ -143,14 +143,13 @@ public class WifiDirectReceiver extends BroadcastReceiver {
                             taskManager.runSenderTask(Message.newHelloMessage(self));
                         }
                     } catch (IOException e) {
-                        Log.d(MainActivity.LOG_TAG, e.toString());
-                        e.printStackTrace();
+                        LogHelper.error(e);
                     }
                 }
             });
         } else {
             // it's a disconnect
-            Log.d(MainActivity.LOG_TAG, "Connection change: DISCONNECT");
+            LogHelper.log("Connection change: DISCONNECT");
             mainActivity.reset();
         }
     }

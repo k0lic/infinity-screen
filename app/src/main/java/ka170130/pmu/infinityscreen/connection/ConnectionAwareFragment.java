@@ -15,6 +15,7 @@ import android.view.View;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.databinding.AppBarAndStatusBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 
 public class ConnectionAwareFragment extends Fragment {
@@ -44,7 +45,7 @@ public class ConnectionAwareFragment extends Fragment {
         connectionViewModel.getConnectionStatus().observe(getViewLifecycleOwner(), status -> {
             // Navigate to HomeFragment if disconnected
             if (status == ConnectionViewModel.ConnectionStatus.NOT_CONNECTED) {
-                Log.d(MainActivity.LOG_TAG, "ConnectionStatus.NOT_CONNECTED detected");
+                LogHelper.log("ConnectionStatus.NOT_CONNECTED detected");
                 navController.navigate(HomeFragmentDirections.globalHomeFragment());
             }
         });

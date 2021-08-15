@@ -11,6 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class SenderTask implements Runnable {
 
@@ -30,7 +31,7 @@ public class SenderTask implements Runnable {
     public void run() {
         lock.lock();
 
-        Log.d(MainActivity.LOG_TAG, "Sending message: " + message.getMessageType().toString());
+        LogHelper.log("Sending message: " + message.getMessageType().toString());
 
         Socket socket = new Socket();
         OutputStream outputStream = null;
@@ -42,17 +43,15 @@ public class SenderTask implements Runnable {
             outputStream = socket.getOutputStream();
 
             outputStream.write(message.getBytes());
-            Log.d(MainActivity.LOG_TAG, "Message sent: " + message.getMessageType().toString());
+            LogHelper.log("Message sent: " + message.getMessageType().toString());
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         } finally {
             if (outputStream != null) {
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    Log.d(MainActivity.LOG_TAG, e.toString());
-                    e.printStackTrace();
+                    LogHelper.error(e);
                 }
             }
 
@@ -61,8 +60,7 @@ public class SenderTask implements Runnable {
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        Log.d(MainActivity.LOG_TAG, e.toString());
-                        e.printStackTrace();
+                        LogHelper.error(e);
                     }
                 }
             }

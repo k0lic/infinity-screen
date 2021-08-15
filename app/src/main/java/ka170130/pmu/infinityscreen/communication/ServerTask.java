@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class ServerTask implements Runnable {
 
@@ -18,7 +19,7 @@ public class ServerTask implements Runnable {
 
     @Override
     public void run() {
-        Log.d(MainActivity.LOG_TAG, "ServerTask up and running");
+        LogHelper.log("ServerTask up and running");
         ServerSocket serverSocket = null;
 
         try {
@@ -26,19 +27,17 @@ public class ServerTask implements Runnable {
 
             while (true) {
                 Socket client = serverSocket.accept();
-                Log.d(MainActivity.LOG_TAG, "ServerTask client " + client.getInetAddress().getHostName() + " accepted");
+                LogHelper.log("ServerTask client " + client.getInetAddress().getHostName() + " accepted");
                 taskManager.runReceiverTask(client);
             }
         } catch (IOException e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         } finally {
             if (serverSocket != null) {
                 try {
                     serverSocket.close();
                 } catch (IOException e) {
-                    Log.d(MainActivity.LOG_TAG, e.toString());
-                    e.printStackTrace();
+                    LogHelper.error(e);
                 }
             }
         }

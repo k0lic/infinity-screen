@@ -23,6 +23,7 @@ import java.io.IOException;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.helpers.Callback;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
 public class MediaManager {
@@ -57,19 +58,17 @@ public class MediaManager {
             imageWidth = options.outWidth;
             imageHeight = options.outHeight;
         } catch (FileNotFoundException exception) {
-            Log.d(MainActivity.LOG_TAG, exception.toString());
-            exception.printStackTrace();
+            LogHelper.error(e);
             return null;
         }
 
         String extension = getExtension(uri);
-        Log.d(MainActivity.LOG_TAG,
-                "FileInfo (from Uri): ["
-                        + "type: " + (fileType == null ? "<NULL>" : fileType.toString())
-                        + ", width: " + imageWidth
-                        + ", height: " + imageHeight
-                        + ", extension: " + extension
-                        + "]"
+        LogHelper.log("FileInfo (from Uri): ["
+                + "type: " + (fileType == null ? "<NULL>" : fileType.toString())
+                + ", width: " + imageWidth
+                + ", height: " + imageHeight
+                + ", extension: " + extension
+                + "]"
         );
 
         return new FileInfo(
@@ -97,8 +96,7 @@ public class MediaManager {
                     bitmap = mmr.getFrameAtTime();
                 }
             } catch (IOException e) {
-                Log.d(MainActivity.LOG_TAG, e.toString());
-                e.printStackTrace();
+                LogHelper.error(e);
             }
 
             callback.invoke(bitmap);

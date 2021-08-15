@@ -20,6 +20,7 @@ import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentLayoutBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
@@ -91,7 +92,7 @@ public class LayoutFragment extends ConnectionAwareFragment {
 
         // Listen for Layout Change - update and redraw DeviceLayoutView on change
         layoutViewModel.getTransformList().observe(getViewLifecycleOwner(), list -> {
-            Log.d(MainActivity.LOG_TAG, "Update and Redraw DeviceLayoutView");
+            LogHelper.log("Update and Redraw DeviceLayoutView");
 
             DeviceLayoutView deviceLayoutView = binding.deviceLayoutView;
 

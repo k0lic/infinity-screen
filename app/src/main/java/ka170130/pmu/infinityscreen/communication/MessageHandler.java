@@ -23,6 +23,7 @@ import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.io.WriteTask;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
@@ -60,7 +61,7 @@ public class MessageHandler {
     }
 
     public void handleMessage(Message message, InetAddress inetAddress) {
-        Log.d(MainActivity.LOG_TAG, "Message received: " + message.getMessageType().toString());
+        LogHelper.log("Message received: " + message.getMessageType().toString());
         try {
             switch (message.getMessageType()) {
                 case TEST:
@@ -122,8 +123,7 @@ public class MessageHandler {
                     break;
             }
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
     }
 
@@ -131,7 +131,7 @@ public class MessageHandler {
     private void handleTestMessage(InetAddress inetAddress) {
         // do nothing
         String hostName = inetAddress == null ? "<NULL>" : inetAddress.getHostName();
-        Log.d(MainActivity.LOG_TAG, "TEST message received from " + hostName);
+        LogHelper.log("TEST message received from " + hostName);
     }
 
     // handle HELLO message
@@ -288,7 +288,7 @@ public class MessageHandler {
         // check if this is the expected package
         if (nextPackage != packageId) {
             // wrong package - dump
-            Log.d(MainActivity.LOG_TAG, "WRONG PACKAGE! Expected packageId " + nextPackage + " but instead received " + packageId);
+            LogHelper.log("WRONG PACKAGE! Expected packageId " + nextPackage + " but instead received " + packageId);
             return;
         }
 
@@ -314,7 +314,7 @@ public class MessageHandler {
                 // success
                 contentMessageHandled(fileIndex, hostAddress, packageId);
             } else {
-                Log.d(MainActivity.LOG_TAG, "Received non-final CONTENT message without content");
+                LogHelper.log("Received non-final CONTENT message without content");
             }
 
             return;
@@ -377,7 +377,7 @@ public class MessageHandler {
         Semaphore sem = udpViewModel.getSemaphore(packageId);
         if (sem != null) {
             sem.release();
-            Log.d(MainActivity.LOG_TAG, "Semaphore#" + packageId + " released");
+            LogHelper.log("Semaphore#" + packageId + " released");
         }
     }
 

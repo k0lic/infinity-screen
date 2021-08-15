@@ -33,6 +33,7 @@ import ka170130.pmu.infinityscreen.databinding.FragmentFileSelectionBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.helpers.FileSelectionHelper;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.layout.PreviewFragmentDirections;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
@@ -153,8 +154,7 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
                         Message.newFileInfoListUpdateMessage(fileInfos), true);
 //                        .runBroadcastTask(Message.newFileInfoListUpdateMessage(fileInfos));
             } catch (IOException e) {
-                Log.d(MainActivity.LOG_TAG, e.toString());
-                e.printStackTrace();
+                LogHelper.error(e);
             }
 
             boolean contentTaskCreated = mediaViewModel.isContentTaskCreated();

@@ -32,6 +32,7 @@ import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentPlayBinding;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.media.FileSelectionWaitFragmentDirections;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
@@ -133,8 +134,7 @@ public class PlayFragment extends FullScreenFragment {
 //                        .runBroadcastTask(Message.newFileIndexUpdateRequestMessage(index));
             }
         } catch (IOException e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
     }
 
@@ -142,13 +142,12 @@ public class PlayFragment extends FullScreenFragment {
         binding.textureView.setVisibility(View.INVISIBLE);
         binding.imageView.setVisibility(View.VISIBLE);
 
-        Log.d(MainActivity.LOG_TAG,
-                "Active FileInfo: " + fileInfo.getFileType().toString()
-                        + " " + fileInfo.getWidth()
-                        + " " + fileInfo.getHeight()
-                        + " " + fileInfo.getExtension()
-                        + " " + fileInfo.getPlaybackStatus()
-                        + " " + fileInfo.getContentUri()
+        LogHelper.log("Active FileInfo: " + fileInfo.getFileType().toString()
+                + " " + fileInfo.getWidth()
+                + " " + fileInfo.getHeight()
+                + " " + fileInfo.getExtension()
+                + " " + fileInfo.getPlaybackStatus()
+                + " " + fileInfo.getContentUri()
         );
         if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
@@ -186,11 +185,10 @@ public class PlayFragment extends FullScreenFragment {
 
                     binding.imageView.setImageDrawable(drawable);
 
-                    Log.d(MainActivity.LOG_TAG, "TESTING: w: " + drawableWidth + " h: " + drawableHeight);
+                    LogHelper.log("TESTING: w: " + drawableWidth + " h: " + drawableHeight);
                     inputStream.close();
                 } catch (IOException e) {
-                    Log.d(MainActivity.LOG_TAG, e.toString());
-                    e.printStackTrace();
+                    LogHelper.error(e);
                 }
             } else {
                 binding.imageView.setImageURI(uri);

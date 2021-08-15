@@ -11,6 +11,7 @@ import android.util.Log;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 
 public class ConnectionManager {
@@ -80,16 +81,16 @@ public class ConnectionManager {
     public void discoverPeers() {
         String[] permissions = { Manifest.permission.ACCESS_FINE_LOCATION };
         PermissionsHelper.request(permissions, s -> {
-            Log.d(MainActivity.LOG_TAG, "Discovering Peers");
+            LogHelper.log("Discovering Peers");
             manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
-                    Log.d(MainActivity.LOG_TAG, "Discover Peers SUCCEEDED");
+                    LogHelper.log("Discover Peers SUCCEEDED");
                 }
 
                 @Override
                 public void onFailure(int reason) {
-                    Log.d(MainActivity.LOG_TAG, "Discover Peers FAILED");
+                    LogHelper.log("Discover Peers FAILED");
                 }
             });
         });
@@ -99,7 +100,7 @@ public class ConnectionManager {
     public void connect(PeerInfo device) {
         String[] permissions = { Manifest.permission.ACCESS_FINE_LOCATION };
         PermissionsHelper.request(permissions, s -> {
-            Log.d(MainActivity.LOG_TAG, "Connecting");
+            LogHelper.log("Connecting");
 
             WifiP2pConfig config = new WifiP2pConfig();
             config.deviceAddress = device.getDeviceAddress();
@@ -107,14 +108,12 @@ public class ConnectionManager {
             manager.connect(channel, config, new WifiP2pManager.ActionListener() {
                 @Override
                 public void onSuccess() {
-                    Log.d(MainActivity.LOG_TAG,
-                            "Connection to " + device.getDeviceName() + " SUCCEEDED");
+                    LogHelper.log("Connection to " + device.getDeviceName() + " SUCCEEDED");
                 }
 
                 @Override
                 public void onFailure(int reason) {
-                    Log.d(MainActivity.LOG_TAG,
-                            "Connection to " + device.getDeviceName() + " FAILED");
+                    LogHelper.log("Connection to " + device.getDeviceName() + " FAILED");
                 }
             });
         });
@@ -125,12 +124,12 @@ public class ConnectionManager {
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
-                Log.d(MainActivity.LOG_TAG, "Disconnect SUCCESSFUL");
+                LogHelper.log("Disconnect SUCCESSFUL");
             }
 
             @Override
             public void onFailure(int reason) {
-                Log.d(MainActivity.LOG_TAG, "Disconnect FAILED");
+                LogHelper.log("Disconnect FAILED");
             }
         });
     }

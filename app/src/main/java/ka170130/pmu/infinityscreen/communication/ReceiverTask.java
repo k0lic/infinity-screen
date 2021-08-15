@@ -11,6 +11,7 @@ import java.util.List;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
@@ -36,7 +37,7 @@ public class ReceiverTask implements Runnable {
 
     @Override
     public void run() {
-        Log.d(MainActivity.LOG_TAG, "ReceiverTask started for " + inetAddress.getHostName());
+        LogHelper.log("ReceiverTask started for " + inetAddress.getHostName());
         InputStream inputStream = null;
 
         try {
@@ -60,15 +61,13 @@ public class ReceiverTask implements Runnable {
             Message message = new Message(result);
             messageHandler.handleMessage(message, inetAddress);
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         } finally {
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    Log.d(MainActivity.LOG_TAG, e.toString());
-                    e.printStackTrace();
+                    LogHelper.error(e);
                 }
             }
 
@@ -77,8 +76,7 @@ public class ReceiverTask implements Runnable {
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        Log.d(MainActivity.LOG_TAG, e.toString());
-                        e.printStackTrace();
+                        LogHelper.error(e);
                     }
                 }
             }

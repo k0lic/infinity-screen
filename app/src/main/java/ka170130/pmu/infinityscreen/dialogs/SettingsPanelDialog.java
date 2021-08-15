@@ -15,6 +15,7 @@ import androidx.fragment.app.DialogFragment;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class SettingsPanelDialog extends DialogFragment {
 
@@ -24,7 +25,7 @@ public class SettingsPanelDialog extends DialogFragment {
     private final ActivityResultLauncher<Intent> settingsPanelLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             intent -> {
-                Log.d(MainActivity.LOG_TAG, "SettingsPanel activity returned");
+                LogHelper.log("SettingsPanel activity returned");
             }
     );
 

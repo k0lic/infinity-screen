@@ -20,6 +20,7 @@ import java.util.List;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
 import ka170130.pmu.infinityscreen.helpers.FileSelectionHelper;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.layout.LayoutManager;
 import ka170130.pmu.infinityscreen.media.MediaManager;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
@@ -88,9 +89,13 @@ public class MainActivity extends AppCompatActivity {
         // Initialize Helpers
         PermissionsHelper.init(this);
         FileSelectionHelper.init(this);
+        LogHelper.init(this);
 
         // Setup Connection Manager
         connectionManager = new ConnectionManager(this);
+
+        // Setup Task Manager
+        taskManager = new TaskManager(this);
 
         // Initialize P2P connection
         Pair<Boolean, String> init = connectionManager.initP2p();
@@ -104,9 +109,6 @@ public class MainActivity extends AppCompatActivity {
         // Turn on WiFi
         connectionManager.getWifiManager().setWifiEnabled(true);
         askForWiFi();
-
-        // Setup Task Manager
-        taskManager = new TaskManager(this);
 
         // Setup Server Task
         taskManager.runServerTask();
@@ -126,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
         // logging
         stateViewModel.getState().observe(this, state -> {
             String s = state == null ? "<NULL>" : state.toString();
-            Log.d(LOG_TAG, "AppState changed to " + s);
+            LogHelper.log("AppState changed to " + s);
         });
     }
 

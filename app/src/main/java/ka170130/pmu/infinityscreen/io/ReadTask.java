@@ -10,6 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class ReadTask implements Runnable {
 
@@ -82,8 +83,7 @@ public class ReadTask implements Runnable {
                 resultQueue.put(result);
 
             } catch (InterruptedException | IOException e) {
-                Log.d(MainActivity.LOG_TAG, e.toString());
-                e.printStackTrace();
+                LogHelper.error(e);
             }
         }
     }

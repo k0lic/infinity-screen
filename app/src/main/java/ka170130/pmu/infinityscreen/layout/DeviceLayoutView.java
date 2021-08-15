@@ -20,6 +20,7 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 // TODO: everything
 public class DeviceLayoutView extends View {
@@ -345,7 +346,7 @@ public class DeviceLayoutView extends View {
         float xMax = 0;
         float yMax = 0;
 
-        Log.d(MainActivity.LOG_TAG, "Device Representations:");
+        LogHelper.log("Device Representations:");
         for (DeviceRepresentation device : devices) {
             device.setRepWidth(device.getWidth() * realToViewFactor);
             device.setRepHeight(device.getHeight() * realToViewFactor);
@@ -359,19 +360,16 @@ public class DeviceLayoutView extends View {
             xMax = Math.max(position.x + device.getRepWidth(), xMax);
             yMax = Math.max(position.y + device.getRepHeight(), yMax);
 
-            Log.d(
-                    MainActivity.LOG_TAG,
-                    device.getNumberId()
-                            + " w: " + device.getWidth()
-                            + " h: " + device.getHeight()
-                            + " pos: (" + device.getPosition().x
-                            + ", " + device.getPosition().y
-                            + ") rw: " + device.getRepWidth()
-                            + " rh: " + device.getRepHeight()
-                            + " rpos: (" + device.getRepPosition().x
-                            + ", " + device.getRepPosition().y
-                            + ")"
-            );
+            LogHelper.log(device.getNumberId()
+                    + " w: " + device.getWidth()
+                    + " h: " + device.getHeight()
+                    + " pos: (" + device.getPosition().x
+                    + ", " + device.getPosition().y
+                    + ") rw: " + device.getRepWidth()
+                    + " rh: " + device.getRepHeight()
+                    + " rpos: (" + device.getRepPosition().x
+                    + ", " + device.getRepPosition().y
+                    + ")");
         }
 
         // Calculate Auto Margins so content is centered
@@ -396,9 +394,8 @@ public class DeviceLayoutView extends View {
         position.y = (actual.y - areaOrigin.y) * realToViewFactor;
         viewport.setRepPosition(position);
 
-        Log.d(MainActivity.LOG_TAG, "Viewport Representation:");
-        Log.d(
-                MainActivity.LOG_TAG,
+        LogHelper.log("Viewport Representation:");
+        LogHelper.log(
                 viewport.getNumberId()
                         + " w: " + viewport.getWidth()
                         + " h: " + viewport.getHeight()

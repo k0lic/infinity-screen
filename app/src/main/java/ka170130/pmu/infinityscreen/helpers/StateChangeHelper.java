@@ -32,8 +32,7 @@ public class StateChangeHelper {
                 );
             }
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
     }
 }

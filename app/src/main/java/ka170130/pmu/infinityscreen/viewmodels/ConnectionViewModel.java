@@ -18,6 +18,7 @@ import java.util.logging.Handler;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 
 public class ConnectionViewModel extends ViewModel implements Resettable {
@@ -66,7 +67,7 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
 //        isHost = new MutableLiveData<>(false);
 //        groupOwnerDevice = new MutableLiveData<>();
 
-        Log.d(MainActivity.LOG_TAG, "Device Info Init: "
+        LogHelper.log("Device Info Init: "
                 + (selfDevice.getValue() == null ? "<NULL>" : selfDevice.getValue().getDeviceName()) + " "
                 + (hostDevice.getValue() == null ? "<NULL>" : hostDevice.getValue().getDeviceName()) + " "
                 + isHost.getValue());
@@ -92,7 +93,7 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
         PeerInfo selfDevice = this.selfDevice.getValue();
         PeerInetAddressInfo hostDevice = this.hostDevice.getValue();
 
-        Log.d(MainActivity.LOG_TAG, "Device Info connection refresh: "
+        LogHelper.log("Device Info connection refresh: "
                 + (selfDevice == null ? "<NULL>" : selfDevice.getDeviceName()) + " "
                 + (hostDevice == null ? "<NULL>" : hostDevice.getDeviceName()));
 
@@ -223,7 +224,7 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
 
         if (!contains) {
             devices.add(device);
-            Log.d(MainActivity.LOG_TAG, "Added to group: " + device.getDeviceName() + " " + device.getDeviceAddress());
+            LogHelper.log("Added to group: " + device.getDeviceName() + " " + device.getDeviceAddress());
         }
 
         setGroupList(devices);

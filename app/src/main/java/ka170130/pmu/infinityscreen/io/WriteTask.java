@@ -16,6 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.FileOnDeviceReady;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 
@@ -66,8 +67,7 @@ public class WriteTask implements Runnable {
                 outputStream.write(command.content);
                 outputStream.close();
             } catch (InterruptedException | IOException e) {
-                Log.d(MainActivity.LOG_TAG, e.toString());
-                e.printStackTrace();
+                LogHelper.error(e);
             }
         }
     }

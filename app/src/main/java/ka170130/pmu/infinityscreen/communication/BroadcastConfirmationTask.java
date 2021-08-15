@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class BroadcastConfirmationTask implements Runnable {
 
@@ -49,23 +50,22 @@ public class BroadcastConfirmationTask implements Runnable {
             while (!confirmation && retryCount < MAX_RETRIES) {
                 socket.send(packet);
 
-                Log.d(MainActivity.LOG_TAG, "Try Acquire: " + retryCount);
+                LogHelper.log("Try Acquire: " + retryCount);
                 confirmation = clientSem.tryAcquire(TIMEOUT, TimeUnit.MILLISECONDS);
                 retryCount++;
             }
 
             if (confirmation) {
                 // success
-                Log.d(MainActivity.LOG_TAG, "Broadcast message " + message.getMessageType().toString() + " sent with confirmation");
+                LogHelper.log("Broadcast message " + message.getMessageType().toString() + " sent with confirmation");
             } else {
                 // failure
-                Log.d(MainActivity.LOG_TAG, "Broadcast message " + message.getMessageType().toString() + " failed to confirm ======================================= FAILED FAILED FAILED");
+                LogHelper.log("Broadcast message " + message.getMessageType().toString() + " failed to confirm ======================================= FAILED FAILED FAILED");
             }
 
             master.release();
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         } finally {
             SenderTask.lock.unlock();
         }

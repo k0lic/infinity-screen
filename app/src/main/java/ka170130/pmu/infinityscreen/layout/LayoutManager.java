@@ -19,6 +19,7 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 
@@ -65,7 +66,8 @@ public class LayoutManager {
                 (self.getPosition().y - viewport.getPosition().y) / viewport.getScreenHeight();
         matrix.postTranslate(horizontal, vertical);
 
-        Log.d(MainActivity.LOG_TAG, "Matrix: wr: " + widthRatio + " hr: " + heightRatio + " dx: " + horizontal + " dy: " + vertical);
+        LogHelper.log("Matrix: wr: " + widthRatio + " hr: " + heightRatio
+                + " dx: " + horizontal + " dy: " + vertical);
         return matrix;
     }
 
@@ -84,8 +86,7 @@ public class LayoutManager {
                         .runSenderTask(hostAddress, Message.newTransformMessage(selfTransform));
             }
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
     }
 
@@ -112,8 +113,7 @@ public class LayoutManager {
 //            mainActivity.getTaskManager()
 //                    .runBroadcastTask(Message.newTransformListUpdateMessage(list));
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
     }
 
@@ -124,8 +124,7 @@ public class LayoutManager {
                     .sendToAllInGroup(Message.newViewportUpdateMessage(viewport), false);
 //                    .runBroadcastTask(Message.newViewportUpdateMessage(viewport));
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         }
     }
 
@@ -138,8 +137,7 @@ public class LayoutManager {
         mainActivity.getWindowManager().getDefaultDisplay().getMetrics(dm);
         double screenWidth = pixelCount[PIXEL_COUNT_WIDTH_INDEX] / dm.xdpi * INCH_TO_CM;
         double screenHeight = pixelCount[PIXEL_COUNT_HEIGHT_INDEX] / dm.ydpi * INCH_TO_CM;
-        Log.d(MainActivity.LOG_TAG,
-                "Screen dimensions : (" + screenWidth + ", " + screenHeight + ")");
+        LogHelper.log("Screen dimensions : (" + screenWidth + ", " + screenHeight + ")");
 
         return new TransformInfo(
                 deviceAddress,
@@ -180,15 +178,13 @@ public class LayoutManager {
         pixelCount[PIXEL_COUNT_WIDTH_INDEX] = realSize.x;
         pixelCount[PIXEL_COUNT_HEIGHT_INDEX] = realSize.y;
 //        } catch (Exception e) {
-//            Log.d(MainActivity.LOG_TAG, e.toString());
-//            e.printStackTrace();
+//            LogHelper.error(e);
 //        }
 
-        Log.d(
-                MainActivity.LOG_TAG,
-                "Display pixel count : (" +
-                        pixelCount[PIXEL_COUNT_WIDTH_INDEX] + ", " +
-                        pixelCount[PIXEL_COUNT_HEIGHT_INDEX] + ")"
+        LogHelper.log(
+                "Display pixel count : ("
+                        + pixelCount[PIXEL_COUNT_WIDTH_INDEX] + ", "
+                        + pixelCount[PIXEL_COUNT_HEIGHT_INDEX] + ")"
         );
         return pixelCount;
     }

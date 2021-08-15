@@ -8,6 +8,7 @@ import java.net.InetAddress;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class BroadcastTask implements Runnable {
 
@@ -35,10 +36,9 @@ public class BroadcastTask implements Runnable {
             );
 
             socket.send(packet);
-            Log.d(MainActivity.LOG_TAG, "Broadcast message " + message.getMessageType().toString() + " sent");
+            LogHelper.log("Broadcast message " + message.getMessageType().toString() + " sent");
         } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
+            LogHelper.error(e);
         } finally {
             SenderTask.lock.unlock();
         }

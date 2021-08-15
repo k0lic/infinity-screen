@@ -22,6 +22,7 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.FileContentPackage;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
+import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.io.ReadTask;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
@@ -54,7 +55,7 @@ public class ContentTask implements Runnable {
         ArrayList<String> contentUriList = mediaViewModel.getSelectedMedia().getValue();
         ContentResolver contentResolver = taskManager.getMainActivity().getContentResolver();
 
-        Log.d(MainActivity.LOG_TAG, "contentUriList.size() = " + contentUriList.size());
+        LogHelper.log("contentUriList.size() = " + contentUriList.size());
 
         Iterator<String> iterator = contentUriList.iterator();
         int fileIndex = -1;
@@ -70,7 +71,7 @@ public class ContentTask implements Runnable {
 
                 int packageId = FileContentPackage.INIT_PACKAGE_ID;
                 int clientPermits = 1 - udpViewModel.getNumberOfClients();
-                Log.d(MainActivity.LOG_TAG, "ClientPermits: " + clientPermits);
+                LogHelper.log("ClientPermits: " + clientPermits);
 
 //                int bufSize = Message.MESSAGE_MAX_SIZE - Message.JIC_BUFFER;
 //                byte[] buf = new byte[bufSize];
@@ -101,7 +102,7 @@ public class ContentTask implements Runnable {
 //                            udpViewModel.getSemaphore(packageId)
 //                    );
                     taskManager.sendToAllInGroup(Message.newContentMessage(content), false);
-                    Log.d(MainActivity.LOG_TAG, "Sending content for file#" + fileIndex + " of length " + ((readResult.getContent() == null ? 0 : readResult.getContent().length) / 1024f) + " KB");
+                    LogHelper.log("Sending content for file#" + fileIndex + " of length " + ((readResult.getContent() == null ? 0 : readResult.getContent().length) / 1024f) + " KB");
 
                     udpViewModel.getSemaphore(packageId).acquire();
 //                    udpViewModel.getSemaphore(SEMAPHORE_KEY).acquire();
@@ -110,21 +111,19 @@ public class ContentTask implements Runnable {
                     packageId++;
                 }
             } catch (IOException | InterruptedException e) {
-                Log.d(MainActivity.LOG_TAG, e.toString());
-                e.printStackTrace();
+                LogHelper.error(e);
             } finally {
 //                if (inputStream != null) {
 //                    try {
 //                        inputStream.close();
 //                    } catch (IOException e) {
-//                        Log.d(MainActivity.LOG_TAG, e.toString());
-//                        e.printStackTrace();
+//                        LogHelper.error(e);
 //                    }
 //                }
             }
         }
 
         udpViewModel.reset();
-        Log.d(MainActivity.LOG_TAG, "Content task done");
+        LogHelper.log("Content task done");
     }
 }
