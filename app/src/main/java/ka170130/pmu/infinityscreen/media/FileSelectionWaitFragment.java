@@ -54,7 +54,9 @@ public class FileSelectionWaitFragment extends ConnectionAwareFragment {
                 Boolean isHost = connectionViewModel.getIsHost().getValue();
                 if (isHost) {
                     // disconnect all
-                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
+                    mainActivity.getTaskManager().
+                            sendToAllInGroup(Message.newDisconnectMessage(), true);
+//                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
                 } else {
                     // disconnect self
                     mainActivity.getConnectionManager().disconnect();

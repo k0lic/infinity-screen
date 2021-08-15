@@ -122,7 +122,9 @@ public class HomeFragment extends Fragment {
                 connectionViewModel.getConnectionStatus().getValue();
         if (status == ConnectionViewModel.ConnectionStatus.CONNECTED_HOST) {
             // disconnect all
-            mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
+            mainActivity.getTaskManager()
+                    .sendToAllInGroup(Message.newDisconnectMessage(), true);
+//            mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
         } else if (status == ConnectionViewModel.ConnectionStatus.CONNECTED_CLIENT) {
             // disconnect self
             mainActivity.getConnectionManager().disconnect();

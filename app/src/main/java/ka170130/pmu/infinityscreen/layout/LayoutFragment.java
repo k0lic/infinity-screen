@@ -62,7 +62,9 @@ public class LayoutFragment extends ConnectionAwareFragment {
             if (item.getItemId() == R.id.option_disconnect) {
                 if (isHost) {
                     // disconnect all
-                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
+                    mainActivity.getTaskManager()
+                            .sendToAllInGroup(Message.newDisconnectMessage(), true);
+//                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
                 } else {
                     // disconnect self
                     mainActivity.getConnectionManager().disconnect();

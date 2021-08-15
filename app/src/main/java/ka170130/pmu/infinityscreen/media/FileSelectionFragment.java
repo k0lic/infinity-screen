@@ -78,7 +78,9 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
                 Boolean isHost = connectionViewModel.getIsHost().getValue();
                 if (isHost) {
                     // disconnect all
-                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
+                    mainActivity.getTaskManager()
+                            .sendToAllInGroup(Message.newDisconnectMessage(), true);
+//                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
                 } else {
                     // disconnect self
                     mainActivity.getConnectionManager().disconnect();
@@ -145,9 +147,11 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
 
             try {
                 mainActivity.getTaskManager()
-                        .runBroadcastTask(Message.newFileIndexUpdateMessage(0));
-                mainActivity.getTaskManager()
-                        .runBroadcastTask(Message.newFileInfoListUpdateMessage(fileInfos));
+                        .sendToAllInGroup(Message.newFileIndexUpdateMessage(0), true);
+//                        .runBroadcastTask(Message.newFileIndexUpdateMessage(0));
+                mainActivity.getTaskManager().sendToAllInGroup(
+                        Message.newFileInfoListUpdateMessage(fileInfos), true);
+//                        .runBroadcastTask(Message.newFileInfoListUpdateMessage(fileInfos));
             } catch (IOException e) {
                 Log.d(MainActivity.LOG_TAG, e.toString());
                 e.printStackTrace();

@@ -28,6 +28,7 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentPlayBinding;
@@ -122,10 +123,14 @@ public class PlayFragment extends FullScreenFragment {
 
             if (isHost) {
                 mainActivity.getTaskManager()
-                        .runBroadcastTask(Message.newFileIndexUpdateMessage(index));
+                        .sendToAllInGroup(Message.newFileIndexUpdateMessage(index), true);
+//                        .runBroadcastTask(Message.newFileIndexUpdateMessage(index));
             } else {
-                mainActivity.getTaskManager()
-                        .runBroadcastTask(Message.newFileIndexUpdateRequestMessage(index));
+                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+                mainActivity.getTaskManager().runSenderTask(
+                        host.getInetAddress(), Message.newFileIndexUpdateRequestMessage(index));
+//                        .sendToAllInGroup(Message.newFileIndexUpdateRequestMessage(index));
+//                        .runBroadcastTask(Message.newFileIndexUpdateRequestMessage(index));
             }
         } catch (IOException e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
@@ -171,6 +176,10 @@ public class PlayFragment extends FullScreenFragment {
                     InputStream inputStream = contentResolver.openInputStream(uri);
 
                     Drawable drawable = Drawable.createFromStream(inputStream, null);
+
+                    if (drawable == null) {
+                        return;
+                    }
 
                     drawableWidth = drawable.getIntrinsicWidth();
                     drawableHeight = drawable.getIntrinsicHeight();

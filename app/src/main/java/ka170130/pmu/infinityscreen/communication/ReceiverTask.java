@@ -15,6 +15,7 @@ import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
+import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 
 public class ReceiverTask implements Runnable {
 
@@ -41,21 +42,22 @@ public class ReceiverTask implements Runnable {
         try {
             inputStream = socket.getInputStream();
 
-            int val = 0;
-            List<Byte> bytes = new ArrayList<>();
+            byte[] buf = new byte[Message.MESSAGE_MAX_SIZE];
+            byte[] copy = new byte[Message.MESSAGE_MAX_SIZE];
+            int total = 0;
 
-            val = inputStream.read();
-            while (val != -1) {
-                bytes.add((byte) val);
-                val = inputStream.read();
+            int len = inputStream.read(buf);
+            while (len != -1) {
+                System.arraycopy(buf, 0, copy, total, len);
+                total += len;
+
+                len = inputStream.read(buf);
             }
 
-            byte[] byteArray = new byte[bytes.size()];
-            for (int i = 0; i < bytes.size(); i++) {
-                byteArray[i] = bytes.get(i);
-            }
+            byte[] result = new byte[total];
+            System.arraycopy(copy, 0, result, 0, total);
 
-            Message message = new Message(byteArray);
+            Message message = new Message(result);
             messageHandler.handleMessage(message, inetAddress);
         } catch (Exception e) {
             Log.d(MainActivity.LOG_TAG, e.toString());

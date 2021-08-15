@@ -14,6 +14,8 @@ import ka170130.pmu.infinityscreen.containers.Message;
 
 public class SenderTask implements Runnable {
 
+    private static final int TIMEOUT = 5000;
+
     public static final ReentrantLock lock = new ReentrantLock();
 
     private InetAddress address;
@@ -35,7 +37,7 @@ public class SenderTask implements Runnable {
 
         try {
             socket.bind(null);
-            socket.connect((new InetSocketAddress(address, TaskManager.DEFAULT_PORT)), 500);
+            socket.connect((new InetSocketAddress(address, TaskManager.DEFAULT_PORT)), TIMEOUT);
 
             outputStream = socket.getOutputStream();
 

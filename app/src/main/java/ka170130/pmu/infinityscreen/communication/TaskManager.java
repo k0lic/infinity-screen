@@ -6,11 +6,15 @@ import androidx.lifecycle.ViewModelProvider;
 
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
+import ka170130.pmu.infinityscreen.io.ReadTask;
+import ka170130.pmu.infinityscreen.io.WriteTask;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
@@ -20,13 +24,17 @@ public class TaskManager {
     public static final int DEFAULT_PORT = 8888;
     public static final int BROADCAST_PORT = 8889;
 
-    private static final int THREAD_POOL_COUNT = 8;
+    private static final int THREAD_POOL_COUNT = 24;
 
     private MainActivity mainActivity;
     private ExecutorService executorService;
     private MessageHandler messageHandler;
+    private ConnectionViewModel connectionViewModel;
 
     private InetAddress defaultAddress;
+
+    private ReadTask readTask;
+    private WriteTask writeTask;
 
     public TaskManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
@@ -36,6 +44,13 @@ public class TaskManager {
                 this,
                 mainActivity
         );
+
+        connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
+
+        readTask = new ReadTask(mainActivity);
+        executorService.submit(readTask);
+        writeTask = new WriteTask(mainActivity);
+        executorService.submit(writeTask);
     }
 
     public MainActivity getMainActivity() {
@@ -44,6 +59,14 @@ public class TaskManager {
 
     public void setDefaultAddress(InetAddress defaultAddress) {
         this.defaultAddress = defaultAddress;
+    }
+
+    public ReadTask getReadTask() {
+        return readTask;
+    }
+
+    public WriteTask getWriteTask() {
+        return writeTask;
     }
 
     public void runServerTask() {
@@ -68,6 +91,20 @@ public class TaskManager {
 
     public void runBroadcastTask(Message message) {
         executorService.submit(new BroadcastTask(message));
+    }
+
+    public void sendToAllInGroup(Message message, boolean toHost) {
+        Iterator<PeerInetAddressInfo> iterator =
+                connectionViewModel.getGroupList().getValue().iterator();
+        while (iterator.hasNext()) {
+            PeerInetAddressInfo next = iterator.next();
+            runSenderTask(next.getInetAddress(), message);
+        }
+
+        if (toHost) {
+            PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+            runSenderTask(host.getInetAddress(), message);
+        }
     }
 
     public void runContentTask(int numberOfClients) {

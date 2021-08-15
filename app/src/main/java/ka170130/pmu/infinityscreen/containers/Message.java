@@ -12,7 +12,7 @@ import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class Message {
 
-    public static final int MESSAGE_MAX_SIZE = 65_536;
+    public static final int MESSAGE_MAX_SIZE = 1_048_576;
     public static final int JIC_BUFFER = 1000;
 
     public enum MessageType {

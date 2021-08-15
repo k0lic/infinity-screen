@@ -108,9 +108,9 @@ public class MainActivity extends AppCompatActivity {
         // Setup Task Manager
         taskManager = new TaskManager(this);
 
-        // Setup Server Tasks
+        // Setup Server Task
         taskManager.runServerTask();
-        taskManager.runBroadcastServerTask();
+//        taskManager.runBroadcastServerTask();
 
         // Setup Wifi Direct Broadcast Receiver
         WifiDirectReceiver.initializeIntentFilter();

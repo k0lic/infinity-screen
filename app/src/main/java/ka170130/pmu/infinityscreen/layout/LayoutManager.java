@@ -108,7 +108,9 @@ public class LayoutManager {
         // Broadcast Transform List Update
         try {
             mainActivity.getTaskManager()
-                    .runBroadcastTask(Message.newTransformListUpdateMessage(list));
+                    .sendToAllInGroup(Message.newTransformListUpdateMessage(list), false);
+//            mainActivity.getTaskManager()
+//                    .runBroadcastTask(Message.newTransformListUpdateMessage(list));
         } catch (Exception e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
@@ -119,7 +121,8 @@ public class LayoutManager {
         // Broadcast Viewport Update
         try {
             mainActivity.getTaskManager()
-                    .runBroadcastTask(Message.newViewportUpdateMessage(viewport));
+                    .sendToAllInGroup(Message.newViewportUpdateMessage(viewport), false);
+//                    .runBroadcastTask(Message.newViewportUpdateMessage(viewport));
         } catch (Exception e) {
             Log.d(MainActivity.LOG_TAG, e.toString());
             e.printStackTrace();
@@ -134,14 +137,9 @@ public class LayoutManager {
         DisplayMetrics dm = new DisplayMetrics();
         mainActivity.getWindowManager().getDefaultDisplay().getMetrics(dm);
         double screenWidth = pixelCount[PIXEL_COUNT_WIDTH_INDEX] / dm.xdpi * INCH_TO_CM;
-        pixelCount[PIXEL_COUNT_HEIGHT_INDEX] += statusBarHeight();
-        pixelCount[PIXEL_COUNT_HEIGHT_INDEX] += softKeyButtonsBarHeight();
         double screenHeight = pixelCount[PIXEL_COUNT_HEIGHT_INDEX] / dm.ydpi * INCH_TO_CM;
         Log.d(MainActivity.LOG_TAG,
                 "Screen dimensions : (" + screenWidth + ", " + screenHeight + ")");
-
-        statusBarHeight();
-        softKeyButtonsBarHeight();
 
         return new TransformInfo(
                 deviceAddress,
@@ -173,17 +171,18 @@ public class LayoutManager {
         WindowManager windowManager = mainActivity.getWindowManager();
         Display display = windowManager.getDefaultDisplay();
 
-        try {
-            Point realSize = new Point();
-            Display.class
-                    .getMethod("getRealSize", Point.class)
-                    .invoke(display, realSize);
-            pixelCount[PIXEL_COUNT_WIDTH_INDEX] = realSize.x;
-            pixelCount[PIXEL_COUNT_HEIGHT_INDEX] = realSize.y;
-        } catch (Exception e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
-            e.printStackTrace();
-        }
+//        try {
+        Point realSize = new Point();
+//            Display.class
+//                    .getMethod("getRealSize", Point.class)
+//                    .invoke(display, realSize);
+        display.getRealSize(realSize);
+        pixelCount[PIXEL_COUNT_WIDTH_INDEX] = realSize.x;
+        pixelCount[PIXEL_COUNT_HEIGHT_INDEX] = realSize.y;
+//        } catch (Exception e) {
+//            Log.d(MainActivity.LOG_TAG, e.toString());
+//            e.printStackTrace();
+//        }
 
         Log.d(
                 MainActivity.LOG_TAG,
@@ -192,31 +191,5 @@ public class LayoutManager {
                         pixelCount[PIXEL_COUNT_HEIGHT_INDEX] + ")"
         );
         return pixelCount;
-    }
-
-    public int statusBarHeight() {
-        Rect rectangle = new Rect();
-        Window window = mainActivity.getWindow();
-        window.getDecorView().getWindowVisibleDisplayFrame(rectangle);
-        int statusBarHeight = rectangle.top;
-
-        Log.d(MainActivity.LOG_TAG, "StatusBar Height = " + statusBarHeight);
-        return statusBarHeight;
-    }
-
-    public int softKeyButtonsBarHeight() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        mainActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        int usableHeight = metrics.heightPixels;
-        mainActivity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-        int realHeight = metrics.heightPixels;
-        if (realHeight > usableHeight) {
-            int softKeysHeight = realHeight - usableHeight;
-            Log.d(MainActivity.LOG_TAG, "Soft Keys Height: " + softKeysHeight);
-            return softKeysHeight;
-        } else {
-            Log.d(MainActivity.LOG_TAG, "No Soft Keys");
-        }
-        return 0;
     }
 }

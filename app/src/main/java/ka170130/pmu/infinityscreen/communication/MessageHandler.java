@@ -23,6 +23,7 @@ import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
+import ka170130.pmu.infinityscreen.io.WriteTask;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
@@ -182,7 +183,8 @@ public class MessageHandler {
     private void handleStateChangeRequestMessage(Message message) throws IOException, ClassNotFoundException {
         StateViewModel.AppState state = (StateViewModel.AppState) message.extractObject();
         // TODO: check if change request should be granted
-        taskManager.runBroadcastTask(Message.newStateChangeMessage(state));
+        taskManager.sendToAllInGroup(Message.newStateChangeMessage(state), true);
+//        taskManager.runBroadcastTask(Message.newStateChangeMessage(state));
     }
 
     // handle STATE_CHANGE message
@@ -264,11 +266,12 @@ public class MessageHandler {
             return;
         }
 
-        taskManager.runBroadcastTask(Message.newFileIndexUpdateMessage(index));
+        taskManager.sendToAllInGroup(Message.newFileIndexUpdateMessage(index), true);
+//        taskManager.runBroadcastTask(Message.newFileIndexUpdateMessage(index));
     }
 
     // handle CONTENT message
-    private void handleContentMessage(Message message) throws IOException, ClassNotFoundException {
+    private void handleContentMessage(Message message) throws IOException, ClassNotFoundException, InterruptedException {
         Boolean isHost = connectionViewModel.getIsHost().getValue();
         if (isHost) {
             // ignore
@@ -319,6 +322,7 @@ public class MessageHandler {
 
         // handle non-empty content
         File file = createdFiles.get(fileIndex);
+        boolean create = false;
 
         // if file was not already created - create new file
         if (file == null) {
@@ -331,24 +335,29 @@ public class MessageHandler {
                             .getExternalFilesDir("InfinityScreen"),
                     fileName
             );
+            create = true;
 
             // if directory was not already created - create directory
-            File dirs = new File(file.getParent());
-            if (!dirs.exists()) {
-                dirs.mkdirs();
-            }
-
-            file.createNewFile();
+//            File dirs = new File(file.getParent());
+//            if (!dirs.exists()) {
+//                dirs.mkdirs();
+//            }
+//
+//            file.createNewFile();
 
             // remember file
             createdFiles.set(fileIndex, file);
             mediaViewModel.setCreatedFiles(createdFiles);
         }
 
+        WriteTask.WriteCommand command =
+                new WriteTask.WriteCommand(file, create, contentPackage.getContent());
+        taskManager.getWriteTask().enqueue(command);
+
         // Append content to file
-        OutputStream outputStream = new FileOutputStream(file, true);
-        outputStream.write(contentPackage.getContent());
-        outputStream.close();
+//        OutputStream outputStream = new FileOutputStream(file, true);
+//        outputStream.write(contentPackage.getContent());
+//        outputStream.close();
 
         // success
         contentMessageHandled(fileIndex, hostAddress, packageId);
@@ -382,7 +391,9 @@ public class MessageHandler {
                     fileOnDeviceReady.getFileIndex(),
                     FileInfo.PlaybackStatus.PLAY
             );
-            taskManager.runBroadcastTask(Message.newPlaybackStatusCommandMessage(command));
+            taskManager.sendToAllInGroup(
+                    Message.newPlaybackStatusCommandMessage(command), true);
+//            taskManager.runBroadcastTask(Message.newPlaybackStatusCommandMessage(command));
         }
     }
 

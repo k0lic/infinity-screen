@@ -20,9 +20,11 @@ public class StateChangeHelper {
             PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
 
             if (isHost) {
-                mainActivity.getTaskManager().runBroadcastTask(
-                        Message.newStateChangeMessage(state)
-                );
+                mainActivity.getTaskManager()
+                        .sendToAllInGroup(Message.newStateChangeMessage(state), true);
+//                mainActivity.getTaskManager().runBroadcastTask(
+//                        Message.newStateChangeMessage(state)
+//                );
             } else {
                 mainActivity.getTaskManager().runSenderTask(
                         host.getInetAddress(),
