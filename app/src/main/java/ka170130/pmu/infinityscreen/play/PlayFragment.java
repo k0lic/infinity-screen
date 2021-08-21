@@ -3,6 +3,7 @@ package ka170130.pmu.infinityscreen.play;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
@@ -161,6 +162,8 @@ public class PlayFragment extends FullScreenFragment {
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             if (state == StateViewModel.AppState.FILE_SELECTION) {
+                mediaPlayer.reset();
+                currentContent = null;
                 mediaViewModel.reset();
                 navController.navigate(PlayFragmentDirections.actionPlayFragmentPop());
             }
@@ -218,11 +221,15 @@ public class PlayFragment extends FullScreenFragment {
         }
 
         if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
+            Uri uri = fetchUri(fileInfo);
+            if (uri == null) {
+                binding.bufferingLayout.setVisibility(View.VISIBLE);
+                return;
+            }
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
 
-            Uri uri = fetchUri(fileInfo);
             if (uri.equals(currentContent)) {
-                // skip -  content already set
+                // skip
                 return;
             }
 
@@ -278,26 +285,26 @@ public class PlayFragment extends FullScreenFragment {
         binding.textureView.setVisibility(View.VISIBLE);
         binding.imageView.setVisibility(View.INVISIBLE);
 
+        Uri uri = fetchUri(fileInfo);
+        // reset media player if necessary
+        if (uri == null || !uri.equals(currentContent)) {
+            mediaPlayer.reset();
+            currentContent = null;
+            mediaPlayerState = MediaPlayerState.IDLE;
+        }
+        if (uri == null) {
+            binding.bufferingLayout.setVisibility(View.VISIBLE);
+            return;
+        }
+
         FileInfo.PlaybackStatus status = fileInfo.getPlaybackStatus();
+        // PLAY video
         if (status == FileInfo.PlaybackStatus.PLAY) {
+            binding.bufferingLayout.setVisibility(View.INVISIBLE);
+
             if (mediaPlayerState == MediaPlayerState.PLAYING) {
                 // skip
                 return;
-            }
-
-            binding.bufferingLayout.setVisibility(View.INVISIBLE);
-
-            Uri uri = fetchUri(fileInfo);
-            if (uri == null) {
-                return;
-            }
-
-            // reset media player if necessary
-            if (!uri.equals(currentContent)) {
-                mediaPlayer.reset();
-
-                currentContent = null;
-                mediaPlayerState = MediaPlayerState.IDLE;
             }
 
             try {
@@ -341,17 +348,10 @@ public class PlayFragment extends FullScreenFragment {
             } catch (IOException e) {
                 LogHelper.error(e);
             }
-        } else if (status == FileInfo.PlaybackStatus.PAUSE) {
+        }
+        // PAUSE VIDEO
+        else if (status == FileInfo.PlaybackStatus.PAUSE) {
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
-
-            Uri uri = fetchUri(fileInfo);
-            // reset media player if necessary
-            if (!uri.equals(currentContent)) {
-                mediaPlayer.reset();
-
-                currentContent = null;
-                mediaPlayerState = MediaPlayerState.IDLE;
-            }
 
             try {
                 switch (mediaPlayerState) {
@@ -380,6 +380,10 @@ public class PlayFragment extends FullScreenFragment {
     }
 
     private Uri fetchUri(FileInfo fileInfo) {
+        if (fileInfo == null) {
+            return null;
+        }
+
         Boolean isHost = connectionViewModel.getIsHost().getValue();
         Uri uri = null;
 
@@ -387,9 +391,14 @@ public class PlayFragment extends FullScreenFragment {
         if (isHost) {
             ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
             Integer index = mediaViewModel.getCurrentFileIndex().getValue();
-            uri = Uri.parse(selectedUris.get(index));
+            if (index >= 0 && index < selectedUris.size()) {
+                uri = Uri.parse(selectedUris.get(index));
+            }
         } else {
-            uri = Uri.parse(fileInfo.getContentUri());
+            String uriString = fileInfo.getContentUri();
+            if (uriString != null) {
+                uri = Uri.parse(uriString);
+            }
         }
 
         return uri;
