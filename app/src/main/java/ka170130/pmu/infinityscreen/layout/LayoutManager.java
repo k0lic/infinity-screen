@@ -49,19 +49,59 @@ public class LayoutManager {
         Integer[] pixelCount = getPixelCount();
 
         Matrix matrix = new Matrix();
-        float widthRatio =
-                pixelCount[LayoutManager.PIXEL_COUNT_WIDTH_INDEX] / (float) drawableWidth;
+        // scale from original image size to viewport contain size
+        float widthRatio = pixelCount[PIXEL_COUNT_WIDTH_INDEX] / (float) drawableWidth;
         widthRatio *= viewport.getScreenWidth() / self.getScreenWidth();
-        float heightRatio =
-                pixelCount[LayoutManager.PIXEL_COUNT_HEIGHT_INDEX] / (float) drawableHeight;
+        float heightRatio = pixelCount[PIXEL_COUNT_HEIGHT_INDEX] / (float) drawableHeight;
         heightRatio *= viewport.getScreenHeight() / self.getScreenHeight();
-        float ratio = Math.min(widthRatio, heightRatio);
-        matrix.postScale(ratio, ratio);
+        float minRatio = Math.min(widthRatio, heightRatio);
+        widthRatio = minRatio;
+        heightRatio = minRatio;
+        matrix.postScale(widthRatio, heightRatio);
 
+        // translate
         float horizontal = -drawableWidth * widthRatio;
         horizontal *=
                 (self.getPosition().x - viewport.getPosition().x) / viewport.getScreenWidth();
         float vertical = -drawableHeight * heightRatio;
+        vertical *=
+                (self.getPosition().y - viewport.getPosition().y) / viewport.getScreenHeight();
+        matrix.postTranslate(horizontal, vertical);
+
+        LogHelper.log("Matrix: wr: " + widthRatio + " hr: " + heightRatio
+                + " dx: " + horizontal + " dy: " + vertical);
+        return matrix;
+    }
+
+    // need a special function since the video is automatically stretched to fit screen
+    public Matrix getVideoMatrix(
+            TransformInfo self,
+            TransformInfo viewport,
+            int drawableWidth,
+            int drawableHeight
+    ) {
+        Integer[] pixelCount = getPixelCount();
+
+        // scale from screen size to original video size
+        float fixWidth = drawableWidth / (float) pixelCount[PIXEL_COUNT_WIDTH_INDEX];
+        float fixHeight = drawableHeight / (float) pixelCount[PIXEL_COUNT_HEIGHT_INDEX];
+
+        Matrix matrix = new Matrix();
+        // scale from original video size to viewport contain size
+        float widthRatio = pixelCount[PIXEL_COUNT_WIDTH_INDEX] / (float) drawableWidth;
+        widthRatio *= viewport.getScreenWidth() / self.getScreenWidth();
+        float heightRatio = pixelCount[PIXEL_COUNT_HEIGHT_INDEX] / (float) drawableHeight;
+        heightRatio *= viewport.getScreenHeight() / self.getScreenHeight();
+        float minRatio = Math.min(widthRatio, heightRatio);
+        widthRatio = minRatio * fixWidth;
+        heightRatio = minRatio * fixHeight;
+        matrix.postScale(widthRatio, heightRatio);
+
+        // translate
+        float horizontal = -pixelCount[PIXEL_COUNT_WIDTH_INDEX] * widthRatio;
+        horizontal *=
+                (self.getPosition().x - viewport.getPosition().x) / viewport.getScreenWidth();
+        float vertical = -pixelCount[PIXEL_COUNT_HEIGHT_INDEX] * heightRatio;
         vertical *=
                 (self.getPosition().y - viewport.getPosition().y) / viewport.getScreenHeight();
         matrix.postTranslate(horizontal, vertical);

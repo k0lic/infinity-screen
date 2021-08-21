@@ -50,77 +50,69 @@ public class ContentTask implements Runnable {
 
     @Override
     public void run() {
+        ReadTask readTask = taskManager.getReadTask();
+        readTask.reset();
         SystemClock.sleep(100);
 
         ArrayList<String> contentUriList = mediaViewModel.getSelectedMedia().getValue();
-        ContentResolver contentResolver = taskManager.getMainActivity().getContentResolver();
+        readTask.registerSources(contentUriList);
 
         LogHelper.log("contentUriList.size() = " + contentUriList.size());
 
-        Iterator<String> iterator = contentUriList.iterator();
-        int fileIndex = -1;
-        while (iterator.hasNext()) {
-            Uri contentUri = Uri.parse(iterator.next());
-            fileIndex++;
+        ContentResolver contentResolver = taskManager.getMainActivity().getContentResolver();
+        int clientPermits = 1 - udpViewModel.getNumberOfClients();
+        LogHelper.log("ClientPermits: " + clientPermits);
 
-//            InputStream inputStream = null;
+        boolean run = readTask.getSources().size() > 0 || readTask.getResultQueue().size() > 0;
+        while (run) {
             try {
-//                inputStream = contentResolver.openInputStream(contentUri);
-                ReadTask.ReadCommand command = new ReadTask.ReadCommand(contentUri, 0);
-                taskManager.getReadTask().enqueue(command);
+                ReadTask.ReadResult readResult = readTask.take();
+                boolean lastPackage = readResult.getContent() == null;
 
-                int packageId = FileContentPackage.INIT_PACKAGE_ID;
-                int clientPermits = 1 - udpViewModel.getNumberOfClients();
-                LogHelper.log("ClientPermits: " + clientPermits);
+                udpViewModel.addSemaphore(readResult.getPackageId(), new Semaphore(clientPermits));
 
-//                int bufSize = Message.MESSAGE_MAX_SIZE - Message.JIC_BUFFER;
-//                byte[] buf = new byte[bufSize];
-//                int len = 0;
-                ReadTask.ReadResult readResult = null;
+                FileContentPackage content = new FileContentPackage(
+                        readResult.getFileIndex(),
+                        readResult.getPackageId(),
+                        lastPackage,
+                        readResult.getContent()
+                );
+                taskManager.sendToAllInGroup(Message.newContentMessage(content), false);
+                LogHelper.log("Sending content for file#" + readResult.getFileIndex() + " of length " + ((readResult.getContent() == null ? 0 : readResult.getContent().length) / 1024f) + " KB");
 
-                while (readResult == null || readResult.getContent() != null) {
-                    readResult = taskManager.getReadTask().take();
-//                    len = inputStream.read(buf);
-                    boolean lastPackage = readResult.getContent() == null;
-//                    boolean lastPackage = len == -1;
+                udpViewModel.getSemaphore(readResult.getPackageId()).acquire();
 
-                    udpViewModel.addSemaphore(packageId, new Semaphore(clientPermits));
-
-//                    byte[] copy = null;
-//                    if (!lastPackage) {
-//                        copy = new byte[len];
-//                        System.arraycopy(buf, 0, copy, 0, len);
-//                    }
-
-                    FileContentPackage content =
-                            new FileContentPackage(fileIndex, packageId, lastPackage, readResult.getContent());
-//                            new FileContentPackage(fileIndex, packageId, lastPackage, copy);
-//                    LogHelper.log("BroadcastConfirmationTask: " + packageId);
-//                    taskManager.runBroadcastConfirmationTask(
-//                            Message.newContentMessage(content),
-//                            udpViewModel.getSemaphore(SEMAPHORE_KEY),
-//                            udpViewModel.getSemaphore(packageId)
-//                    );
-                    taskManager.sendToAllInGroup(Message.newContentMessage(content), false);
-                    LogHelper.log("Sending content for file#" + fileIndex + " of length " + ((readResult.getContent() == null ? 0 : readResult.getContent().length) / 1024f) + " KB");
-
-                    udpViewModel.getSemaphore(packageId).acquire();
-//                    udpViewModel.getSemaphore(SEMAPHORE_KEY).acquire();
+                udpViewModel.removeSemaphore(readResult.getPackageId());
+//                ReadTask.ReadCommand command = new ReadTask.ReadCommand(contentUri, 0);
+//                taskManager.getReadTask().enqueue(command);
 //
-                    udpViewModel.removeSemaphore(packageId);
-                    packageId++;
-                }
+//                int packageId = FileContentPackage.INIT_PACKAGE_ID;
+//                int clientPermits = 1 - udpViewModel.getNumberOfClients();
+//                LogHelper.log("ClientPermits: " + clientPermits);
+//
+//                ReadTask.ReadResult readResult = null;
+//
+//                while (readResult == null || readResult.getContent() != null) {
+//                    readResult = taskManager.getReadTask().take();
+//                    boolean lastPackage = readResult.getContent() == null;
+//
+//                    udpViewModel.addSemaphore(packageId, new Semaphore(clientPermits));
+//
+//                    FileContentPackage content =
+//                            new FileContentPackage(fileIndex, packageId, lastPackage, readResult.getContent());
+//                    taskManager.sendToAllInGroup(Message.newContentMessage(content), false);
+//                    LogHelper.log("Sending content for file#" + fileIndex + " of length " + ((readResult.getContent() == null ? 0 : readResult.getContent().length) / 1024f) + " KB");
+//
+//                    udpViewModel.getSemaphore(packageId).acquire();
+//
+//                    udpViewModel.removeSemaphore(packageId);
+//                    packageId++;
+//                }
             } catch (IOException | InterruptedException e) {
                 LogHelper.error(e);
-            } finally {
-//                if (inputStream != null) {
-//                    try {
-//                        inputStream.close();
-//                    } catch (IOException e) {
-//                        LogHelper.error(e);
-//                    }
-//                }
             }
+
+            run = readTask.getSources().size() > 0 || readTask.getResultQueue().size() > 0;
         }
 
         udpViewModel.reset();

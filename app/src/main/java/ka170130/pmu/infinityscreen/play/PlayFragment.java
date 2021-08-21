@@ -1,8 +1,11 @@
 package ka170130.pmu.infinityscreen.play;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Matrix;
+import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,7 +18,10 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import android.util.Log;
+import android.util.Size;
 import android.view.LayoutInflater;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -46,6 +52,9 @@ public class PlayFragment extends FullScreenFragment {
     private LayoutViewModel layoutViewModel;
     private MediaViewModel mediaViewModel;
 
+    private MediaPlayer mediaPlayer;
+    private Uri currentContent;
+
     public PlayFragment() {
         // Required empty public constructor
     }
@@ -57,6 +66,9 @@ public class PlayFragment extends FullScreenFragment {
         stateViewModel = new ViewModelProvider(mainActivity).get(StateViewModel.class);
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
         mediaViewModel = new ViewModelProvider(mainActivity).get(MediaViewModel.class);
+
+        mediaPlayer = new MediaPlayer();
+        currentContent = null;
     }
 
     @Override
@@ -77,17 +89,57 @@ public class PlayFragment extends FullScreenFragment {
                 return;
             }
 
+            LogHelper.log("Active FileInfo: " + fileInfo.getFileType().toString()
+                    + " " + fileInfo.getWidth()
+                    + " " + fileInfo.getHeight()
+                    + " " + fileInfo.getExtension()
+                    + " " + fileInfo.getPlaybackStatus()
+                    + " " + fileInfo.getContentUri()
+            );
+
             if (fileInfo.getFileType() == FileInfo.FileType.IMAGE) {
                handleImage(fileInfo);
             }
 
-            // TODO: handle FileType.VIDEO
+            if (fileInfo.getFileType() == FileInfo.FileType.VIDEO) {
+                handleVideo(fileInfo);
+            }
+        });
+
+        // Listen for File Index change
+        mediaViewModel.getCurrentFileIndex().observe(getViewLifecycleOwner(), index -> {
+            mainActivity.getTaskManager().getReadTask().changeFocus(index);
         });
 
         // TODO: remove this code - replace with popup menu or something
         binding.menuButton.setOnClickListener(view -> {
             StateChangeHelper.requestStateChange(
                     mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
+        });
+
+        // Set media player surface
+        binding.textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
+                Surface surface = new Surface(surfaceTexture);
+                mediaPlayer.setSurface(surface);
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
+                // do nothing
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surfaceTexture) {
+                // do nothing
+                return false;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surfaceTexture) {
+                // do nothing
+            }
         });
 
         // Listen for App State change
@@ -142,27 +194,10 @@ public class PlayFragment extends FullScreenFragment {
         binding.textureView.setVisibility(View.INVISIBLE);
         binding.imageView.setVisibility(View.VISIBLE);
 
-        LogHelper.log("Active FileInfo: " + fileInfo.getFileType().toString()
-                + " " + fileInfo.getWidth()
-                + " " + fileInfo.getHeight()
-                + " " + fileInfo.getExtension()
-                + " " + fileInfo.getPlaybackStatus()
-                + " " + fileInfo.getContentUri()
-        );
         if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
 
-            Boolean isHost = connectionViewModel.getIsHost().getValue();
-            Uri uri = null;
-
-            // fetch image uri
-            if (isHost) {
-                ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
-                Integer index = mediaViewModel.getCurrentFileIndex().getValue();
-                uri = Uri.parse(selectedUris.get(index));
-            } else {
-                uri = Uri.parse(fileInfo.getContentUri());
-            }
+            Uri uri = fetchUri(fileInfo);
 
             ContentResolver contentResolver =
                     mainActivity.getApplicationContext().getContentResolver();
@@ -206,5 +241,67 @@ public class PlayFragment extends FullScreenFragment {
 
             binding.imageView.setImageDrawable(null);
         }
+    }
+
+    private void handleVideo(FileInfo fileInfo) {
+        binding.textureView.setVisibility(View.VISIBLE);
+        binding.imageView.setVisibility(View.INVISIBLE);
+
+        FileInfo.PlaybackStatus status = fileInfo.getPlaybackStatus();
+        if (status == FileInfo.PlaybackStatus.PLAY) {
+            try {
+                binding.bufferingLayout.setVisibility(View.INVISIBLE);
+
+                Uri uri = fetchUri(fileInfo);
+                if (uri == null) {
+                    return;
+                }
+
+                if (!mediaPlayer.isPlaying()) {
+                    mediaPlayer.setDataSource(mainActivity, uri);
+                    mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+                    mediaPlayer.prepareAsync();
+                }
+
+                // set matrix
+                TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+                TransformInfo viewport = layoutViewModel.getViewport().getValue();
+
+                Size videoDimens = mainActivity.getMediaManager().getVideoDimensions(uri);
+                int videoWidth = videoDimens.getWidth();
+                int videoHeight = videoDimens.getHeight();
+                LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
+
+                Matrix matrix = mainActivity.getLayoutManager()
+                        .getVideoMatrix(self, viewport, videoWidth, videoHeight);
+                binding.textureView.setTransform(matrix);
+            } catch (IOException e) {
+                LogHelper.error(e);
+            }
+        } else if (status == FileInfo.PlaybackStatus.PAUSE) {
+            binding.bufferingLayout.setVisibility(View.INVISIBLE);
+
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+            }
+        } else {
+            binding.bufferingLayout.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private Uri fetchUri(FileInfo fileInfo) {
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+        Uri uri = null;
+
+        // fetch image uri
+        if (isHost) {
+            ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
+            Integer index = mediaViewModel.getCurrentFileIndex().getValue();
+            uri = Uri.parse(selectedUris.get(index));
+        } else {
+            uri = Uri.parse(fileInfo.getContentUri());
+        }
+
+        return uri;
     }
 }

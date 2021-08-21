@@ -103,6 +103,17 @@ public class MediaManager {
         });
     }
 
+    public Size getVideoDimensions(Uri uri) {
+        // get first frame
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(mainActivity, uri);
+        Bitmap bitmap = mmr.getFrameAtTime();
+
+        // get size of first frame
+        Size size = new Size(bitmap.getWidth(), bitmap.getHeight());
+        return size;
+    }
+
     public boolean isVideo(String mimeType) {
         return mimeType != null && mimeType.startsWith("video");
     }
