@@ -47,6 +47,14 @@ import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class PlayFragment extends FullScreenFragment {
 
+    private enum MediaPlayerState {
+        IDLE,
+        PLAYING,
+        PAUSED,
+        STOPPED,
+        COMPLETED
+    }
+
     private FragmentPlayBinding binding;
     private StateViewModel stateViewModel;
     private LayoutViewModel layoutViewModel;
@@ -54,6 +62,7 @@ public class PlayFragment extends FullScreenFragment {
 
     private MediaPlayer mediaPlayer;
     private Uri currentContent;
+    private MediaPlayerState mediaPlayerState;
 
     public PlayFragment() {
         // Required empty public constructor
@@ -68,7 +77,13 @@ public class PlayFragment extends FullScreenFragment {
         mediaViewModel = new ViewModelProvider(mainActivity).get(MediaViewModel.class);
 
         mediaPlayer = new MediaPlayer();
+        mediaPlayer.setLooping(false);
+        mediaPlayer.setOnCompletionListener(mp -> {
+            mediaPlayerState = MediaPlayerState.COMPLETED;
+        });
+
         currentContent = null;
+        mediaPlayerState = MediaPlayerState.IDLE;
     }
 
     @Override
@@ -97,12 +112,13 @@ public class PlayFragment extends FullScreenFragment {
                     + " " + fileInfo.getContentUri()
             );
 
-            if (fileInfo.getFileType() == FileInfo.FileType.IMAGE) {
-               handleImage(fileInfo);
-            }
-
-            if (fileInfo.getFileType() == FileInfo.FileType.VIDEO) {
-                handleVideo(fileInfo);
+            switch (fileInfo.getFileType()) {
+                case IMAGE:
+                    handleImage(fileInfo);
+                    break;
+                case VIDEO:
+                    handleVideo(fileInfo);
+                    break;
             }
         });
 
@@ -194,11 +210,23 @@ public class PlayFragment extends FullScreenFragment {
         binding.textureView.setVisibility(View.INVISIBLE);
         binding.imageView.setVisibility(View.VISIBLE);
 
+        // stop media player - if it is active
+        if (mediaPlayerState != MediaPlayerState.IDLE) {
+            mediaPlayer.reset();
+            mediaPlayerState = MediaPlayerState.IDLE;
+            currentContent = null;
+        }
+
         if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
 
             Uri uri = fetchUri(fileInfo);
+            if (uri.equals(currentContent)) {
+                // skip -  content already set
+                return;
+            }
 
+            // set content
             ContentResolver contentResolver =
                     mainActivity.getApplicationContext().getContentResolver();
             int drawableWidth = fileInfo.getWidth();
@@ -236,10 +264,13 @@ public class PlayFragment extends FullScreenFragment {
             Matrix matrix = mainActivity.getLayoutManager()
                     .getMatrix(self, viewport, drawableWidth, drawableHeight);
             binding.imageView.setImageMatrix(matrix);
+
+            currentContent = uri;
         } else {
             binding.bufferingLayout.setVisibility(View.VISIBLE);
-
             binding.imageView.setImageDrawable(null);
+
+            currentContent = null;
         }
     }
 
@@ -249,43 +280,102 @@ public class PlayFragment extends FullScreenFragment {
 
         FileInfo.PlaybackStatus status = fileInfo.getPlaybackStatus();
         if (status == FileInfo.PlaybackStatus.PLAY) {
+            if (mediaPlayerState == MediaPlayerState.PLAYING) {
+                // skip
+                return;
+            }
+
+            binding.bufferingLayout.setVisibility(View.INVISIBLE);
+
+            Uri uri = fetchUri(fileInfo);
+            if (uri == null) {
+                return;
+            }
+
+            // reset media player if necessary
+            if (!uri.equals(currentContent)) {
+                mediaPlayer.reset();
+
+                currentContent = null;
+                mediaPlayerState = MediaPlayerState.IDLE;
+            }
+
             try {
-                binding.bufferingLayout.setVisibility(View.INVISIBLE);
+                switch (mediaPlayerState) {
+                    case IDLE:
+                        // set content
+                        if (!mediaPlayer.isPlaying()) {
+                            mediaPlayer.setDataSource(mainActivity, uri);
+                            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+                            mediaPlayer.prepareAsync();
+                        }
 
-                Uri uri = fetchUri(fileInfo);
-                if (uri == null) {
-                    return;
+                        // set matrix
+                        TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+                        TransformInfo viewport = layoutViewModel.getViewport().getValue();
+
+                        Size videoDimens = mainActivity.getMediaManager().getVideoDimensions(uri);
+                        int videoWidth = videoDimens.getWidth();
+                        int videoHeight = videoDimens.getHeight();
+                        LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
+
+                        Matrix matrix = mainActivity.getLayoutManager()
+                                .getVideoMatrix(self, viewport, videoWidth, videoHeight);
+                        binding.textureView.setTransform(matrix);
+
+                        mediaPlayerState = MediaPlayerState.PLAYING;
+                        break;
+                    case PAUSED:
+                    case COMPLETED:
+                        mediaPlayer.start();
+                        mediaPlayerState = MediaPlayerState.PLAYING;
+                        break;
+                    case STOPPED:
+                        mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+                        mediaPlayer.prepareAsync();
+                        mediaPlayerState = MediaPlayerState.PLAYING;
+                        break;
                 }
 
-                if (!mediaPlayer.isPlaying()) {
-                    mediaPlayer.setDataSource(mainActivity, uri);
-                    mediaPlayer.setOnPreparedListener(MediaPlayer::start);
-                    mediaPlayer.prepareAsync();
-                }
-
-                // set matrix
-                TransformInfo self = layoutViewModel.getSelfAuto().getValue();
-                TransformInfo viewport = layoutViewModel.getViewport().getValue();
-
-                Size videoDimens = mainActivity.getMediaManager().getVideoDimensions(uri);
-                int videoWidth = videoDimens.getWidth();
-                int videoHeight = videoDimens.getHeight();
-                LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
-
-                Matrix matrix = mainActivity.getLayoutManager()
-                        .getVideoMatrix(self, viewport, videoWidth, videoHeight);
-                binding.textureView.setTransform(matrix);
+                currentContent = uri;
             } catch (IOException e) {
                 LogHelper.error(e);
             }
         } else if (status == FileInfo.PlaybackStatus.PAUSE) {
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
 
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.pause();
+            Uri uri = fetchUri(fileInfo);
+            // reset media player if necessary
+            if (!uri.equals(currentContent)) {
+                mediaPlayer.reset();
+
+                currentContent = null;
+                mediaPlayerState = MediaPlayerState.IDLE;
+            }
+
+            try {
+                switch (mediaPlayerState) {
+                    case IDLE:
+                        mediaPlayer.setDataSource(mainActivity, uri);
+                        mediaPlayer.prepare();
+                        mediaPlayerState = MediaPlayerState.PAUSED;
+                        break;
+                    case PLAYING:
+                        if (mediaPlayer.isPlaying()) {
+                            mediaPlayer.pause();
+                        }
+                        mediaPlayerState = MediaPlayerState.PAUSED;
+                        break;
+                }
+
+                currentContent = uri;
+            } catch (IOException e) {
+                LogHelper.error(e);
             }
         } else {
             binding.bufferingLayout.setVisibility(View.VISIBLE);
+
+            currentContent = null;
         }
     }
 
