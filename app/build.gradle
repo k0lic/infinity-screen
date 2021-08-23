@@ -64,6 +64,4 @@ dependencies {
     // fragment
     def fragment_version = "1.3.6"
     implementation "androidx.fragment:fragment:$fragment_version"
-
-    compile 'com.sachinchandil:videodownloadandplay:1.0.0'
 }

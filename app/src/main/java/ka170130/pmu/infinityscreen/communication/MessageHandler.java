@@ -400,8 +400,8 @@ public class MessageHandler {
         if (readyOnAll) {
             PlaybackStatusCommand command = new PlaybackStatusCommand(
                     fileOnDeviceReady.getFileIndex(),
-                    FileInfo.PlaybackStatus.PAUSE
-//                    FileInfo.PlaybackStatus.PLAY
+//                    FileInfo.PlaybackStatus.PAUSE
+                    FileInfo.PlaybackStatus.PLAY
             );
             taskManager.sendToAllInGroup(
                     Message.newPlaybackStatusCommandMessage(command), true);

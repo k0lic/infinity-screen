@@ -21,8 +21,6 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.sachinchandil.videodownloadandplay.VideoDownloadAndPlayService;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -436,23 +434,18 @@ public class PlayFragment extends FullScreenFragment {
             mediaPlayer.setDataSource(mainActivity, uri);
         } else {
             // file is downloading - use stream proxy
-//            StringBuilder proxyPath = new StringBuilder("http://127.0.0.1:");
-//            proxyPath.append(TaskManager.PROXY_PORT);
-//            proxyPath.append("/");
-//            proxyPath.append(contentDescriptor);
-//            proxyPath.append("?filesize=");
-//            proxyPath.append(fileInfo.getFileSize());
-//            proxyPath.append("?mimetype=");
-//            proxyPath.append(fileInfo.getMimeType());
-//
-//            String path = proxyPath.toString();
-//            LogHelper.log("Proxy path: " + path);
-//            mediaPlayer.setDataSource(path);
+            StringBuilder proxyPath = new StringBuilder("http://127.0.0.1:");
+            proxyPath.append(TaskManager.PROXY_PORT);
+            proxyPath.append("/");
+            proxyPath.append(contentDescriptor);
+            proxyPath.append("?filesize=");
+            proxyPath.append(fileInfo.getFileSize());
+            proxyPath.append("?mimetype=");
+            proxyPath.append(fileInfo.getMimeType());
 
-            VideoDownloadAndPlayService.startServer(
-                    mainActivity,
-                    contentDescriptor,
-            );
+            String path = proxyPath.toString();
+            LogHelper.log("Proxy path: " + path);
+            mediaPlayer.setDataSource(path);
         }
     }
 }
