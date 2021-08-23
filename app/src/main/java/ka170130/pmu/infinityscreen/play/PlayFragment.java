@@ -14,12 +14,23 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.os.Handler;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.drm.DrmSessionEventListener;
+import com.google.android.exoplayer2.source.BaseMediaSource;
+import com.google.android.exoplayer2.source.MediaPeriod;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.MediaSourceEventListener;
+import com.google.android.exoplayer2.upstream.Allocator;
+import com.google.android.exoplayer2.upstream.TransferListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +64,9 @@ public class PlayFragment extends FullScreenFragment {
     private LayoutViewModel layoutViewModel;
     private MediaViewModel mediaViewModel;
 
-    private MediaPlayer mediaPlayer;
+//    private MediaPlayer mediaPlayer;
+    private SimpleExoPlayer exoPlayer;
+
     private String currentContent;
     private MediaPlayerState mediaPlayerState;
 
@@ -69,11 +82,12 @@ public class PlayFragment extends FullScreenFragment {
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
         mediaViewModel = new ViewModelProvider(mainActivity).get(MediaViewModel.class);
 
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setLooping(false);
-        mediaPlayer.setOnCompletionListener(mp -> {
-            mediaPlayerState = MediaPlayerState.COMPLETED;
-        });
+//        mediaPlayer = new MediaPlayer();
+//        mediaPlayer.setLooping(false);
+//        mediaPlayer.setOnCompletionListener(mp -> {
+//            mediaPlayerState = MediaPlayerState.COMPLETED;
+//        });
+        exoPlayer = new SimpleExoPlayer.Builder(mainActivity).build();
 
         currentContent = null;
         mediaPlayerState = MediaPlayerState.IDLE;
@@ -100,7 +114,6 @@ public class PlayFragment extends FullScreenFragment {
             LogHelper.log("Active FileInfo: " + fileInfo.getFileType().toString()
                     + " " + fileInfo.getWidth()
                     + " " + fileInfo.getHeight()
-                    + " " + fileInfo.getExtension()
                     + " " + fileInfo.getPlaybackStatus()
                     + " " + fileInfo.getContentUri()
             );
@@ -131,7 +144,8 @@ public class PlayFragment extends FullScreenFragment {
             @Override
             public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
                 Surface surface = new Surface(surfaceTexture);
-                mediaPlayer.setSurface(surface);
+//                mediaPlayer.setSurface(surface);
+                exoPlayer.setVideoSurface(surface);
             }
 
             @Override
@@ -154,7 +168,9 @@ public class PlayFragment extends FullScreenFragment {
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             if (state == StateViewModel.AppState.FILE_SELECTION) {
-                mediaPlayer.reset();
+//                mediaPlayer.reset();
+                exoPlayer.stop();
+                exoPlayer.clearMediaItems();
                 currentContent = null;
                 mediaViewModel.reset();
                 navController.navigate(PlayFragmentDirections.actionPlayFragmentPop());
@@ -207,7 +223,9 @@ public class PlayFragment extends FullScreenFragment {
 
         // stop media player - if it is active
         if (mediaPlayerState != MediaPlayerState.IDLE) {
-            mediaPlayer.reset();
+//            mediaPlayer.reset();
+            exoPlayer.stop();
+            exoPlayer.clearMediaItems();
             mediaPlayerState = MediaPlayerState.IDLE;
             currentContent = null;
         }
@@ -284,7 +302,9 @@ public class PlayFragment extends FullScreenFragment {
         String contentDescriptor = fetchContentDescriptor(fileInfo);
         // reset media player if necessary
         if (contentDescriptor == null || !contentDescriptor.equals(currentContent)) {
-            mediaPlayer.reset();
+//            mediaPlayer.reset();
+            exoPlayer.stop();
+            exoPlayer.clearMediaItems();
             currentContent = null;
             mediaPlayerState = MediaPlayerState.IDLE;
         }
@@ -308,41 +328,40 @@ public class PlayFragment extends FullScreenFragment {
             try {
                 switch (mediaPlayerState) {
                     case IDLE:
-                        // extract uri
-                        Uri uri = extractUri(isHost, contentDescriptor);
-
                         // set content
-                        if (!mediaPlayer.isPlaying()) {
-                            setVideoContent(
-                                    isHost, fileInfo.isDownloaded(), contentDescriptor, fileInfo);
-                            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
-                            mediaPlayer.prepareAsync();
+                        if (!exoPlayer.isPlaying()) {
+                            setVideoContent(isHost, contentDescriptor, fileInfo);
+//                            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+//                            mediaPlayer.prepareAsync();
+                            exoPlayer.prepare();
+                            exoPlayer.play();
                         }
 
                         // set matrix
                         TransformInfo self = layoutViewModel.getSelfAuto().getValue();
                         TransformInfo viewport = layoutViewModel.getViewport().getValue();
 
-                        // TODO: make getVideoDimensions() work
-//                        Size videoDimens = mainActivity.getMediaManager().getVideoDimensions(uri);
-//                        int videoWidth = videoDimens.getWidth();
-//                        int videoHeight = videoDimens.getHeight();
-//                        LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
-//
-//                        Matrix matrix = mainActivity.getLayoutManager()
-//                                .getVideoMatrix(self, viewport, videoWidth, videoHeight);
-//                        binding.textureView.setTransform(matrix);
+                        int videoWidth = fileInfo.getWidth();
+                        int videoHeight = fileInfo.getHeight();
+                        LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
+
+                        Matrix matrix = mainActivity.getLayoutManager()
+                                .getVideoMatrix(self, viewport, videoWidth, videoHeight);
+                        binding.textureView.setTransform(matrix);
 
                         mediaPlayerState = MediaPlayerState.PLAYING;
                         break;
                     case PAUSED:
                     case COMPLETED:
-                        mediaPlayer.start();
+//                        mediaPlayer.start();
+                        exoPlayer.play();
                         mediaPlayerState = MediaPlayerState.PLAYING;
                         break;
                     case STOPPED:
-                        mediaPlayer.setOnPreparedListener(MediaPlayer::start);
-                        mediaPlayer.prepareAsync();
+//                        mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+//                        mediaPlayer.prepareAsync();
+                        exoPlayer.prepare();
+                        exoPlayer.play();
                         mediaPlayerState = MediaPlayerState.PLAYING;
                         break;
                 }
@@ -359,14 +378,15 @@ public class PlayFragment extends FullScreenFragment {
             try {
                 switch (mediaPlayerState) {
                     case IDLE:
-                        setVideoContent(
-                                isHost, fileInfo.isDownloaded(), contentDescriptor, fileInfo);
-                        mediaPlayer.prepare();
+                        setVideoContent(isHost, contentDescriptor, fileInfo);
+//                        mediaPlayer.prepare();
+                        exoPlayer.prepare();
                         mediaPlayerState = MediaPlayerState.PAUSED;
                         break;
                     case PLAYING:
-                        if (mediaPlayer.isPlaying()) {
-                            mediaPlayer.pause();
+                        if (exoPlayer.isPlaying()) {
+//                            mediaPlayer.pause();
+                            exoPlayer.pause();
                         }
                         mediaPlayerState = MediaPlayerState.PAUSED;
                         break;
@@ -399,7 +419,13 @@ public class PlayFragment extends FullScreenFragment {
                 contentDescriptor = selectedUris.get(index);
             }
         } else {
-            contentDescriptor = fileInfo.getContentUri();
+            if (fileInfo.getFileType() == FileInfo.FileType.IMAGE) {
+                contentDescriptor = fileInfo.getContentUri();
+            } else if (fileInfo.getFileType() == FileInfo.FileType.VIDEO) {
+                // content descriptor is not used for videos - videos are streamed from host
+                // still have to differentiate between files
+                contentDescriptor = "dummy#" + fileInfo.getIndex();
+            }
         }
 
         return contentDescriptor;
@@ -422,22 +448,29 @@ public class PlayFragment extends FullScreenFragment {
 
     private void setVideoContent(
             Boolean isHost,
-            boolean downloaded,
             String contentDescriptor,
             FileInfo fileInfo
     ) throws IOException {
-        // TODO: remove next line
-        downloaded = false;
-        if (isHost || downloaded) {
-            // file is fully downloaded
+        if (isHost) {
+            // file is on local device
             Uri uri = extractUri(isHost, contentDescriptor);
-            mediaPlayer.setDataSource(mainActivity, uri);
+//            mediaPlayer.setDataSource(mainActivity, uri);
+            MediaItem mediaItem = MediaItem.fromUri(uri);
+            exoPlayer.setMediaItem(mediaItem);
         } else {
-            // file is downloading - use stream proxy
-            StringBuilder proxyPath = new StringBuilder("http://127.0.0.1:");
+            // file is streamed over WiFi P2P
+            PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+            String hostAddress = host.getInetAddress().getHostAddress();
+            int fileIndex = mediaViewModel.getCurrentFileIndex().getValue();
+
+            StringBuilder proxyPath = new StringBuilder("http://");
+            proxyPath.append(hostAddress);
+            proxyPath.append(":");
             proxyPath.append(TaskManager.PROXY_PORT);
             proxyPath.append("/");
-            proxyPath.append(contentDescriptor);
+            proxyPath.append("hello");  // not necessary, url looks weird without
+            proxyPath.append("?fileindex=");
+            proxyPath.append(fileIndex);
             proxyPath.append("?filesize=");
             proxyPath.append(fileInfo.getFileSize());
             proxyPath.append("?mimetype=");
@@ -445,7 +478,11 @@ public class PlayFragment extends FullScreenFragment {
 
             String path = proxyPath.toString();
             LogHelper.log("Proxy path: " + path);
-            mediaPlayer.setDataSource(path);
+
+//            mediaPlayer.setDataSource(path);
+            Uri uri = Uri.parse(path);
+            MediaItem mediaItem = MediaItem.fromUri(uri);
+            exoPlayer.setMediaItem(mediaItem);
         }
     }
 }

@@ -67,8 +67,6 @@ public class FileSelectionWaitFragment extends ConnectionAwareFragment {
             return false;
         });
 
-        // TODO
-
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             if (state == StateViewModel.AppState.LAYOUT) {

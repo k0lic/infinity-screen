@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 public class FileInfo implements Serializable {
 
-    public static final int VIDEO_PACKAGE_THRESHOLD = 0;
+    public static final int VIDEO_PACKAGE_THRESHOLD = 10;
 
     public enum FileType {
         IMAGE,
@@ -20,41 +20,43 @@ public class FileInfo implements Serializable {
         WAIT    // show buffering dialog
     }
 
+    private int index;
+
     private String mimeType;
     private FileType fileType;
     private long fileSize;
     private int width;
     private int height;
-    private String extension;
 
     private int nextPackage;
 
     private PlaybackStatus playbackStatus;
     private String contentUri;
-    private boolean downloaded;
 
     public FileInfo(
+            int index,
             String mimeType,
             FileType fileType,
             long fileSize,
             int width,
             int height,
-            String extension,
             int nextPackage,
             PlaybackStatus playbackStatus,
-            String contentUri,
-            boolean downloaded
+            String contentUri
     ) {
+        this.index = index;
         this.mimeType = mimeType;
         this.fileType = fileType;
         this.fileSize = fileSize;
         this.width = width;
         this.height = height;
-        this.extension = extension;
         this.nextPackage = nextPackage;
         this.playbackStatus = playbackStatus;
         this.contentUri = contentUri;
-        this.downloaded = downloaded;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public String getMimeType() {
@@ -75,10 +77,6 @@ public class FileInfo implements Serializable {
 
     public int getHeight() {
         return height;
-    }
-
-    public String getExtension() {
-        return extension;
     }
 
     public int getNextPackage() {
@@ -103,13 +101,5 @@ public class FileInfo implements Serializable {
 
     public void setContentUri(String contentUri) {
         this.contentUri = contentUri;
-    }
-
-    public boolean isDownloaded() {
-        return downloaded;
-    }
-
-    public void setDownloaded(boolean downloaded) {
-        this.downloaded = downloaded;
     }
 }

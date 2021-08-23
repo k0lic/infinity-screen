@@ -106,7 +106,6 @@ public class DeviceListFragment extends ConnectionAwareFragment {
 
         // Continue Button
         binding.continueButton.setOnClickListener(view -> {
-            // TODO: replace dummy code with real code
 //            mainActivity.getTaskManager().runBroadcastTask(Message.newTestMessage());
 //            navController.navigate(DeviceListFragmentDirections.actionLayoutFragment());
             StateChangeHelper.requestStateChange(
@@ -125,10 +124,6 @@ public class DeviceListFragment extends ConnectionAwareFragment {
 
         return  binding.getRoot();
     }
-
-    // TODO: remove this comment
-    // Don't react to connection changes
-
 
     @Override
     public void onResume() {

@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
@@ -20,6 +21,7 @@ import java.util.concurrent.Semaphore;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.FileContentPackage;
+import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
@@ -52,14 +54,22 @@ public class ContentTask implements Runnable {
     public void run() {
         ReadTask readTask = taskManager.getReadTask();
         readTask.reset();
-        SystemClock.sleep(100);
 
+        // get all content of IMAGE type
         ArrayList<String> contentUriList = mediaViewModel.getSelectedMedia().getValue();
-        readTask.registerSources(contentUriList);
-
+        ArrayList<FileInfo> fileInfos = mediaViewModel.getFileInfoList().getValue();
         LogHelper.log("contentUriList.size() = " + contentUriList.size());
+        LogHelper.log("fileInfos.size() = " + fileInfos.size());
 
-        ContentResolver contentResolver = taskManager.getMainActivity().getContentResolver();
+        ArrayList<MainActivity.Pair<Integer, String>> imageList = new ArrayList<>();
+        for (int i = 0; i < contentUriList.size() && i < fileInfos.size(); i++) {
+            if (fileInfos.get(i).getFileType() == FileInfo.FileType.IMAGE) {
+                imageList.add(new MainActivity.Pair<>(i, contentUriList.get(i)));
+            }
+        }
+        readTask.registerSources(imageList);
+        LogHelper.log("imageList.size() = " + imageList.size());
+
         int clientPermits = 1 - udpViewModel.getNumberOfClients();
         LogHelper.log("ClientPermits: " + clientPermits);
 
@@ -83,31 +93,6 @@ public class ContentTask implements Runnable {
                 udpViewModel.getSemaphore(readResult.getPackageId()).acquire();
 
                 udpViewModel.removeSemaphore(readResult.getPackageId());
-//                ReadTask.ReadCommand command = new ReadTask.ReadCommand(contentUri, 0);
-//                taskManager.getReadTask().enqueue(command);
-//
-//                int packageId = FileContentPackage.INIT_PACKAGE_ID;
-//                int clientPermits = 1 - udpViewModel.getNumberOfClients();
-//                LogHelper.log("ClientPermits: " + clientPermits);
-//
-//                ReadTask.ReadResult readResult = null;
-//
-//                while (readResult == null || readResult.getContent() != null) {
-//                    readResult = taskManager.getReadTask().take();
-//                    boolean lastPackage = readResult.getContent() == null;
-//
-//                    udpViewModel.addSemaphore(packageId, new Semaphore(clientPermits));
-//
-//                    FileContentPackage content =
-//                            new FileContentPackage(fileIndex, packageId, lastPackage, readResult.getContent());
-//                    taskManager.sendToAllInGroup(Message.newContentMessage(content), false);
-//                    LogHelper.log("Sending content for file#" + fileIndex + " of length " + ((readResult.getContent() == null ? 0 : readResult.getContent().length) / 1024f) + " KB");
-//
-//                    udpViewModel.getSemaphore(packageId).acquire();
-//
-//                    udpViewModel.removeSemaphore(packageId);
-//                    packageId++;
-//                }
             } catch (IOException | InterruptedException e) {
                 LogHelper.error(e);
             }

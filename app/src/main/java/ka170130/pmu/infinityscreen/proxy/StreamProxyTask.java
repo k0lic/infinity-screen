@@ -1,6 +1,10 @@
-package ka170130.pmu.infinityscreen.io;
+package ka170130.pmu.infinityscreen.proxy;
 
+import android.content.ContentResolver;
+import android.net.Uri;
 import android.util.Log;
+
+import androidx.lifecycle.ViewModelProvider;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -10,24 +14,33 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 
 public class StreamProxyTask implements Runnable {
 
     private static final int REQUEST_MAX_SIZE = 1024;
 
+    private MainActivity mainActivity;
+    private MediaViewModel mediaViewModel;
+
     private Socket socket;
-    private String localPath;
+    private int fileIndex;
     private long fileSize;
     private String mimeType;
     private int position;
 
-    public StreamProxyTask(Socket socket) {
+    public StreamProxyTask(MainActivity mainActivity, Socket socket) {
+        this.mainActivity = mainActivity;
         this.socket = socket;
+
+        this.mediaViewModel =
+                new ViewModelProvider(mainActivity).get(MediaViewModel.class);
     }
 
     @Override
@@ -75,7 +88,7 @@ public class StreamProxyTask implements Runnable {
             urlLine = urlLine.substring(1, charPos);
         }
         String[] args = urlLine.split("\\?");
-        localPath = args[0];
+        // skip args[0] - "hello" dummy string
         for (int i = 1; i < args.length; i++) {
             // args[i] = <argument_name>"="<argument_value>
             int equalsIndex = args[i].indexOf("=");
@@ -88,6 +101,9 @@ public class StreamProxyTask implements Runnable {
                     break;
                 case "mimetype":
                     mimeType = argValue;
+                    break;
+                case "fileindex":
+                    fileIndex = Integer.parseInt(argValue);
                     break;
             }
         }
@@ -140,30 +156,31 @@ public class StreamProxyTask implements Runnable {
         // Loop as long as there's stuff to send
         while (cbToSend > 0 && !socket.isClosed()) {
             // See if there's more to send
-            File file = new File(localPath);
+            ArrayList<String> selectedMediaList = mediaViewModel.getSelectedMedia().getValue();
+            String content = selectedMediaList.get(fileIndex);
+            ContentResolver contentResolver = mainActivity.getContentResolver();
+            InputStream input = contentResolver.openInputStream(Uri.parse(content));
+
             fc++;
             int cbSentThisBatch = 0;
-            if (file.exists()) {
-                FileInputStream input = new FileInputStream(file);
-                input.skip(position);
-                int cbToSendThisBatch = input.available();
-                while (cbToSendThisBatch > 0) {
-                    int cbToRead = Math.min(cbToSendThisBatch, buff.length);
-                    int cbRead = input.read(buff, 0, cbToRead);
-                    if (cbRead == -1) {
-                        break;
-                    }
-                    cbToSendThisBatch -= cbRead;
-                    cbToSend -= cbRead;
-                    output.write(buff, 0, cbRead);
-                    output.flush();
-                    position += cbRead;
-                    cbSentThisBatch += cbRead;
-
-                    LogHelper.log("Stream Proxy Task sent " + cbRead + " bytes");
+            input.skip(position);
+            int cbToSendThisBatch = input.available();
+            while (cbToSendThisBatch > 0) {
+                int cbToRead = Math.min(cbToSendThisBatch, buff.length);
+                int cbRead = input.read(buff, 0, cbToRead);
+                if (cbRead == -1) {
+                    break;
                 }
-                input.close();
+                cbToSendThisBatch -= cbRead;
+                cbToSend -= cbRead;
+                output.write(buff, 0, cbRead);
+                output.flush();
+                position += cbRead;
+                cbSentThisBatch += cbRead;
+
+                LogHelper.log("Stream Proxy Task sent " + cbRead + " bytes");
             }
+            input.close();
 
             // If we did nothing this batch, block for some time
             if (cbSentThisBatch == 0) {
@@ -177,7 +194,5 @@ public class StreamProxyTask implements Runnable {
         socket.close();
     }
 
-    private class InvalidRequestException extends Exception {
-        // TODO: anything?
-    }
+    private class InvalidRequestException extends Exception { }
 }

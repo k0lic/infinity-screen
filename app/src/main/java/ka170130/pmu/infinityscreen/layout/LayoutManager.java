@@ -55,9 +55,7 @@ public class LayoutManager {
         float heightRatio = pixelCount[PIXEL_COUNT_HEIGHT_INDEX] / (float) drawableHeight;
         heightRatio *= viewport.getScreenHeight() / self.getScreenHeight();
         float minRatio = Math.min(widthRatio, heightRatio);
-        widthRatio = minRatio;
-        heightRatio = minRatio;
-        matrix.postScale(widthRatio, heightRatio);
+        matrix.postScale(minRatio, minRatio);
 
         // translate
         float horizontal = -drawableWidth * widthRatio;
@@ -68,7 +66,7 @@ public class LayoutManager {
                 (self.getPosition().y - viewport.getPosition().y) / viewport.getScreenHeight();
         matrix.postTranslate(horizontal, vertical);
 
-        LogHelper.log("Matrix: wr: " + widthRatio + " hr: " + heightRatio
+        LogHelper.log("Matrix: wr: " + minRatio + " hr: " + minRatio
                 + " dx: " + horizontal + " dy: " + vertical);
         return matrix;
     }
@@ -93,20 +91,18 @@ public class LayoutManager {
         float heightRatio = pixelCount[PIXEL_COUNT_HEIGHT_INDEX] / (float) drawableHeight;
         heightRatio *= viewport.getScreenHeight() / self.getScreenHeight();
         float minRatio = Math.min(widthRatio, heightRatio);
-        widthRatio = minRatio * fixWidth;
-        heightRatio = minRatio * fixHeight;
-        matrix.postScale(widthRatio, heightRatio);
+        matrix.postScale(minRatio * fixWidth, minRatio * fixHeight);
 
         // translate
-        float horizontal = -pixelCount[PIXEL_COUNT_WIDTH_INDEX] * widthRatio;
+        float horizontal = -pixelCount[PIXEL_COUNT_WIDTH_INDEX] * widthRatio * fixWidth;
         horizontal *=
                 (self.getPosition().x - viewport.getPosition().x) / viewport.getScreenWidth();
-        float vertical = -pixelCount[PIXEL_COUNT_HEIGHT_INDEX] * heightRatio;
+        float vertical = -pixelCount[PIXEL_COUNT_HEIGHT_INDEX] * heightRatio * fixHeight;
         vertical *=
                 (self.getPosition().y - viewport.getPosition().y) / viewport.getScreenHeight();
         matrix.postTranslate(horizontal, vertical);
 
-        LogHelper.log("Matrix: wr: " + widthRatio + " hr: " + heightRatio
+        LogHelper.log("Matrix: wr: " + minRatio * fixWidth + " hr: " + minRatio * fixHeight
                 + " dx: " + horizontal + " dy: " + vertical);
         return matrix;
     }

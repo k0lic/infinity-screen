@@ -138,14 +138,18 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
             ArrayList<FileInfo> fileInfos = new ArrayList<>();
 
             Iterator<String> iterator = mediaViewModel.getSelectedMedia().getValue().iterator();
+            int index = 0;
             while (iterator.hasNext()) {
                 String next = iterator.next();
                 Uri uri = Uri.parse(next);
 
-                FileInfo fileInfo = mainActivity.getMediaManager().fileInfoFromUri(uri);
+                FileInfo fileInfo = mainActivity.getMediaManager().fileInfoFromUri(uri, index);
                 fileInfos.add(fileInfo);
+
+                index++;
             }
 
+            // update FileInfoList
             try {
                 mainActivity.getTaskManager()
                         .sendToAllInGroup(Message.newFileIndexUpdateMessage(0), true);
@@ -157,16 +161,22 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
                 LogHelper.error(e);
             }
 
-            boolean contentTaskCreated = mediaViewModel.isContentTaskCreated();
-            if (!contentTaskCreated) {
-                int numberOfClients = connectionViewModel.getGroupList().getValue().size();
-                mainActivity.getTaskManager().runContentTask(numberOfClients);
-                mediaViewModel.setContentTaskCreated(true);
-            }
+            // wait until FileInfoList is updated
+            // then navigate to PlayFragment and start sending images
+            mediaViewModel.getFileInfoList().observe(getViewLifecycleOwner(), list -> {
+                if (list.size() > 0) {
+                    boolean contentTaskCreated = mediaViewModel.isContentTaskCreated();
+                    if (!contentTaskCreated) {
+                        int numberOfClients = connectionViewModel.getGroupList().getValue().size();
+                        mainActivity.getTaskManager().runContentTask(numberOfClients);
+                        mediaViewModel.setContentTaskCreated(true);
+                    }
 
-            StateChangeHelper.requestStateChange(
-                    mainActivity, connectionViewModel, StateViewModel.AppState.PLAY);
-//            navController.navigate(FileSelectionFragmentDirections.actionPlayFragment());
+                    StateChangeHelper.requestStateChange(
+                            mainActivity, connectionViewModel, StateViewModel.AppState.PLAY);
+//                    navController.navigate(FileSelectionFragmentDirections.actionPlayFragment());
+                }
+            });
         });
 
         // Listen for App State change

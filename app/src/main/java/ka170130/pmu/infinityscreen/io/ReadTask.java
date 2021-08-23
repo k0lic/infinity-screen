@@ -45,13 +45,21 @@ public class ReadTask implements Runnable {
         focus = 0;
     }
 
-    public void registerSources(List<String> uriList) {
-        Iterator<String> iterator = uriList.iterator();
+    public void registerSources(List<MainActivity.Pair<Integer, String>> imageList) {
+        Iterator<MainActivity.Pair<Integer, String>> iterator = imageList.iterator();
 
         while (iterator.hasNext()) {
-            String next = iterator.next();
+            MainActivity.Pair<Integer, String> next = iterator.next();
+            int fileIndex = next.first;
+            Uri imageUri = Uri.parse(next.second);
+
             sources.add(new Source(
-                    Uri.parse(next), 0, FileContentPackage.INIT_PACKAGE_ID, false));
+                    imageUri,
+                    fileIndex,
+                    0,
+                    FileContentPackage.INIT_PACKAGE_ID,
+                    false
+            ));
         }
 
         semaphore.release();
@@ -91,10 +99,13 @@ public class ReadTask implements Runnable {
                     semaphore.acquire();
                 }
 
-                // use focused source, if it is not yet done
+                // use focused source
                 int index = 0;
-                if (focus > 0 && focus < sources.size() && !sources.get(focus).isDone()) {
-                    index = focus;
+                while (index < sources.size() && sources.get(index).fileIndex != focus) {
+                    index++;
+                }
+                if (index == sources.size() || sources.get(index).isDone()) {
+                    index = 0;
                 }
 
                 // get first source that is not yet done
@@ -136,7 +147,7 @@ public class ReadTask implements Runnable {
                 }
 
                 // forward read content
-                ReadResult result = new ReadResult(index, source.packageId, copy);
+                ReadResult result = new ReadResult(source.fileIndex, source.packageId, copy);
                 resultQueue.put(result);
 
                 // update source
@@ -149,57 +160,19 @@ public class ReadTask implements Runnable {
                 LogHelper.error(e);
             }
         }
-//        while (true) {
-//            try {
-//                ReadCommand command = queue.take();
-//
-//                // create new input stream if uri different than current is requested
-//                // reset is not supported, so we create new input stream if we are ahead of desired content
-//                if (!command.contentUri.equals(currentUri) || currentPosition > command.skip) {
-//                    if (inputStream != null) {
-//                        inputStream.close();
-//                    }
-//
-//                    currentUri = command.contentUri;
-//                    inputStream = contentResolver.openInputStream(currentUri);
-//                    currentPosition = 0;
-//                }
-//
-//                if (currentPosition < command.skip) {
-//                    inputStream.skip(command.skip - currentPosition);
-//                    currentPosition = command.skip;
-//                }
-//
-//                int len = inputStream.read(buf);
-//                byte[] copy = null;
-//                if (len != -1) {
-//                    copy = new byte[len];
-//                    System.arraycopy(buf, 0, copy, 0, len);
-//                    currentPosition += len;
-//
-//                    // TODO: remove and code something smart
-//                    ReadCommand nextCommand = new ReadCommand(currentUri, currentPosition);
-//                    queue.offer(nextCommand);
-//                }
-//
-//                ReadResult result = new ReadResult(copy);
-//                resultQueue.put(result);
-//
-//            } catch (InterruptedException | IOException e) {
-//                LogHelper.error(e);
-//            }
-//        }
     }
 
     public static class Source {
 
         private Uri contentUri;
+        private int fileIndex;
         private int position;
         private int packageId;
         private boolean done;
 
-        public Source(Uri contentUri, int position, int packageId, boolean done) {
+        public Source(Uri contentUri, int fileIndex, int position, int packageId, boolean done) {
             this.contentUri = contentUri;
+            this.fileIndex = fileIndex;
             this.position = position;
             this.packageId = packageId;
             this.done = done;
@@ -207,6 +180,10 @@ public class ReadTask implements Runnable {
 
         public Uri getContentUri() {
             return contentUri;
+        }
+
+        public int getFileIndex() {
+            return fileIndex;
         }
 
         public int getPosition() {

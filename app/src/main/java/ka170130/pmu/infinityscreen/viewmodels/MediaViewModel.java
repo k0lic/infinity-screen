@@ -142,17 +142,6 @@ public class MediaViewModel extends ViewModel implements Resettable {
         setFileInfoList(fileInfos);
     }
 
-    public void setFileInfoListElementDownloaded(int index, boolean downloaded) {
-        if (isFileInfoListIndexOutOfBounds(index)) {
-            return;
-        }
-
-        ArrayList<FileInfo> fileInfos = fileInfoList.getValue();
-        fileInfos.get(index).setDownloaded(downloaded);
-
-        setFileInfoList(fileInfos);
-    }
-
     public void setFileInfoListElementPlaybackStatus(int index, FileInfo.PlaybackStatus playbackStatus) {
         if (isFileInfoListIndexOutOfBounds(index)) {
             return;

@@ -1,4 +1,4 @@
-package ka170130.pmu.infinityscreen.io;
+package ka170130.pmu.infinityscreen.proxy;
 
 import java.io.IOException;
 import java.net.ServerSocket;

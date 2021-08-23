@@ -36,7 +36,7 @@ public class MediaManager {
         this.mainActivity = mainActivity;
     }
 
-    public FileInfo fileInfoFromUri(Uri uri) {
+    public FileInfo fileInfoFromUri(Uri uri, int index) {
         String mimeType = getMimeType(uri);
         FileInfo.FileType fileType = null;
         if (isImage(mimeType)) {
@@ -56,44 +56,52 @@ public class MediaManager {
             fileSize = returnCursor.getLong(sizeIndex);
         }
 
-        int imageWidth = 0;
-        int imageHeight = 0;
-        try {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(
-                    mainActivity.getContentResolver().openInputStream(uri),
-                    null,
-                    options
-            );
-            imageWidth = options.outWidth;
-            imageHeight = options.outHeight;
-        } catch (FileNotFoundException exception) {
-            LogHelper.error(exception);
-            return null;
+        int contentWidth = 0;
+        int contentHeight = 0;
+        if (fileType == FileInfo.FileType.IMAGE) {
+            try {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeStream(
+                        mainActivity.getContentResolver().openInputStream(uri),
+                        null,
+                        options
+                );
+                contentWidth = options.outWidth;
+                contentHeight = options.outHeight;
+            } catch (FileNotFoundException exception) {
+                LogHelper.error(exception);
+                return null;
+            }
+        } else if (fileType == FileInfo.FileType.VIDEO) {
+            Size videoDimens = getVideoDimensions(uri);
+            contentWidth = videoDimens.getWidth();
+            contentHeight = videoDimens.getHeight();
         }
 
-        String extension = getExtension(uri);
         LogHelper.log("FileInfo (from Uri): ["
                 + "mime type: " + mimeType
                 + ", type: " + (fileType == null ? "<NULL>" : fileType.toString())
-                + ", width: " + imageWidth
-                + ", height: " + imageHeight
-                + ", extension: " + extension
+                + ", width: " + contentWidth
+                + ", height: " + contentHeight
                 + "]"
         );
 
+        FileInfo.PlaybackStatus initialStatus = FileInfo.PlaybackStatus.WAIT;
+        if (fileType == FileInfo.FileType.VIDEO) {
+            initialStatus = FileInfo.PlaybackStatus.PLAY;
+        }
+
         return new FileInfo(
+                index,
                 mimeType,
                 fileType,
                 fileSize,
-                imageWidth,
-                imageHeight,
-                extension,
+                contentWidth,
+                contentHeight,
                 FileContentPackage.INIT_PACKAGE_ID,
-                FileInfo.PlaybackStatus.WAIT,
-                null,
-                false
+                initialStatus,
+                null
         );
     }
 
@@ -152,7 +160,7 @@ public class MediaManager {
         return mimeType;
     }
 
-    public String getExtension(Uri uri) {
-        return MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-    }
+//    public String getExtension(Uri uri) {
+//        return MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+//    }
 }

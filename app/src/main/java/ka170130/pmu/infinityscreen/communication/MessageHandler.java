@@ -298,8 +298,6 @@ public class MessageHandler {
         ArrayList<File> createdFiles = mediaViewModel.getCreatedFiles();
         if (contentPackage.getContent() == null) {
             if (contentPackage.isLastPackage()) {
-                mediaViewModel.setFileInfoListElementDownloaded(fileIndex, true);
-
                 // activate content if it was not already activated
                 if (fileInfo.getContentUri() == null) {
                     File file = createdFiles.get(fileIndex);
@@ -326,9 +324,7 @@ public class MessageHandler {
         // (do not create on disk, it will be created on another thread so we can respond sooner)
         if (file == null) {
             String fileName =
-                    "infinity-screen-"
-                            + System.currentTimeMillis()
-                            + "." + fileInfo.getExtension();
+                    "infinity-screen-image#" + fileIndex + "-" + System.currentTimeMillis();
             file = new File(
                     taskManager.getMainActivity().getApplicationContext()
                             .getExternalFilesDir("InfinityScreen"),
@@ -341,12 +337,13 @@ public class MessageHandler {
             mediaViewModel.setCreatedFiles(createdFiles);
         }
 
+        // TODO: maybe this activation is not needed - since StreamProxy is now used for videos
         // activate video content
-        if (fileInfo.getFileType() == FileInfo.FileType.VIDEO
-                && fileInfo.getNextPackage() >= FileInfo.VIDEO_PACKAGE_THRESHOLD
-        ) {
-            activateContent(file, fileIndex, hostAddress);
-        }
+//        if (fileInfo.getFileType() == FileInfo.FileType.VIDEO
+//                && fileInfo.getNextPackage() >= FileInfo.VIDEO_PACKAGE_THRESHOLD
+//        ) {
+//            activateContent(file, fileIndex, hostAddress);
+//        }
 
         // Submit 'Append content to file' task
         WriteTask.WriteCommand command =
