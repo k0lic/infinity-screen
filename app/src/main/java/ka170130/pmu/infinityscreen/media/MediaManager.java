@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.util.Size;
 import android.webkit.MimeTypeMap;
@@ -21,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.FileContentPackage;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.helpers.Callback;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
@@ -45,6 +47,15 @@ public class MediaManager {
             fileType =  null;
         }
 
+        long fileSize = 0;
+        Cursor returnCursor = mainActivity.getContentResolver()
+                .query(uri, null, null, null, null);
+        int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+
+        if (returnCursor.moveToFirst()) {
+            fileSize = returnCursor.getLong(sizeIndex);
+        }
+
         int imageWidth = 0;
         int imageHeight = 0;
         try {
@@ -64,7 +75,8 @@ public class MediaManager {
 
         String extension = getExtension(uri);
         LogHelper.log("FileInfo (from Uri): ["
-                + "type: " + (fileType == null ? "<NULL>" : fileType.toString())
+                + "mime type: " + mimeType
+                + ", type: " + (fileType == null ? "<NULL>" : fileType.toString())
                 + ", width: " + imageWidth
                 + ", height: " + imageHeight
                 + ", extension: " + extension
@@ -72,12 +84,16 @@ public class MediaManager {
         );
 
         return new FileInfo(
+                mimeType,
                 fileType,
+                fileSize,
                 imageWidth,
                 imageHeight,
                 extension,
+                FileContentPackage.INIT_PACKAGE_ID,
                 FileInfo.PlaybackStatus.WAIT,
-                null
+                null,
+                false
         );
     }
 

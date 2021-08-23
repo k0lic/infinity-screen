@@ -112,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup Server Task
         taskManager.runServerTask();
+        taskManager.runStreamProxyServer();
 //        taskManager.runBroadcastServerTask();
 
         // Setup Wifi Direct Broadcast Receiver

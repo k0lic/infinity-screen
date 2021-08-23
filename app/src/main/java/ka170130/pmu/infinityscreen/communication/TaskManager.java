@@ -14,6 +14,8 @@ import java.util.concurrent.Semaphore;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.io.ReadTask;
+import ka170130.pmu.infinityscreen.io.StreamProxyServer;
+import ka170130.pmu.infinityscreen.io.StreamProxyTask;
 import ka170130.pmu.infinityscreen.io.WriteTask;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
@@ -23,6 +25,7 @@ public class TaskManager {
 
     public static final int DEFAULT_PORT = 8888;
     public static final int BROADCAST_PORT = 8889;
+    public static final int PROXY_PORT = 8900;
 
     private static final int THREAD_POOL_COUNT = 24;
 
@@ -38,7 +41,8 @@ public class TaskManager {
 
     public TaskManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
-        executorService = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
+//        executorService = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
+        executorService = Executors.newCachedThreadPool();
 
         messageHandler = new MessageHandler(
                 this,
@@ -117,5 +121,13 @@ public class TaskManager {
             Semaphore clientSem
     ) {
         executorService.submit(new BroadcastConfirmationTask(message, master, clientSem));
+    }
+
+    public void runStreamProxyServer() {
+        executorService.submit(new StreamProxyServer(this));
+    }
+
+    public void runStreamProxyTask(Socket socket) {
+        executorService.submit(new StreamProxyTask(socket));
     }
 }

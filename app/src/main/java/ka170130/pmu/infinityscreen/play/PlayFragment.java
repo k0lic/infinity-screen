@@ -1,11 +1,10 @@
 package ka170130.pmu.infinityscreen.play;
 
 import android.content.ContentResolver;
-import android.content.Context;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
+import android.media.MediaDataSource;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -13,12 +12,8 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 
-import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -26,22 +21,21 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.io.FileNotFoundException;
+import com.sachinchandil.videodownloadandplay.VideoDownloadAndPlayService;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import ka170130.pmu.infinityscreen.MainActivity;
-import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
-import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentPlayBinding;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
-import ka170130.pmu.infinityscreen.media.FileSelectionWaitFragmentDirections;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
@@ -62,7 +56,7 @@ public class PlayFragment extends FullScreenFragment {
     private MediaViewModel mediaViewModel;
 
     private MediaPlayer mediaPlayer;
-    private Uri currentContent;
+    private String currentContent;
     private MediaPlayerState mediaPlayerState;
 
     public PlayFragment() {
@@ -221,17 +215,21 @@ public class PlayFragment extends FullScreenFragment {
         }
 
         if (fileInfo.getPlaybackStatus() != FileInfo.PlaybackStatus.WAIT) {
-            Uri uri = fetchUri(fileInfo);
-            if (uri == null) {
+            String contentDescriptor = fetchContentDescriptor(fileInfo);
+            if (contentDescriptor == null) {
                 binding.bufferingLayout.setVisibility(View.VISIBLE);
                 return;
             }
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
 
-            if (uri.equals(currentContent)) {
+            if (contentDescriptor.equals(currentContent)) {
                 // skip
                 return;
             }
+
+            // extract uri from content descriptor (uri/file path)
+            Boolean isHost = connectionViewModel.getIsHost().getValue();
+            Uri uri = extractUri(isHost, contentDescriptor);
 
             // set content
             ContentResolver contentResolver =
@@ -272,7 +270,7 @@ public class PlayFragment extends FullScreenFragment {
                     .getMatrix(self, viewport, drawableWidth, drawableHeight);
             binding.imageView.setImageMatrix(matrix);
 
-            currentContent = uri;
+            currentContent = contentDescriptor;
         } else {
             binding.bufferingLayout.setVisibility(View.VISIBLE);
             binding.imageView.setImageDrawable(null);
@@ -285,17 +283,19 @@ public class PlayFragment extends FullScreenFragment {
         binding.textureView.setVisibility(View.VISIBLE);
         binding.imageView.setVisibility(View.INVISIBLE);
 
-        Uri uri = fetchUri(fileInfo);
+        String contentDescriptor = fetchContentDescriptor(fileInfo);
         // reset media player if necessary
-        if (uri == null || !uri.equals(currentContent)) {
+        if (contentDescriptor == null || !contentDescriptor.equals(currentContent)) {
             mediaPlayer.reset();
             currentContent = null;
             mediaPlayerState = MediaPlayerState.IDLE;
         }
-        if (uri == null) {
+        if (contentDescriptor == null) {
             binding.bufferingLayout.setVisibility(View.VISIBLE);
             return;
         }
+
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
 
         FileInfo.PlaybackStatus status = fileInfo.getPlaybackStatus();
         // PLAY video
@@ -310,9 +310,13 @@ public class PlayFragment extends FullScreenFragment {
             try {
                 switch (mediaPlayerState) {
                     case IDLE:
+                        // extract uri
+                        Uri uri = extractUri(isHost, contentDescriptor);
+
                         // set content
                         if (!mediaPlayer.isPlaying()) {
-                            mediaPlayer.setDataSource(mainActivity, uri);
+                            setVideoContent(
+                                    isHost, fileInfo.isDownloaded(), contentDescriptor, fileInfo);
                             mediaPlayer.setOnPreparedListener(MediaPlayer::start);
                             mediaPlayer.prepareAsync();
                         }
@@ -321,14 +325,15 @@ public class PlayFragment extends FullScreenFragment {
                         TransformInfo self = layoutViewModel.getSelfAuto().getValue();
                         TransformInfo viewport = layoutViewModel.getViewport().getValue();
 
-                        Size videoDimens = mainActivity.getMediaManager().getVideoDimensions(uri);
-                        int videoWidth = videoDimens.getWidth();
-                        int videoHeight = videoDimens.getHeight();
-                        LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
-
-                        Matrix matrix = mainActivity.getLayoutManager()
-                                .getVideoMatrix(self, viewport, videoWidth, videoHeight);
-                        binding.textureView.setTransform(matrix);
+                        // TODO: make getVideoDimensions() work
+//                        Size videoDimens = mainActivity.getMediaManager().getVideoDimensions(uri);
+//                        int videoWidth = videoDimens.getWidth();
+//                        int videoHeight = videoDimens.getHeight();
+//                        LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
+//
+//                        Matrix matrix = mainActivity.getLayoutManager()
+//                                .getVideoMatrix(self, viewport, videoWidth, videoHeight);
+//                        binding.textureView.setTransform(matrix);
 
                         mediaPlayerState = MediaPlayerState.PLAYING;
                         break;
@@ -344,7 +349,7 @@ public class PlayFragment extends FullScreenFragment {
                         break;
                 }
 
-                currentContent = uri;
+                currentContent = contentDescriptor;
             } catch (IOException e) {
                 LogHelper.error(e);
             }
@@ -356,7 +361,8 @@ public class PlayFragment extends FullScreenFragment {
             try {
                 switch (mediaPlayerState) {
                     case IDLE:
-                        mediaPlayer.setDataSource(mainActivity, uri);
+                        setVideoContent(
+                                isHost, fileInfo.isDownloaded(), contentDescriptor, fileInfo);
                         mediaPlayer.prepare();
                         mediaPlayerState = MediaPlayerState.PAUSED;
                         break;
@@ -368,7 +374,7 @@ public class PlayFragment extends FullScreenFragment {
                         break;
                 }
 
-                currentContent = uri;
+                currentContent = contentDescriptor;
             } catch (IOException e) {
                 LogHelper.error(e);
             }
@@ -379,28 +385,74 @@ public class PlayFragment extends FullScreenFragment {
         }
     }
 
-    private Uri fetchUri(FileInfo fileInfo) {
+    private String fetchContentDescriptor(FileInfo fileInfo) {
         if (fileInfo == null) {
             return null;
         }
 
         Boolean isHost = connectionViewModel.getIsHost().getValue();
-        Uri uri = null;
+        String contentDescriptor = null;
 
-        // fetch image uri
+        // fetch content (uri/path)
         if (isHost) {
             ArrayList<String> selectedUris = mediaViewModel.getSelectedMedia().getValue();
             Integer index = mediaViewModel.getCurrentFileIndex().getValue();
             if (index >= 0 && index < selectedUris.size()) {
-                uri = Uri.parse(selectedUris.get(index));
+                contentDescriptor = selectedUris.get(index);
             }
         } else {
-            String uriString = fileInfo.getContentUri();
-            if (uriString != null) {
-                uri = Uri.parse(uriString);
-            }
+            contentDescriptor = fileInfo.getContentUri();
+        }
+
+        return contentDescriptor;
+    }
+
+    private Uri extractUri(Boolean isHost, String contentDescriptor) {
+        Uri uri = null;
+
+        if (isHost) {
+            // contentDescriptor is uri
+            uri = Uri.parse(contentDescriptor);
+        } else {
+            // contentDescriptor is file absolute path
+            File file = new File(contentDescriptor);
+            uri = Uri.fromFile(file);
         }
 
         return uri;
+    }
+
+    private void setVideoContent(
+            Boolean isHost,
+            boolean downloaded,
+            String contentDescriptor,
+            FileInfo fileInfo
+    ) throws IOException {
+        // TODO: remove next line
+        downloaded = false;
+        if (isHost || downloaded) {
+            // file is fully downloaded
+            Uri uri = extractUri(isHost, contentDescriptor);
+            mediaPlayer.setDataSource(mainActivity, uri);
+        } else {
+            // file is downloading - use stream proxy
+//            StringBuilder proxyPath = new StringBuilder("http://127.0.0.1:");
+//            proxyPath.append(TaskManager.PROXY_PORT);
+//            proxyPath.append("/");
+//            proxyPath.append(contentDescriptor);
+//            proxyPath.append("?filesize=");
+//            proxyPath.append(fileInfo.getFileSize());
+//            proxyPath.append("?mimetype=");
+//            proxyPath.append(fileInfo.getMimeType());
+//
+//            String path = proxyPath.toString();
+//            LogHelper.log("Proxy path: " + path);
+//            mediaPlayer.setDataSource(path);
+
+            VideoDownloadAndPlayService.startServer(
+                    mainActivity,
+                    contentDescriptor,
+            );
+        }
     }
 }

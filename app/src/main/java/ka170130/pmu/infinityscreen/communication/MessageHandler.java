@@ -298,18 +298,16 @@ public class MessageHandler {
         ArrayList<File> createdFiles = mediaViewModel.getCreatedFiles();
         if (contentPackage.getContent() == null) {
             if (contentPackage.isLastPackage()) {
-                // Remember file as uri
+                mediaViewModel.setFileInfoListElementDownloaded(fileIndex, true);
+
+                // activate content if it was not already activated
+                if (fileInfo.getContentUri() == null) {
+                    File file = createdFiles.get(fileIndex);
+                    activateContent(file, fileIndex, hostAddress);
+                }
+
                 File file = createdFiles.get(fileIndex);
-                Uri uri = Uri.fromFile(file);
-                mediaViewModel.setFileInfoListElementContent(fileIndex, uri.toString());
-
-                // send message to host to let him know file is ready on this device
-                int deviceIndex = layoutViewModel.getSelfAuto().getValue().getNumberId() - 1;
-
-                FileOnDeviceReady fileOnDeviceReady =
-                        new FileOnDeviceReady(deviceIndex, fileIndex);
-                taskManager.runSenderTask(
-                        hostAddress, Message.newFileReadyMessage(fileOnDeviceReady));
+                LogHelper.log("Real file size: " + file.length());
 
                 // success
                 contentMessageHandled(fileIndex, hostAddress, packageId);
@@ -325,6 +323,7 @@ public class MessageHandler {
         boolean create = false;
 
         // if file was not already created - create new file
+        // (do not create on disk, it will be created on another thread so we can respond sooner)
         if (file == null) {
             String fileName =
                     "infinity-screen-"
@@ -337,30 +336,42 @@ public class MessageHandler {
             );
             create = true;
 
-            // if directory was not already created - create directory
-//            File dirs = new File(file.getParent());
-//            if (!dirs.exists()) {
-//                dirs.mkdirs();
-//            }
-//
-//            file.createNewFile();
-
             // remember file
             createdFiles.set(fileIndex, file);
             mediaViewModel.setCreatedFiles(createdFiles);
         }
 
+        // activate video content
+        if (fileInfo.getFileType() == FileInfo.FileType.VIDEO
+                && fileInfo.getNextPackage() >= FileInfo.VIDEO_PACKAGE_THRESHOLD
+        ) {
+            activateContent(file, fileIndex, hostAddress);
+        }
+
+        // Submit 'Append content to file' task
         WriteTask.WriteCommand command =
                 new WriteTask.WriteCommand(file, create, contentPackage.getContent());
         taskManager.getWriteTask().enqueue(command);
 
-        // Append content to file
-//        OutputStream outputStream = new FileOutputStream(file, true);
-//        outputStream.write(contentPackage.getContent());
-//        outputStream.close();
-
         // success
         contentMessageHandled(fileIndex, hostAddress, packageId);
+    }
+
+    private void activateContent(
+            File file,
+            int fileIndex,
+            InetAddress hostAddress
+    ) throws IOException {
+        // Remember file path
+        mediaViewModel.setFileInfoListElementContent(fileIndex, file.getAbsolutePath());
+
+        // send message to host to let him know file is ready on this device
+        int deviceIndex = layoutViewModel.getSelfAuto().getValue().getNumberId() - 1;
+
+        FileOnDeviceReady fileOnDeviceReady =
+                new FileOnDeviceReady(deviceIndex, fileIndex);
+        taskManager.runSenderTask(
+                hostAddress, Message.newFileReadyMessage(fileOnDeviceReady));
     }
 
     private void contentMessageHandled(int fileIndex, InetAddress hostAddress, int packageId) throws IOException {
@@ -389,7 +400,8 @@ public class MessageHandler {
         if (readyOnAll) {
             PlaybackStatusCommand command = new PlaybackStatusCommand(
                     fileOnDeviceReady.getFileIndex(),
-                    FileInfo.PlaybackStatus.PLAY
+                    FileInfo.PlaybackStatus.PAUSE
+//                    FileInfo.PlaybackStatus.PLAY
             );
             taskManager.sendToAllInGroup(
                     Message.newPlaybackStatusCommandMessage(command), true);
