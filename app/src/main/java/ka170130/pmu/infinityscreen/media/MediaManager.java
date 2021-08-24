@@ -17,25 +17,46 @@ import android.util.Log;
 import android.util.Size;
 import android.webkit.MimeTypeMap;
 
+import androidx.lifecycle.ViewModelProvider;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.FileContentPackage;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.helpers.Callback;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
+import ka170130.pmu.infinityscreen.sync.SyncInfo;
+import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 
 public class MediaManager {
 
+    private static final long[] DEFERRED_DELAYS = {
+            1000
+    };
+
     private MainActivity mainActivity;
+    private ConnectionViewModel connectionViewModel;
+    private SyncViewModel syncViewModel;
+
+    private int deferredPicker;
 
     public MediaManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
+        this.connectionViewModel =
+                new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
+        this.syncViewModel =
+                new ViewModelProvider(mainActivity).get(SyncViewModel.class);
+
+        this.deferredPicker = 0;
     }
 
     public FileInfo fileInfoFromUri(Uri uri, int index) {
@@ -165,11 +186,42 @@ public class MediaManager {
     public void requestPlay(int fileIndex) throws IOException {
         // TODO: optimize so playback is synchronous, maybe add check(s)
         // Authorize Play
-        Message message = Message.newPlaybackStatusCommandMessage(new PlaybackStatusCommand(
+//        Message message = Message.newPlaybackStatusCommandMessage(new PlaybackStatusCommand(
+//                fileIndex,
+//                FileInfo.PlaybackStatus.PLAY
+//        ));
+//        mainActivity.getTaskManager().sendToAllInGroup(message, true);
+
+        // Authorize Deferred Play
+        long now = System.currentTimeMillis();
+        long ownTimestamp = now + getDeferredDelay();
+        PlaybackStatusCommand command = new PlaybackStatusCommand(
                 fileIndex,
-                FileInfo.PlaybackStatus.PLAY
-        ));
-        mainActivity.getTaskManager().sendToAllInGroup(message, true);
+                FileInfo.PlaybackStatus.DEFERRED_PLAY
+        );
+
+        // Send to all - but change timestamp for everyone
+        Iterator<PeerInetAddressInfo> iterator =
+                connectionViewModel.getGroupList().getValue().iterator();
+        while (iterator.hasNext()) {
+            PeerInetAddressInfo next = iterator.next();
+
+            // Adjust timestamp according to Sync information
+            SyncInfo syncInfo = syncViewModel.getSyncInfoListElement(next.getDeviceAddress());
+            command.setTimestamp(ownTimestamp + syncInfo.getClockDiff());
+
+            // Send PLAYBACK_STATUS_COMMAND message to peer
+            Message message = Message.newPlaybackStatusCommandMessage(command);
+            mainActivity.getTaskManager().runSenderTask(next.getInetAddress(), message);
+        }
+
+        // Adjust timestamp for self
+        command.setTimestamp(ownTimestamp);
+
+        // Send PLAYBACK_STATUS_COMMAND message to self
+        PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+        Message message = Message.newPlaybackStatusCommandMessage(command);
+        mainActivity.getTaskManager().runSenderTask(host.getInetAddress(), message);
     }
 
     public void requestPause(int fileIndex) throws IOException {
@@ -180,5 +232,21 @@ public class MediaManager {
                 FileInfo.PlaybackStatus.PAUSE
         ));
         mainActivity.getTaskManager().sendToAllInGroup(message, true);
+    }
+
+    private long getDeferredDelay() {
+        return DEFERRED_DELAYS[deferredPicker];
+    }
+
+    private void increaseDeferredDelay() {
+        if (deferredPicker + 1 < DEFERRED_DELAYS.length) {
+            deferredPicker++;
+        }
+    }
+
+    private void decreaseDeferredDelay() {
+        if (deferredPicker - 1 >= 0) {
+            deferredPicker--;
+        }
     }
 }

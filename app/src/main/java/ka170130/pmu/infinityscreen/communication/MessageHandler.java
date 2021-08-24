@@ -1,20 +1,16 @@
 package ka170130.pmu.infinityscreen.communication;
 
-import android.net.Uri;
-import android.util.Log;
-
 import androidx.lifecycle.ViewModelProvider;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.sync.ClockResponse;
 import ka170130.pmu.infinityscreen.containers.FileContentPackage;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.FileOnDeviceReady;
@@ -26,10 +22,12 @@ import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.io.WriteTask;
 import ka170130.pmu.infinityscreen.media.MediaManager;
+import ka170130.pmu.infinityscreen.sync.SyncInfo;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.UdpViewModel;
 
 public class MessageHandler {
@@ -42,6 +40,7 @@ public class MessageHandler {
     private LayoutViewModel layoutViewModel;
     private MediaViewModel mediaViewModel;
     private UdpViewModel udpViewModel;
+    private SyncViewModel syncViewModel;
 
     public MessageHandler(
             TaskManager taskManager,
@@ -62,10 +61,13 @@ public class MessageHandler {
                 new ViewModelProvider(mainActivity).get(MediaViewModel.class);
         this.udpViewModel =
                 new ViewModelProvider(mainActivity).get(UdpViewModel.class);
+        this.syncViewModel =
+                new ViewModelProvider(mainActivity).get(SyncViewModel.class);
     }
 
     public void handleMessage(Message message, InetAddress inetAddress) {
-        LogHelper.log("Message received: " + message.getMessageType().toString());
+        LogHelper.log(Message.LOG_TAG,
+                "Message received: " + message.getMessageType().toString());
         try {
             switch (message.getMessageType()) {
                 case TEST:
@@ -128,6 +130,18 @@ public class MessageHandler {
                 case PLAYBACK_STATUS_REQUEST:
                     handlePlaybackStatusRequestMessage(message);
                     break;
+                case CLOCK_REQUEST:
+                    handleClockRequestMessage(message, inetAddress);
+                    break;
+                case CLOCK_RESPONSE:
+                    handleClockResponseMessage(message);
+                    break;
+                case SEEK_TO_ORDER:
+                    handleSeekToOrderMessage(message);
+                    break;
+                case SEEK_TO_REQUEST:
+                    handleSeekToRequestMessage(message);
+                    break;
             }
         } catch (Exception e) {
             LogHelper.error(e);
@@ -138,7 +152,7 @@ public class MessageHandler {
     private void handleTestMessage(InetAddress inetAddress) {
         // do nothing
         String hostName = inetAddress == null ? "<NULL>" : inetAddress.getHostName();
-        LogHelper.log("TEST message received from " + hostName);
+        LogHelper.log(Message.LOG_TAG, "TEST message received from " + hostName);
     }
 
     // handle HELLO message
@@ -404,8 +418,8 @@ public class MessageHandler {
         if (readyOnAll) {
             PlaybackStatusCommand command = new PlaybackStatusCommand(
                     fileOnDeviceReady.getFileIndex(),
-//                    FileInfo.PlaybackStatus.PAUSE
-                    FileInfo.PlaybackStatus.PLAY
+                    FileInfo.PlaybackStatus.PAUSE
+//                    FileInfo.PlaybackStatus.PLAY
             );
             taskManager.sendToAllInGroup(
                     Message.newPlaybackStatusCommandMessage(command), true);
@@ -416,8 +430,15 @@ public class MessageHandler {
     // handle PLAYBACK_STATUS_COMMAND message
     private void handlePlaybackStatusCommandMessage(Message message) throws IOException, ClassNotFoundException {
         PlaybackStatusCommand command = (PlaybackStatusCommand) message.extractObject();
+        FileInfo.PlaybackStatus status = command.getPlaybackStatus();
 
-        mediaViewModel.setFileInfoListElementPlaybackStatus(command.getFileIndex(), command.getPlaybackStatus());
+        // Check if Playback Status is a deferred one
+        if (status == FileInfo.PlaybackStatus.DEFERRED_PLAY) {
+            mediaViewModel.setFileInfoListElementDeferredPlaybackStatus(
+                    command.getFileIndex(), status, command.getTimestamp());
+        } else {
+            mediaViewModel.setFileInfoListElementPlaybackStatus(command.getFileIndex(), status);
+        }
     }
 
     // handle PLAYBACK_STATUS_REQUEST message
@@ -425,11 +446,62 @@ public class MessageHandler {
         PlaybackStatusCommand command = (PlaybackStatusCommand) message.extractObject();
 
         int fileIndex = command.getFileIndex();
-        if (command.getPlaybackStatus() == FileInfo.PlaybackStatus.PLAY) {
+        FileInfo.PlaybackStatus status = command.getPlaybackStatus();
+        if (status == FileInfo.PlaybackStatus.PLAY
+                || status == FileInfo.PlaybackStatus.DEFERRED_PLAY
+        ) {
             mediaManager.requestPlay(fileIndex);
-        } else if (command.getPlaybackStatus() == FileInfo.PlaybackStatus.PAUSE) {
+        } else if (status == FileInfo.PlaybackStatus.PAUSE) {
             mediaManager.requestPause(fileIndex);
         }
+    }
+
+    // handle CLOCK_REQUEST message
+    private void handleClockRequestMessage(Message message, InetAddress inetAddress) throws IOException, ClassNotFoundException {
+        // timestamp of sender
+        Long timestamp1 = (Long) message.extractObject();
+        // own timestamp
+        long timestamp2 = System.currentTimeMillis();
+        // own address
+        String address = connectionViewModel.getSelfDevice().getValue().getDeviceAddress();
+        ClockResponse clockResponse = new ClockResponse(address, timestamp1, timestamp2);
+
+        taskManager.runSenderTask(inetAddress, Message.newClockResponseMessage(clockResponse));
+    }
+
+    // handle CLOCK_RESPONSE message
+    private void handleClockResponseMessage(Message message) throws IOException, ClassNotFoundException {
+        ClockResponse clockResponse = (ClockResponse) message.extractObject();
+
+        long timestamp1 = clockResponse.getTimestamp1();
+        long timestamp2 = clockResponse.getTimestamp2();
+        long timestamp3 = System.currentTimeMillis();
+
+        long roundTripTime = timestamp3 - timestamp1;
+        long latency = roundTripTime / 2;
+        long clockDiff = timestamp2 - timestamp1 - latency;
+
+        LogHelper.log(SyncInfo.LOG_TAG,
+                "CLOCK_RESPONSE for device " + clockResponse.getDeviceAddress() + ": roundTripTime = " + roundTripTime + " clockDiff = " + clockDiff);
+
+        // Update Latency of SyncInfoList Element with matching address
+        syncViewModel.updateSyncInfoListElement(clockResponse.getDeviceAddress(), clockDiff);
+    }
+
+    // handle SEEK_TO_ORDER message
+    private void handleSeekToOrderMessage(Message message) throws IOException, ClassNotFoundException {
+        Long timestamp = (Long) message.extractObject();
+        mediaViewModel.setCurrentTimestamp(timestamp);
+    }
+
+    // handle SEEK_TO_REQUEST message
+    private void handleSeekToRequestMessage(Message message) throws IOException, ClassNotFoundException {
+        Long timestamp = (Long) message.extractObject();
+
+        // TODO: maybe check(s)
+
+        Message response = Message.newSeekToOrderMessage(timestamp);
+        taskManager.sendToAllInGroup(response, true);
     }
 
     private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {

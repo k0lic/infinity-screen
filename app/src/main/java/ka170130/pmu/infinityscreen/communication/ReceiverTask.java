@@ -37,7 +37,8 @@ public class ReceiverTask implements Runnable {
 
     @Override
     public void run() {
-        LogHelper.log("ReceiverTask started for " + inetAddress.getHostName());
+        LogHelper.log(Message.LOG_TAG,
+                "ReceiverTask started for " + inetAddress.getHostName());
         InputStream inputStream = null;
 
         try {

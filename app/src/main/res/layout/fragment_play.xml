@@ -142,6 +142,7 @@
             app:thumbColor="?attr/colorPlayAccent"
             app:trackColorActive="?attr/colorPlayAccent"
             app:trackColorInactive="?attr/colorPlay"
+            app:labelBehavior="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             />
 

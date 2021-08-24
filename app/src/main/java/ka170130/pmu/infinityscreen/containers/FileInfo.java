@@ -15,9 +15,10 @@ public class FileInfo implements Serializable {
     }
 
     public enum PlaybackStatus {
-        PLAY,   // show image/play video
-        PAUSE,  // show image/pause video
-        WAIT    // show buffering dialog
+        PLAY,           // show image/play video
+        DEFERRED_PLAY,  // show image/play video at timestamp
+        PAUSE,          // show image/pause video
+    WAIT                // show buffering dialog
     }
 
     private int index;
@@ -31,6 +32,7 @@ public class FileInfo implements Serializable {
     private int nextPackage;
 
     private PlaybackStatus playbackStatus;
+    private long timestamp;
     private String contentUri;
 
     public FileInfo(
@@ -52,6 +54,7 @@ public class FileInfo implements Serializable {
         this.height = height;
         this.nextPackage = nextPackage;
         this.playbackStatus = playbackStatus;
+        timestamp = 0;
         this.contentUri = contentUri;
     }
 
@@ -93,6 +96,14 @@ public class FileInfo implements Serializable {
 
     public void setPlaybackStatus(PlaybackStatus playbackStatus) {
         this.playbackStatus = playbackStatus;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getContentUri() {

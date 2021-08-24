@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class ServerTask implements Runnable {
@@ -27,7 +28,8 @@ public class ServerTask implements Runnable {
 
             while (true) {
                 Socket client = serverSocket.accept();
-                LogHelper.log("ServerTask client " + client.getInetAddress().getHostName() + " accepted");
+                LogHelper.log(Message.LOG_TAG,
+                        "ServerTask client " + client.getInetAddress().getHostName() + " accepted");
                 taskManager.runReceiverTask(client);
             }
         } catch (IOException e) {

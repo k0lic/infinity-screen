@@ -4,9 +4,6 @@ import android.content.ContentResolver;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
-import android.media.MediaDataSource;
-import android.media.MediaPlayer;
-import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,7 +13,6 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Handler;
-import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.TextureView;
@@ -26,21 +22,13 @@ import android.view.ViewGroup;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.drm.DrmSessionEventListener;
-import com.google.android.exoplayer2.source.BaseMediaSource;
-import com.google.android.exoplayer2.source.MediaPeriod;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.MediaSourceEventListener;
-import com.google.android.exoplayer2.upstream.Allocator;
-import com.google.android.exoplayer2.upstream.TransferListener;
+import com.google.android.material.slider.Slider;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
@@ -52,6 +40,7 @@ import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentPlayBinding;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
+import ka170130.pmu.infinityscreen.helpers.TimeHelper;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
@@ -61,8 +50,13 @@ public class PlayFragment extends FullScreenFragment {
     private static final long CONTROLS_TIMEOUT = 10_000;
     private static final long AUTO_HIDE_CHECK_INTERVAL = 500;
 
+    private static final long MINIMUM_DEFERRED_DELAY = 10;
+    private static final long SEEK_TO_DELAY = 100;
+    private static final long SLIDER_UPDATE_DELAY = 250;
+
     private enum MediaPlayerState {
         IDLE,
+        PREPARING,
         PLAYING,
         PAUSED,
         STOPPED,
@@ -81,6 +75,7 @@ public class PlayFragment extends FullScreenFragment {
     private MediaPlayerState mediaPlayerState;
 
     private long lastInteraction = 0;
+    private boolean durationSet = false;
 
     private Handler handler;
     private Runnable autoHideControls = new Runnable() {
@@ -96,6 +91,45 @@ public class PlayFragment extends FullScreenFragment {
             }
 
             handler.postDelayed(autoHideControls, AUTO_HIDE_CHECK_INTERVAL);
+        }
+    };
+    private Runnable deferredPlay = new Runnable() {
+        @Override
+        public void run() {
+            exoPlayer.play();
+
+            // Update Media Player State
+            mediaPlayerState = MediaPlayerState.PLAYING;
+            LogHelper.log("PREPARING to PLAYING");
+
+            // Set Pause Drawable
+            binding.playButton.setImageResource(R.drawable.outline_pause_24);
+        }
+    };
+    private Runnable deferredSeekToRequest = new Runnable() {
+        @Override
+        public void run() {
+            long position = Math.round(binding.slider.getValue());
+            requestSeekTo(position, false);
+        }
+    };
+    private Runnable updateSliderAndCurrentTimeLabel = new Runnable() {
+        @Override
+        public void run() {
+            if (durationSet) {
+                // Update Slider and Current Time Label
+                long position = exoPlayer.getCurrentPosition();
+
+                if (position >= binding.slider.getValueFrom()
+                        && position <= binding.slider.getValueTo()
+                ) {
+                    binding.slider.setValue(position);
+                }
+
+                binding.currentTime.setText(TimeHelper.format(position));
+            }
+
+            handler.postDelayed(updateSliderAndCurrentTimeLabel, SLIDER_UPDATE_DELAY);
         }
     };
 
@@ -153,6 +187,45 @@ public class PlayFragment extends FullScreenFragment {
             markInteraction();
         });
 
+        // Slider
+        binding.slider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
+            @Override
+            public void onStartTrackingTouch(@NonNull Slider slider) {
+                // Pause if not already paused
+                if (mediaPlayerState == MediaPlayerState.PLAYING
+                        || mediaPlayerState == MediaPlayerState.PREPARING
+                ) {
+                    requestPause();
+                }
+            }
+
+            @Override
+            public void onStopTrackingTouch(@NonNull Slider slider) {
+                // ignore
+            }
+        });
+
+        binding.slider.addOnChangeListener(new Slider.OnChangeListener() {
+            @Override
+            public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
+                // Only react to changes made by user - ignore changes made by the video progressing
+                if (fromUser) {
+                    handler.removeCallbacks(deferredSeekToRequest);
+
+                    // Only notify group about Seek To Change after some time has passed without new value
+                    // This is to prevent from spamming changes when the slider is being dragged
+                    handler.postDelayed(deferredSeekToRequest, SEEK_TO_DELAY);
+
+                    // Set current position
+                    long position = Math.round(value);
+                    binding.currentTime.setText(TimeHelper.format(position));
+
+                    // Seek now only on this device
+                    exoPlayer.seekTo(position);
+                }
+            }
+        });
+
         // TODO: remove this code - replace with popup menu or something
         binding.menuButton.setOnClickListener(view -> {
             StateChangeHelper.requestStateChange(
@@ -199,28 +272,59 @@ public class PlayFragment extends FullScreenFragment {
             }
         });
 
+        // Listen for Seek To Position change
+        mediaViewModel.getCurrentTimestamp().observe(getViewLifecycleOwner(), timestamp -> {
+            exoPlayer.seekTo(timestamp);
+
+            // Change state from COMPLETED
+            if (mediaPlayerState == MediaPlayerState.COMPLETED) {
+                LogHelper.log("COMPLETED to PAUSED");
+                mediaPlayerState = MediaPlayerState.PAUSED;
+            }
+        });
+
         // Listen for File Index change
         mediaViewModel.getCurrentFileIndex().observe(getViewLifecycleOwner(), index -> {
             mainActivity.getTaskManager().getReadTask().changeFocus(index);
         });
 
-        // Listen for Media Completion (and more?)
+        // Listen for Exo Player Playback State change
         exoPlayer.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int playbackState) {
-                // Detect completion
+                // Detect Completion
                 if (playbackState == Player.STATE_ENDED) {
+                    exoPlayer.pause();
+
                     mediaPlayerState = MediaPlayerState.COMPLETED;
 
                     Integer fileIndex = mediaViewModel.getCurrentFileIndex().getValue();
                     mediaViewModel.setFileInfoListElementPlaybackStatus(
                             fileIndex, FileInfo.PlaybackStatus.PAUSE);
                 }
+                // Detect Ready
+                else if (playbackState == Player.STATE_READY) {
+                    if (!durationSet) {
+                        long duration = exoPlayer.getDuration();
+
+                        // Set video duration
+                        binding.totalTime.setText(TimeHelper.format(duration));
+
+                        // Set Slider config
+                        binding.slider.setValueFrom(0);
+                        binding.slider.setValueTo(duration);
+
+                        durationSet = true;
+                    }
+                }
             }
         });
 
         // Automatically hide controls after inactivity
         handler.post(autoHideControls);
+
+        // Automatically update Slider and Current Time Label
+        handler.post(updateSliderAndCurrentTimeLabel);
 
         // Set media player surface
         binding.textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
@@ -395,66 +499,97 @@ public class PlayFragment extends FullScreenFragment {
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
 
             // check if we just switched to this video
-            if (currentContent == null) {
+            if (mediaPlayerState == MediaPlayerState.IDLE || currentContent == null) {
                 // in that case we should automatically Pause to prevent auto play when going through the gallery
                 mediaViewModel.setFileInfoListElementPlaybackStatus(
                         fileInfo.getIndex(), FileInfo.PlaybackStatus.PAUSE);
                 return;
             }
 
-            if (mediaPlayerState == MediaPlayerState.PLAYING) {
+            if (mediaPlayerState == MediaPlayerState.PLAYING
+                    || mediaPlayerState == MediaPlayerState.PREPARING
+            ) {
                 // skip
                 return;
             }
 
-            try {
-                switch (mediaPlayerState) {
-                    case IDLE:
-                        LogHelper.log("IDLE to PLAYING");
-                        // set content
-                        setVideoContent(isHost, contentDescriptor, fileInfo);
-
-                        // set matrix
-                        setVideoMatrix(fileInfo);
-
-                        if (!exoPlayer.isPlaying()) {
-//                            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
-//                            mediaPlayer.prepareAsync();
-                            exoPlayer.prepare();
-                            exoPlayer.play();
-                        }
-
-                        mediaPlayerState = MediaPlayerState.PLAYING;
-                        break;
-                    case COMPLETED:
-                        LogHelper.log("COMPLETED to PLAYING");
-                        exoPlayer.seekTo(0);
-                        exoPlayer.play();
-                        mediaPlayerState = MediaPlayerState.PLAYING;
-                        break;
-                    case PAUSED:
-                        LogHelper.log("PAUSED to PLAYING");
-//                        mediaPlayer.start();
-                        exoPlayer.play();
-                        mediaPlayerState = MediaPlayerState.PLAYING;
-                        break;
-                    case STOPPED:
-                        LogHelper.log("STOPPED to PLAYING");
-//                        mediaPlayer.setOnPreparedListener(MediaPlayer::start);
-//                        mediaPlayer.prepareAsync();
-                        exoPlayer.prepare();
-                        exoPlayer.play();
-                        mediaPlayerState = MediaPlayerState.PLAYING;
-                        break;
-                }
-
-                // Set Pause Drawable
-                binding.playButton.setImageResource(R.drawable.outline_pause_24);
-
-                currentContent = contentDescriptor;
-            } catch (IOException e) {
-                LogHelper.error(e);
+            switch (mediaPlayerState) {
+                case COMPLETED:
+                    LogHelper.log("COMPLETED to PLAYING");
+                    exoPlayer.seekTo(0);
+                    exoPlayer.play();
+                    mediaPlayerState = MediaPlayerState.PLAYING;
+                    break;
+                case PAUSED:
+                    LogHelper.log("PAUSED to PLAYING");
+//                    mediaPlayer.start();
+                    exoPlayer.play();
+                    mediaPlayerState = MediaPlayerState.PLAYING;
+                    break;
+                case STOPPED:
+                    LogHelper.log("STOPPED to PLAYING");
+//                    mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+//                    mediaPlayer.prepareAsync();
+                    exoPlayer.prepare();
+                    exoPlayer.play();
+                    mediaPlayerState = MediaPlayerState.PLAYING;
+                    break;
             }
+
+            // Set Pause Drawable
+            binding.playButton.setImageResource(R.drawable.outline_pause_24);
+
+            currentContent = contentDescriptor;
+        }
+        // DEFERRED PLAY VIDEO
+        else if (status == FileInfo.PlaybackStatus.DEFERRED_PLAY) {
+            binding.bufferingLayout.setVisibility(View.INVISIBLE);
+
+            // check if we just switched to this video
+            if (mediaPlayerState == MediaPlayerState.IDLE || currentContent == null) {
+                // in that case we should automatically Pause to prevent auto play when going through the gallery
+                mediaViewModel.setFileInfoListElementPlaybackStatus(
+                        fileInfo.getIndex(), FileInfo.PlaybackStatus.PAUSE);
+                return;
+            }
+
+            if (mediaPlayerState == MediaPlayerState.PLAYING
+                    || mediaPlayerState == MediaPlayerState.PREPARING
+            ) {
+                // skip
+                return;
+            }
+
+            long delay = fileInfo.getTimestamp() - System.currentTimeMillis();
+            if (delay < MINIMUM_DEFERRED_DELAY) {
+                LogHelper.log("Delay (" + delay + ") is less than MINIMUM_DEFERRED_DELAY(" + MINIMUM_DEFERRED_DELAY + ")! What now?");
+                // TODO: handle late deferred handling - notify host and ask for abortion?
+                // just request pause
+                requestPause();
+                return;
+            }
+
+            switch (mediaPlayerState) {
+                case COMPLETED:
+                    LogHelper.log("COMPLETED to PREPARING");
+                    handler.postDelayed(deferredPlay, delay);
+                    exoPlayer.seekTo(0);
+                    mediaPlayerState = MediaPlayerState.PREPARING;
+                    break;
+                case PAUSED:
+                    LogHelper.log("PAUSED to PREPARING");
+                    handler.postDelayed(deferredPlay, delay);
+                    mediaPlayerState = MediaPlayerState.PREPARING;
+                    break;
+                case STOPPED:
+                    LogHelper.log("STOPPED to PREPARING");
+                    handler.postDelayed(deferredPlay, delay);
+                    exoPlayer.prepare();
+                    mediaPlayerState = MediaPlayerState.PREPARING;
+                    break;
+            }
+
+            currentContent = contentDescriptor;
         }
         // PAUSE VIDEO
         else if (status == FileInfo.PlaybackStatus.PAUSE) {
@@ -476,11 +611,23 @@ public class PlayFragment extends FullScreenFragment {
                         break;
                     case PLAYING:
                         LogHelper.log("PLAYING to PAUSED");
-                        if (exoPlayer.isPlaying()) {
+
 //                            mediaPlayer.pause();
-                            exoPlayer.pause();
-                        }
+                        exoPlayer.pause();
+
                         mediaPlayerState = MediaPlayerState.PAUSED;
+
+                        requestSeekTo(exoPlayer.getCurrentPosition(), true);
+                        break;
+                    case PREPARING:
+                        LogHelper.log("PREPARING to PAUSED");
+
+                        handler.removeCallbacks(deferredPlay);
+                        exoPlayer.pause();
+
+                        mediaPlayerState = MediaPlayerState.PAUSED;
+
+                        requestSeekTo(exoPlayer.getCurrentPosition(), true);
                         break;
                 }
 
@@ -598,6 +745,8 @@ public class PlayFragment extends FullScreenFragment {
         exoPlayer.pause();
         exoPlayer.stop();
         exoPlayer.clearMediaItems();
+
+        durationSet = false;
     }
 
     private void requestPlay() {
@@ -638,6 +787,30 @@ public class PlayFragment extends FullScreenFragment {
 
                 mainActivity.getTaskManager().runSenderTask(
                         hostAddress, Message.newPlaybackStatusRequestMessage(command));
+            }
+        } catch (IOException e) {
+            LogHelper.error(e);
+        }
+    }
+
+    private void requestSeekTo(long timestamp, boolean onlyHost) {
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+
+        try {
+            if (isHost) {
+                Message message = Message.newSeekToOrderMessage(timestamp);
+                mainActivity.getTaskManager().sendToAllInGroup(message, true);
+            } else {
+                if (onlyHost) {
+                    // skip
+                    return;
+                }
+
+                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+                InetAddress hostAddress = host.getInetAddress();
+
+                Message message = Message.newSeekToRequestMessage(timestamp);
+                mainActivity.getTaskManager().runSenderTask(hostAddress, message);
             }
         } catch (IOException e) {
             LogHelper.error(e);

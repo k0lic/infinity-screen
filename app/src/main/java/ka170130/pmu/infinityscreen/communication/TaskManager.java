@@ -15,6 +15,7 @@ import ka170130.pmu.infinityscreen.io.ReadTask;
 import ka170130.pmu.infinityscreen.proxy.StreamProxyServer;
 import ka170130.pmu.infinityscreen.proxy.StreamProxyTask;
 import ka170130.pmu.infinityscreen.io.WriteTask;
+import ka170130.pmu.infinityscreen.sync.SyncTask;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.containers.Message;
 
@@ -126,5 +127,9 @@ public class TaskManager {
 
     public void runStreamProxyTask(Socket socket) {
         executorService.submit(new StreamProxyTask(mainActivity, socket));
+    }
+
+    public void runSyncTask() {
+        executorService.submit(new SyncTask(mainActivity));
     }
 }

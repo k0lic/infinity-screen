@@ -9,6 +9,8 @@ import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class StreamProxyServer implements Runnable {
 
+    public static final String LOG_TAG = "stream-proxy-server-log-tag";
+
     private TaskManager taskManager;
 
     public StreamProxyServer(TaskManager taskManager) {
@@ -24,7 +26,8 @@ public class StreamProxyServer implements Runnable {
 
             while (true) {
                 Socket client = serverSocket.accept();
-                LogHelper.log("StreamProxy client " + client.getInetAddress().getHostName() + " accepted");
+                LogHelper.log(StreamProxyServer.LOG_TAG,
+                        "StreamProxy client " + client.getInetAddress().getHostName() + " accepted");
                 taskManager.runStreamProxyTask(client);
             }
         } catch (IOException e) {

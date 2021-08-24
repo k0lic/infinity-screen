@@ -8,9 +8,12 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import ka170130.pmu.infinityscreen.sync.ClockResponse;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class Message {
+
+    public static final String LOG_TAG = "message-log-tag";
 
     public static final int MESSAGE_MAX_SIZE = 1_048_576;
     public static final int JIC_BUFFER = 1000;
@@ -35,7 +38,11 @@ public class Message {
         CONTENT_ACK,
         FILE_READY,
         PLAYBACK_STATUS_COMMAND,
-        PLAYBACK_STATUS_REQUEST
+        PLAYBACK_STATUS_REQUEST,
+        CLOCK_REQUEST,
+        CLOCK_RESPONSE,
+        SEEK_TO_ORDER,
+        SEEK_TO_REQUEST
     }
 
     private static final MessageType[] MESSAGE_TYPES = MessageType.values();
@@ -140,6 +147,22 @@ public class Message {
 
     public static Message newPlaybackStatusRequestMessage(PlaybackStatusCommand command) throws IOException {
         return createMessageFromSerializable(MessageType.PLAYBACK_STATUS_REQUEST, command);
+    }
+
+    public static Message newClockRequestMessage(Long timestamp) throws IOException {
+        return createMessageFromSerializable(MessageType.CLOCK_REQUEST, timestamp);
+    }
+
+    public static Message newClockResponseMessage(ClockResponse clockResponse) throws IOException {
+        return createMessageFromSerializable(MessageType.CLOCK_RESPONSE, clockResponse);
+    }
+
+    public static Message newSeekToOrderMessage(Long timestamp) throws IOException {
+        return createMessageFromSerializable(MessageType.SEEK_TO_ORDER, timestamp);
+    }
+
+    public static Message newSeekToRequestMessage(Long timestamp) throws IOException {
+        return createMessageFromSerializable(MessageType.SEEK_TO_REQUEST, timestamp);
     }
 
     private static Message createMessageFromSerializable(MessageType type, Serializable serializable) throws IOException {

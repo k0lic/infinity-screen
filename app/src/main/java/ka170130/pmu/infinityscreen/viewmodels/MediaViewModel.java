@@ -18,6 +18,7 @@ import java.util.Map;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.FileOnDeviceReady;
+import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 
 public class MediaViewModel extends ViewModel implements Resettable {
@@ -25,9 +26,10 @@ public class MediaViewModel extends ViewModel implements Resettable {
     private static final String SELECTED_KEY = "media-selected-key";
     private static final String FILE_INFO_KEY = "media-file-info-key";
     private static final String CURRENT_INDEX_KEY = "media-current-file-index-key";
+    private static final String CURRENT_TIMESTAMP_KEY = "media-current-timestamp-key";
     private static final String READY_MATRIX_KEY = "media-ready-matrix-key";
-    private static final String CREATED_FILES_KEY = "media-created-files-key";
     private static final String CONTENT_TASK_CREATED_KEY = "media-content-task-created-key";
+    private static final String CREATED_FILES_KEY = "media-created-files-key";
 
     private SavedStateHandle savedStateHandle;
 
@@ -35,6 +37,8 @@ public class MediaViewModel extends ViewModel implements Resettable {
     private MutableLiveData<ArrayList<FileInfo>> fileInfoList;
     private MutableLiveData<Integer> currentFileIndex;
     private MediatorLiveData<FileInfo> currentFileInfo;
+
+    private MutableLiveData<Long> currentTimestamp;
 
     // host only
     private boolean[][] readyMatrix;
@@ -53,6 +57,8 @@ public class MediaViewModel extends ViewModel implements Resettable {
         currentFileInfo = new MediatorLiveData<>();
         currentFileInfo.addSource(fileInfoList, fileInfos -> refreshCurrentFileInfo());
         currentFileInfo.addSource(currentFileIndex, index -> refreshCurrentFileInfo());
+
+        currentTimestamp = savedStateHandle.getLiveData(CURRENT_TIMESTAMP_KEY, 0L);
 
         readyMatrix = savedStateHandle.get(READY_MATRIX_KEY);
         contentTaskCreated = savedStateHandle.get(CONTENT_TASK_CREATED_KEY);
@@ -80,6 +86,7 @@ public class MediaViewModel extends ViewModel implements Resettable {
         clearSelectedMedia();
         clearFileInfoList();
         setCurrentFileIndex(0);
+        setCurrentTimestamp(0L);
         setReadyMatrix(null);
         setContentTaskCreated(false);
         setCreatedFiles(null);
@@ -143,12 +150,26 @@ public class MediaViewModel extends ViewModel implements Resettable {
     }
 
     public void setFileInfoListElementPlaybackStatus(int index, FileInfo.PlaybackStatus playbackStatus) {
+        setFileInfoListElementDeferredPlaybackStatus(
+                index, playbackStatus, PlaybackStatusCommand.NO_TIMESTAMP);
+    }
+
+    public void setFileInfoListElementDeferredPlaybackStatus(
+            int index,
+            FileInfo.PlaybackStatus playbackStatus,
+            long timestamp
+    ) {
         if (isFileInfoListIndexOutOfBounds(index)) {
             return;
         }
 
         ArrayList<FileInfo> fileInfos = fileInfoList.getValue();
-        fileInfos.get(index).setPlaybackStatus(playbackStatus);
+        FileInfo fileInfo = fileInfos.get(index);
+
+        fileInfo.setPlaybackStatus(playbackStatus);
+        if (timestamp != PlaybackStatusCommand.NO_TIMESTAMP) {
+            fileInfo.setTimestamp(timestamp);
+        }
 
         setFileInfoList(fileInfos);
     }
@@ -175,6 +196,14 @@ public class MediaViewModel extends ViewModel implements Resettable {
 
     public LiveData<FileInfo> getCurrentFileInfo() {
         return currentFileInfo;
+    }
+
+    public LiveData<Long> getCurrentTimestamp() {
+        return currentTimestamp;
+    }
+
+    public void setCurrentTimestamp(Long timestamp) {
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(CURRENT_TIMESTAMP_KEY, timestamp));
     }
 
     public boolean[][] getReadyMatrix() {

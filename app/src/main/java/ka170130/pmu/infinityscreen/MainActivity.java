@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,6 +34,7 @@ import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.Resettable;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.UdpViewModel;
 
 public class MainActivity extends AppCompatActivity {
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 stateViewModel = new ViewModelProvider(this).get(StateViewModel.class));
         resettables.add(new ViewModelProvider(this).get(MediaViewModel.class));
         resettables.add(new ViewModelProvider(this).get(UdpViewModel.class));
+        resettables.add(new ViewModelProvider(this).get(SyncViewModel.class));
 
         // Initialize Helpers
         PermissionsHelper.init(this);
@@ -124,11 +127,17 @@ public class MainActivity extends AppCompatActivity {
         // Discover Peers - Become Discoverable
         connectionManager.discoverPeers();
 
+        // Run Sync Task - no harm in starting it early
+        taskManager.runSyncTask();
+
         // logging
         stateViewModel.getState().observe(this, state -> {
             String s = state == null ? "<NULL>" : state.toString();
             LogHelper.log("AppState changed to " + s);
         });
+
+        // Keep the screen on
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     public void reset() {

@@ -40,7 +40,11 @@ public class LogHelper {
     }
 
     public static void log(String message) {
-        Log.d(MainActivity.LOG_TAG, message);
+        log(MainActivity.LOG_TAG, message);
+    }
+
+    public static void log(String tag, String message) {
+        Log.d(tag, message);
 
         if (mainActivity == null) {
             return;
@@ -52,7 +56,7 @@ public class LogHelper {
                     new WriteTask.WriteCommand(file, false, s.getBytes());
             mainActivity.getTaskManager().getWriteTask().enqueue(command);
         } catch (InterruptedException e) {
-            Log.d(MainActivity.LOG_TAG, e.toString());
+            Log.d(tag, e.toString());
             e.printStackTrace();
         }
     }

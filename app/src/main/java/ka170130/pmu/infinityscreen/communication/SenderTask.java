@@ -31,7 +31,8 @@ public class SenderTask implements Runnable {
     public void run() {
         lock.lock();
 
-        LogHelper.log("Sending message: " + message.getMessageType().toString());
+        LogHelper.log(Message.LOG_TAG,
+                "Sending message: " + message.getMessageType().toString());
 
         Socket socket = new Socket();
         OutputStream outputStream = null;
@@ -43,7 +44,8 @@ public class SenderTask implements Runnable {
             outputStream = socket.getOutputStream();
 
             outputStream.write(message.getBytes());
-            LogHelper.log("Message sent: " + message.getMessageType().toString());
+            LogHelper.log(Message.LOG_TAG,
+                    "Message sent: " + message.getMessageType().toString());
         } catch (Exception e) {
             LogHelper.error(e);
         } finally {

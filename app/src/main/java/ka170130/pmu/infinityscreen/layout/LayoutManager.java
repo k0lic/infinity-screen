@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -14,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
@@ -22,6 +24,7 @@ import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 
 public class LayoutManager {
 
@@ -32,12 +35,14 @@ public class LayoutManager {
     private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
     private LayoutViewModel layoutViewModel;
+    private SyncViewModel syncViewModel;
 
     public LayoutManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
 
         connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
+        syncViewModel = new ViewModelProvider(mainActivity).get(SyncViewModel.class);
     }
 
     public Matrix getMatrix(
@@ -151,6 +156,20 @@ public class LayoutManager {
         } catch (Exception e) {
             LogHelper.error(e);
         }
+
+        // Initialize SyncViewModel SyncInfoList
+        String ownAddress = connectionViewModel.getSelfDevice().getValue().getDeviceAddress();
+        ArrayList<String> deviceAddressList = new ArrayList<>();
+        Iterator<TransformInfo> iterator = list.iterator();
+        while (iterator.hasNext()) {
+            TransformInfo next = iterator.next();
+            String deviceAddress = next.getDeviceAddress();
+            // Do not include own address
+            if (!deviceAddress.equals(ownAddress)) {
+                deviceAddressList.add(deviceAddress);
+            }
+        }
+        syncViewModel.initSyncInfoList(deviceAddressList);
     }
 
     public void hostViewportListener(TransformInfo viewport) {

@@ -45,7 +45,7 @@ public class StreamProxyTask implements Runnable {
 
     @Override
     public void run() {
-        LogHelper.log("Stream Proxy Task is running...");
+        LogHelper.log(StreamProxyServer.LOG_TAG, "Stream Proxy Task is running...");
 
         try {
             readHeader();
@@ -72,14 +72,14 @@ public class StreamProxyTask implements Runnable {
 //        }
         headers = new String(buf, 0, len, StandardCharsets.UTF_8);
 
-        LogHelper.log("Stream Proxy Task read headers: ");
-        LogHelper.log(headers);
+        LogHelper.log(StreamProxyServer.LOG_TAG, "Stream Proxy Task read headers: ");
+        LogHelper.log(StreamProxyServer.LOG_TAG, headers);
 
         // Get the important bits from the headers
         String[] headerLines = headers.split("\n");
         String urlLine = headerLines[0];
         if (!urlLine.startsWith("GET ")) {
-            LogHelper.log("Only GET is supported");
+            LogHelper.log(StreamProxyServer.LOG_TAG, "Only GET is supported");
             throw new InvalidRequestException();
         }
         urlLine = urlLine.substring(4);
@@ -94,7 +94,8 @@ public class StreamProxyTask implements Runnable {
             int equalsIndex = args[i].indexOf("=");
             String argName = args[i].substring(0, equalsIndex);
             String argValue = args[i].substring(equalsIndex + 1);
-            LogHelper.log("arg name: " + argName + "; arg value: " + argValue);
+            LogHelper.log(StreamProxyServer.LOG_TAG,
+                    "arg name: " + argName + "; arg value: " + argValue);
             switch (argName) {
                 case "filesize":
                     fileSize = Long.parseLong(argValue);
@@ -119,7 +120,7 @@ public class StreamProxyTask implements Runnable {
                     headerLine = headerLine.substring(0, charPos);
                 }
                 position = Integer.parseInt(headerLine);
-                LogHelper.log("position = " + position);
+                LogHelper.log(StreamProxyServer.LOG_TAG,"position = " + position);
             }
         }
     }
@@ -140,8 +141,8 @@ public class StreamProxyTask implements Runnable {
         headers += "Connection: close\r\n";
         headers += "\r\n";
 
-        LogHelper.log("Response headers: ");
-        LogHelper.log(headers);
+        LogHelper.log(StreamProxyServer.LOG_TAG, "Response headers: ");
+        LogHelper.log(StreamProxyServer.LOG_TAG, headers);
 
         // Begin with HTTP header
         int fc = 0;
@@ -178,13 +179,14 @@ public class StreamProxyTask implements Runnable {
                 position += cbRead;
                 cbSentThisBatch += cbRead;
 
-                LogHelper.log("Stream Proxy Task sent " + cbRead + " bytes");
+                LogHelper.log(StreamProxyServer.LOG_TAG,
+                        "Stream Proxy Task sent " + cbRead + " bytes");
             }
             input.close();
 
             // If we did nothing this batch, block for some time
             if (cbSentThisBatch == 0) {
-                LogHelper.log("Blocking until more data appears");
+                LogHelper.log(StreamProxyServer.LOG_TAG,"Blocking until more data appears");
                 Thread.sleep(500);
             }
         }
