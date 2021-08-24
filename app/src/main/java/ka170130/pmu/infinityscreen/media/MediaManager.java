@@ -43,6 +43,8 @@ public class MediaManager {
             1000
     };
 
+    private static final int DEFAULT_THUMBNAIL_SIZE = 200;
+
     private MainActivity mainActivity;
     private ConnectionViewModel connectionViewModel;
     private SyncViewModel syncViewModel;
@@ -136,7 +138,20 @@ public class MediaManager {
 
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    bitmap = contentResolver.loadThumbnail(uri, size, null);
+                    LogHelper.log("Video Thumbnail Size: " + size.getWidth() + " " + size.getHeight());
+
+                    // Handle (0,0) size
+                    int width = size.getWidth();
+                    int height = size.getHeight();
+                    if (width == 0) {
+                        width = DEFAULT_THUMBNAIL_SIZE;
+                    }
+                    if (height == 0) {
+                        height =DEFAULT_THUMBNAIL_SIZE;
+                    }
+                    Size nonZeroSize = new Size(width, height);
+
+                    bitmap = contentResolver.loadThumbnail(uri, nonZeroSize, null);
                 } else {
                     MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                     mmr.setDataSource(mainActivity, uri);

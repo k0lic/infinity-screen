@@ -44,7 +44,7 @@ public class LogHelper {
     }
 
     public static void log(String tag, String message) {
-//        Log.d(tag, message);
+        Log.d(tag, message);
 //
 //        if (mainActivity == null) {
 //            return;
@@ -62,7 +62,7 @@ public class LogHelper {
     }
 
     public static void error(Exception e) {
-//        log(e.toString());
-//        e.printStackTrace();
+        log(e.toString());
+        e.printStackTrace();
     }
 }
