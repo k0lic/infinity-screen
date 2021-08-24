@@ -6,6 +6,7 @@ import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
 import android.media.MediaDataSource;
 import android.media.MediaPlayer;
+import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.drm.DrmSessionEventListener;
 import com.google.android.exoplayer2.source.BaseMediaSource;
@@ -35,12 +37,17 @@ import com.google.android.exoplayer2.upstream.TransferListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
+import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
+import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentPlayBinding;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
@@ -50,6 +57,9 @@ import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class PlayFragment extends FullScreenFragment {
+
+    private static final long CONTROLS_TIMEOUT = 10_000;
+    private static final long AUTO_HIDE_CHECK_INTERVAL = 500;
 
     private enum MediaPlayerState {
         IDLE,
@@ -69,6 +79,25 @@ public class PlayFragment extends FullScreenFragment {
 
     private String currentContent;
     private MediaPlayerState mediaPlayerState;
+
+    private long lastInteraction = 0;
+
+    private Handler handler;
+    private Runnable autoHideControls = new Runnable() {
+        @Override
+        public void run() {
+            // Check if controls are visible
+            if (binding.menuButton.getVisibility() == View.VISIBLE) {
+                // Check for inactivity
+                if (System.currentTimeMillis() - lastInteraction > CONTROLS_TIMEOUT) {
+                    // hide controls
+                    hideControls();
+                }
+            }
+
+            handler.postDelayed(autoHideControls, AUTO_HIDE_CHECK_INTERVAL);
+        }
+    };
 
     public PlayFragment() {
         // Required empty public constructor
@@ -91,6 +120,8 @@ public class PlayFragment extends FullScreenFragment {
 
         currentContent = null;
         mediaPlayerState = MediaPlayerState.IDLE;
+
+        handler = new Handler(mainActivity.getMainLooper());
     }
 
     @Override
@@ -99,11 +130,51 @@ public class PlayFragment extends FullScreenFragment {
         // Inflate the layout for this fragment
         binding = FragmentPlayBinding.inflate(inflater, container, false);
 
+        // Play/Pause button
+        binding.playButton.setOnClickListener(view -> {
+            if (mediaPlayerState == MediaPlayerState.PLAYING) {
+                requestPause();
+            } else {
+                requestPlay();
+            }
+
+            markInteraction();
+        });
+
         // Previous Button
-        binding.previousButton.setOnClickListener(view -> handleIndexChange(-1));
+        binding.previousButton.setOnClickListener(view -> {
+            handleIndexChange(-1);
+            markInteraction();
+        });
 
         // Next Button
-        binding.nextButton.setOnClickListener(view -> handleIndexChange(1));
+        binding.nextButton.setOnClickListener(view -> {
+            handleIndexChange(1);
+            markInteraction();
+        });
+
+        // TODO: remove this code - replace with popup menu or something
+        binding.menuButton.setOnClickListener(view -> {
+            StateChangeHelper.requestStateChange(
+                    mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
+            markInteraction();
+        });
+
+        // Block accidental background clicks
+        binding.controlsLayout.setOnClickListener(view -> markInteraction());
+
+        // Background click
+        binding.frameLayout.setOnClickListener(view -> {
+            // toggle control buttons visibility
+            int currentVisibility = binding.menuButton.getVisibility();
+            if (currentVisibility == View.VISIBLE) {
+                hideControls();
+            } else {
+                showControls();
+            }
+
+            markInteraction();
+        });
 
         // Listen for File Info change
         mediaViewModel.getCurrentFileInfo().observe(getViewLifecycleOwner(), fileInfo -> {
@@ -133,11 +204,23 @@ public class PlayFragment extends FullScreenFragment {
             mainActivity.getTaskManager().getReadTask().changeFocus(index);
         });
 
-        // TODO: remove this code - replace with popup menu or something
-        binding.menuButton.setOnClickListener(view -> {
-            StateChangeHelper.requestStateChange(
-                    mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
+        // Listen for Media Completion (and more?)
+        exoPlayer.addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int playbackState) {
+                // Detect completion
+                if (playbackState == Player.STATE_ENDED) {
+                    mediaPlayerState = MediaPlayerState.COMPLETED;
+
+                    Integer fileIndex = mediaViewModel.getCurrentFileIndex().getValue();
+                    mediaViewModel.setFileInfoListElementPlaybackStatus(
+                            fileIndex, FileInfo.PlaybackStatus.PAUSE);
+                }
+            }
         });
+
+        // Automatically hide controls after inactivity
+        handler.post(autoHideControls);
 
         // Set media player surface
         binding.textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
@@ -169,8 +252,7 @@ public class PlayFragment extends FullScreenFragment {
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             if (state == StateViewModel.AppState.FILE_SELECTION) {
 //                mediaPlayer.reset();
-                exoPlayer.stop();
-                exoPlayer.clearMediaItems();
+                resetExoPlayer();
                 currentContent = null;
                 mediaViewModel.reset();
                 navController.navigate(PlayFragmentDirections.actionPlayFragmentPop());
@@ -178,15 +260,6 @@ public class PlayFragment extends FullScreenFragment {
         });
 
         return  binding.getRoot();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        // sync App State - necessary for the Back button to work
-//        StateChangeHelper.requestStateChange(
-//                mainActivity, connectionViewModel, StateViewModel.AppState.PLAY);
     }
 
     private void handleIndexChange(int delta) {
@@ -220,12 +293,12 @@ public class PlayFragment extends FullScreenFragment {
     private void handleImage(FileInfo fileInfo) {
         binding.textureView.setVisibility(View.INVISIBLE);
         binding.imageView.setVisibility(View.VISIBLE);
+        disableVideoControls();
 
         // stop media player - if it is active
         if (mediaPlayerState != MediaPlayerState.IDLE) {
 //            mediaPlayer.reset();
-            exoPlayer.stop();
-            exoPlayer.clearMediaItems();
+            resetExoPlayer();
             mediaPlayerState = MediaPlayerState.IDLE;
             currentContent = null;
         }
@@ -298,13 +371,14 @@ public class PlayFragment extends FullScreenFragment {
     private void handleVideo(FileInfo fileInfo) {
         binding.textureView.setVisibility(View.VISIBLE);
         binding.imageView.setVisibility(View.INVISIBLE);
+        enableVideoControls();
 
         String contentDescriptor = fetchContentDescriptor(fileInfo);
         // reset media player if necessary
         if (contentDescriptor == null || !contentDescriptor.equals(currentContent)) {
 //            mediaPlayer.reset();
-            exoPlayer.stop();
-            exoPlayer.clearMediaItems();
+            resetExoPlayer();
+
             currentContent = null;
             mediaPlayerState = MediaPlayerState.IDLE;
         }
@@ -320,6 +394,14 @@ public class PlayFragment extends FullScreenFragment {
         if (status == FileInfo.PlaybackStatus.PLAY) {
             binding.bufferingLayout.setVisibility(View.INVISIBLE);
 
+            // check if we just switched to this video
+            if (currentContent == null) {
+                // in that case we should automatically Pause to prevent auto play when going through the gallery
+                mediaViewModel.setFileInfoListElementPlaybackStatus(
+                        fileInfo.getIndex(), FileInfo.PlaybackStatus.PAUSE);
+                return;
+            }
+
             if (mediaPlayerState == MediaPlayerState.PLAYING) {
                 // skip
                 return;
@@ -328,36 +410,36 @@ public class PlayFragment extends FullScreenFragment {
             try {
                 switch (mediaPlayerState) {
                     case IDLE:
+                        LogHelper.log("IDLE to PLAYING");
                         // set content
+                        setVideoContent(isHost, contentDescriptor, fileInfo);
+
+                        // set matrix
+                        setVideoMatrix(fileInfo);
+
                         if (!exoPlayer.isPlaying()) {
-                            setVideoContent(isHost, contentDescriptor, fileInfo);
 //                            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
 //                            mediaPlayer.prepareAsync();
                             exoPlayer.prepare();
                             exoPlayer.play();
                         }
 
-                        // set matrix
-                        TransformInfo self = layoutViewModel.getSelfAuto().getValue();
-                        TransformInfo viewport = layoutViewModel.getViewport().getValue();
-
-                        int videoWidth = fileInfo.getWidth();
-                        int videoHeight = fileInfo.getHeight();
-                        LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
-
-                        Matrix matrix = mainActivity.getLayoutManager()
-                                .getVideoMatrix(self, viewport, videoWidth, videoHeight);
-                        binding.textureView.setTransform(matrix);
-
+                        mediaPlayerState = MediaPlayerState.PLAYING;
+                        break;
+                    case COMPLETED:
+                        LogHelper.log("COMPLETED to PLAYING");
+                        exoPlayer.seekTo(0);
+                        exoPlayer.play();
                         mediaPlayerState = MediaPlayerState.PLAYING;
                         break;
                     case PAUSED:
-                    case COMPLETED:
+                        LogHelper.log("PAUSED to PLAYING");
 //                        mediaPlayer.start();
                         exoPlayer.play();
                         mediaPlayerState = MediaPlayerState.PLAYING;
                         break;
                     case STOPPED:
+                        LogHelper.log("STOPPED to PLAYING");
 //                        mediaPlayer.setOnPreparedListener(MediaPlayer::start);
 //                        mediaPlayer.prepareAsync();
                         exoPlayer.prepare();
@@ -365,6 +447,9 @@ public class PlayFragment extends FullScreenFragment {
                         mediaPlayerState = MediaPlayerState.PLAYING;
                         break;
                 }
+
+                // Set Pause Drawable
+                binding.playButton.setImageResource(R.drawable.outline_pause_24);
 
                 currentContent = contentDescriptor;
             } catch (IOException e) {
@@ -378,12 +463,19 @@ public class PlayFragment extends FullScreenFragment {
             try {
                 switch (mediaPlayerState) {
                     case IDLE:
+                        LogHelper.log("IDLE to PAUSED");
+                        // set content
                         setVideoContent(isHost, contentDescriptor, fileInfo);
+
+                        // set matrix
+                        setVideoMatrix(fileInfo);
+
 //                        mediaPlayer.prepare();
                         exoPlayer.prepare();
                         mediaPlayerState = MediaPlayerState.PAUSED;
                         break;
                     case PLAYING:
+                        LogHelper.log("PLAYING to PAUSED");
                         if (exoPlayer.isPlaying()) {
 //                            mediaPlayer.pause();
                             exoPlayer.pause();
@@ -391,6 +483,9 @@ public class PlayFragment extends FullScreenFragment {
                         mediaPlayerState = MediaPlayerState.PAUSED;
                         break;
                 }
+
+                // Set Play Drawable
+                binding.playButton.setImageResource(R.drawable.outline_play_arrow_24);
 
                 currentContent = contentDescriptor;
             } catch (IOException e) {
@@ -401,6 +496,19 @@ public class PlayFragment extends FullScreenFragment {
 
             currentContent = null;
         }
+    }
+
+    private void setVideoMatrix(FileInfo fileInfo) {
+        TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+        TransformInfo viewport = layoutViewModel.getViewport().getValue();
+
+        int videoWidth = fileInfo.getWidth();
+        int videoHeight = fileInfo.getHeight();
+        LogHelper.log("Video: w: " + videoWidth + " h: " + videoHeight);
+
+        Matrix matrix = mainActivity.getLayoutManager()
+                .getVideoMatrix(self, viewport, videoWidth, videoHeight);
+        binding.textureView.setTransform(matrix);
     }
 
     private String fetchContentDescriptor(FileInfo fileInfo) {
@@ -484,5 +592,83 @@ public class PlayFragment extends FullScreenFragment {
             MediaItem mediaItem = MediaItem.fromUri(uri);
             exoPlayer.setMediaItem(mediaItem);
         }
+    }
+
+    private void resetExoPlayer() {
+        exoPlayer.pause();
+        exoPlayer.stop();
+        exoPlayer.clearMediaItems();
+    }
+
+    private void requestPlay() {
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+        Integer fileIndex = mediaViewModel.getCurrentFileIndex().getValue();
+
+        try {
+            if (isHost) {
+                mainActivity.getMediaManager().requestPlay(fileIndex);
+            } else {
+                // send message to host requesting Play
+                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+                InetAddress hostAddress = host.getInetAddress();
+                PlaybackStatusCommand command =
+                        new PlaybackStatusCommand(fileIndex, FileInfo.PlaybackStatus.PLAY);
+
+                mainActivity.getTaskManager().runSenderTask(
+                        hostAddress, Message.newPlaybackStatusRequestMessage(command));
+            }
+        } catch (IOException e) {
+            LogHelper.error(e);
+        }
+    }
+
+    private void requestPause() {
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+        Integer fileIndex = mediaViewModel.getCurrentFileIndex().getValue();
+
+        try {
+            if (isHost) {
+                mainActivity.getMediaManager().requestPause(fileIndex);
+            } else {
+                // send message to host requesting Pause
+                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+                InetAddress hostAddress = host.getInetAddress();
+                PlaybackStatusCommand command =
+                        new PlaybackStatusCommand(fileIndex, FileInfo.PlaybackStatus.PAUSE);
+
+                mainActivity.getTaskManager().runSenderTask(
+                        hostAddress, Message.newPlaybackStatusRequestMessage(command));
+            }
+        } catch (IOException e) {
+            LogHelper.error(e);
+        }
+    }
+
+    private void markInteraction() {
+        lastInteraction = System.currentTimeMillis();
+    }
+
+    private void hideControls() {
+        binding.menuButton.setVisibility(View.INVISIBLE);
+        binding.controlsLayout.setVisibility(View.INVISIBLE);
+    }
+
+    private void showControls() {
+        binding.menuButton.setVisibility(View.VISIBLE);
+        binding.controlsLayout.setVisibility(View.VISIBLE);
+    }
+
+    private void disableVideoControls() {
+        binding.playButton.setVisibility(View.INVISIBLE);
+        binding.currentTime.setVisibility(View.INVISIBLE);
+        binding.totalTime.setVisibility(View.INVISIBLE);
+        binding.slider.setVisibility(View.INVISIBLE);
+    }
+
+    private void enableVideoControls() {
+        binding.playButton.setVisibility(View.VISIBLE);
+        binding.currentTime.setVisibility(View.VISIBLE);
+        binding.totalTime.setVisibility(View.VISIBLE);
+        binding.slider.setVisibility(View.VISIBLE);
     }
 }

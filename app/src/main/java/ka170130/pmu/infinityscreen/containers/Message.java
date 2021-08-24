@@ -34,7 +34,8 @@ public class Message {
         CONTENT,
         CONTENT_ACK,
         FILE_READY,
-        PLAYBACK_STATUS_COMMAND
+        PLAYBACK_STATUS_COMMAND,
+        PLAYBACK_STATUS_REQUEST
     }
 
     private static final MessageType[] MESSAGE_TYPES = MessageType.values();
@@ -135,6 +136,10 @@ public class Message {
 
     public static Message newPlaybackStatusCommandMessage(PlaybackStatusCommand command) throws IOException {
         return createMessageFromSerializable(MessageType.PLAYBACK_STATUS_COMMAND, command);
+    }
+
+    public static Message newPlaybackStatusRequestMessage(PlaybackStatusCommand command) throws IOException {
+        return createMessageFromSerializable(MessageType.PLAYBACK_STATUS_REQUEST, command);
     }
 
     private static Message createMessageFromSerializable(MessageType type, Serializable serializable) throws IOException {

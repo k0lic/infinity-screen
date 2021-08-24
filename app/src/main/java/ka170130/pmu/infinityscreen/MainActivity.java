@@ -91,8 +91,10 @@ public class MainActivity extends AppCompatActivity {
         FileSelectionHelper.init(this);
         LogHelper.init(this);
 
-        // Setup Connection Manager
+        // Setup Managers
         connectionManager = new ConnectionManager(this);
+        layoutManager = new LayoutManager(this);
+        mediaManager = new MediaManager(this);
 
         // Setup Task Manager
         taskManager = new TaskManager(this);
@@ -118,10 +120,6 @@ public class MainActivity extends AppCompatActivity {
         // Setup Wifi Direct Broadcast Receiver
         WifiDirectReceiver.initializeIntentFilter();
         receiver = new WifiDirectReceiver(this);
-
-        // Setup Managers
-        layoutManager = new LayoutManager(this);
-        mediaManager = new MediaManager(this);
 
         // Discover Peers - Become Discoverable
         connectionManager.discoverPeers();

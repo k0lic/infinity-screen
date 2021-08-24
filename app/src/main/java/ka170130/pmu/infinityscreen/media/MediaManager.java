@@ -24,6 +24,8 @@ import java.io.IOException;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.FileContentPackage;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
+import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.helpers.Callback;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
@@ -89,7 +91,7 @@ public class MediaManager {
 
         FileInfo.PlaybackStatus initialStatus = FileInfo.PlaybackStatus.WAIT;
         if (fileType == FileInfo.FileType.VIDEO) {
-            initialStatus = FileInfo.PlaybackStatus.PLAY;
+            initialStatus = FileInfo.PlaybackStatus.PAUSE;
         }
 
         return new FileInfo(
@@ -160,7 +162,23 @@ public class MediaManager {
         return mimeType;
     }
 
-//    public String getExtension(Uri uri) {
-//        return MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-//    }
+    public void requestPlay(int fileIndex) throws IOException {
+        // TODO: optimize so playback is synchronous, maybe add check(s)
+        // Authorize Play
+        Message message = Message.newPlaybackStatusCommandMessage(new PlaybackStatusCommand(
+                fileIndex,
+                FileInfo.PlaybackStatus.PLAY
+        ));
+        mainActivity.getTaskManager().sendToAllInGroup(message, true);
+    }
+
+    public void requestPause(int fileIndex) throws IOException {
+        // TODO: optimize so playback is synchronous, maybe add check(s)
+        // Authorize Pause
+        Message message = Message.newPlaybackStatusCommandMessage(new PlaybackStatusCommand(
+                fileIndex,
+                FileInfo.PlaybackStatus.PAUSE
+        ));
+        mainActivity.getTaskManager().sendToAllInGroup(message, true);
+    }
 }

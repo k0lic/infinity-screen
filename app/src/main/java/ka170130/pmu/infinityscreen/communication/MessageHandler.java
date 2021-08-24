@@ -25,6 +25,7 @@ import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.io.WriteTask;
+import ka170130.pmu.infinityscreen.media.MediaManager;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
@@ -35,6 +36,7 @@ public class MessageHandler {
 
     private TaskManager taskManager;
     private ConnectionManager connectionManager;
+    private MediaManager mediaManager;
     private ConnectionViewModel connectionViewModel;
     private StateViewModel stateViewModel;
     private LayoutViewModel layoutViewModel;
@@ -48,6 +50,8 @@ public class MessageHandler {
         this.taskManager = taskManager;
 
         this.connectionManager = mainActivity.getConnectionManager();
+        this.mediaManager = mainActivity.getMediaManager();
+
         this.connectionViewModel =
                 new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         this.stateViewModel =
@@ -120,6 +124,9 @@ public class MessageHandler {
                     break;
                 case PLAYBACK_STATUS_COMMAND:
                     handlePlaybackStatusCommandMessage(message);
+                    break;
+                case PLAYBACK_STATUS_REQUEST:
+                    handlePlaybackStatusRequestMessage(message);
                     break;
             }
         } catch (Exception e) {
@@ -411,6 +418,18 @@ public class MessageHandler {
         PlaybackStatusCommand command = (PlaybackStatusCommand) message.extractObject();
 
         mediaViewModel.setFileInfoListElementPlaybackStatus(command.getFileIndex(), command.getPlaybackStatus());
+    }
+
+    // handle PLAYBACK_STATUS_REQUEST message
+    private void handlePlaybackStatusRequestMessage(Message message) throws IOException, ClassNotFoundException {
+        PlaybackStatusCommand command = (PlaybackStatusCommand) message.extractObject();
+
+        int fileIndex = command.getFileIndex();
+        if (command.getPlaybackStatus() == FileInfo.PlaybackStatus.PLAY) {
+            mediaManager.requestPlay(fileIndex);
+        } else if (command.getPlaybackStatus() == FileInfo.PlaybackStatus.PAUSE) {
+            mediaManager.requestPause(fileIndex);
+        }
     }
 
     private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {
