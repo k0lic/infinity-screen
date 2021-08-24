@@ -44,25 +44,25 @@ public class LogHelper {
     }
 
     public static void log(String tag, String message) {
-        Log.d(tag, message);
-
-        if (mainActivity == null) {
-            return;
-        }
-
-        try {
-            String s = message + "\n";
-            WriteTask.WriteCommand command =
-                    new WriteTask.WriteCommand(file, false, s.getBytes());
-            mainActivity.getTaskManager().getWriteTask().enqueue(command);
-        } catch (InterruptedException e) {
-            Log.d(tag, e.toString());
-            e.printStackTrace();
-        }
+//        Log.d(tag, message);
+//
+//        if (mainActivity == null) {
+//            return;
+//        }
+//
+//        try {
+//            String s = message + "\n";
+//            WriteTask.WriteCommand command =
+//                    new WriteTask.WriteCommand(file, false, s.getBytes());
+//            mainActivity.getTaskManager().getWriteTask().enqueue(command);
+//        } catch (InterruptedException e) {
+//            Log.d(tag, e.toString());
+//            e.printStackTrace();
+//        }
     }
 
     public static void error(Exception e) {
-        log(e.toString());
-        e.printStackTrace();
+//        log(e.toString());
+//        e.printStackTrace();
     }
 }

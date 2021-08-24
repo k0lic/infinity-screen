@@ -484,6 +484,9 @@ public class MessageHandler {
         LogHelper.log(SyncInfo.LOG_TAG,
                 "CLOCK_RESPONSE for device " + clockResponse.getDeviceAddress() + ": roundTripTime = " + roundTripTime + " clockDiff = " + clockDiff);
 
+        // Update Average Round Trip time - used to monitor load
+        syncViewModel.updateAverageRoundTripTime(roundTripTime);
+
         // Update Latency of SyncInfoList Element with matching address
         syncViewModel.updateSyncInfoListElement(clockResponse.getDeviceAddress(), clockDiff);
     }

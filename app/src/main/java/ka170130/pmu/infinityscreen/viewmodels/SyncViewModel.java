@@ -12,10 +12,14 @@ import ka170130.pmu.infinityscreen.sync.SyncInfo;
 public class SyncViewModel extends ViewModel implements Resettable {
 
     private static final String SYNC_LIST_KEY = "sync-sync-list-key";
+    private static final String AVERAGE_ROUND_TRIP_KEY = "sync-average-round-trip-time-key";
+
+    private static final double FACTOR = 0.15;
 
     private SavedStateHandle savedStateHandle;
 
     private ArrayList<SyncInfo> syncInfoList;
+    private Long averageRoundTripTime;
 
     public SyncViewModel(SavedStateHandle savedStateHandle) {
         this.savedStateHandle = savedStateHandle;
@@ -23,6 +27,11 @@ public class SyncViewModel extends ViewModel implements Resettable {
         syncInfoList = savedStateHandle.get(SYNC_LIST_KEY);
         if (syncInfoList == null) {
             syncInfoList = new ArrayList<>();
+        }
+
+        averageRoundTripTime = savedStateHandle.get(AVERAGE_ROUND_TRIP_KEY);
+        if (averageRoundTripTime == null) {
+            averageRoundTripTime = 0L;
         }
     }
 
@@ -83,5 +92,19 @@ public class SyncViewModel extends ViewModel implements Resettable {
         }
 
         return null;
+    }
+
+    public Long getAverageRoundTripTime() {
+        return averageRoundTripTime;
+    }
+
+    public void setAverageRoundTripTime(Long averageRoundTripTime) {
+        this.averageRoundTripTime = averageRoundTripTime;
+        savedStateHandle.set(AVERAGE_ROUND_TRIP_KEY, averageRoundTripTime);
+    }
+
+    public void updateAverageRoundTripTime(long roundTripTime) {
+        long update = Math.round(FACTOR * roundTripTime + (1 - FACTOR) * averageRoundTripTime);
+        setAverageRoundTripTime(update);
     }
 }

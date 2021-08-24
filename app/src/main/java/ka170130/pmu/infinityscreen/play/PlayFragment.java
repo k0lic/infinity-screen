@@ -18,6 +18,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
@@ -566,6 +567,12 @@ public class PlayFragment extends FullScreenFragment {
                 // TODO: handle late deferred handling - notify host and ask for abortion?
                 // just request pause
                 requestPause();
+
+                Toast.makeText(
+                        mainActivity,
+                        "Playing video failed! Message latency too high.",
+                        Toast.LENGTH_SHORT
+                ).show();
                 return;
             }
 
