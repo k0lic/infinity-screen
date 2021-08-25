@@ -149,8 +149,8 @@ public class Message {
         return createMessageFromSerializable(MessageType.PLAYBACK_STATUS_REQUEST, command);
     }
 
-    public static Message newClockRequestMessage(Long timestamp) throws IOException {
-        return createMessageFromSerializable(MessageType.CLOCK_REQUEST, timestamp);
+    public static Message newClockRequestMessage(ClockResponse clockResponse) throws IOException {
+        return createMessageFromSerializable(MessageType.CLOCK_REQUEST, clockResponse);
     }
 
     public static Message newClockResponseMessage(ClockResponse clockResponse) throws IOException {

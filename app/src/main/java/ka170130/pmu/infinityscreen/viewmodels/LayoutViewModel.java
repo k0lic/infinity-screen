@@ -55,12 +55,12 @@ public class LayoutViewModel extends ViewModel implements Resettable {
             return;
         }
 
-        String myAddress = self.getDeviceAddress();
+        String ownName = self.getDeviceName();
 
         Iterator<TransformInfo> iterator = list.iterator();
         while (iterator.hasNext()) {
             TransformInfo next = iterator.next();
-            if (next.getDeviceAddress().equals(myAddress)) {
+            if (next.getDeviceName().equals(ownName)) {
                 selfAuto.setValue(next);
                 return;
             }
@@ -103,7 +103,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         Iterator<TransformInfo> iterator = list.iterator();
         while (!contains && iterator.hasNext()) {
             TransformInfo next = iterator.next();
-            contains = transformInfo.getDeviceAddress().equals(next.getDeviceAddress());
+            contains = transformInfo.getDeviceName().equals(next.getDeviceName());
         }
 
         if (contains) {
@@ -112,7 +112,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         }
 
         TransformInfo toAdd = new TransformInfo(
-                transformInfo.getDeviceAddress(),
+                transformInfo.getDeviceName(),
                 size + 1,
                 transformInfo.getScreenWidth(),
                 transformInfo.getScreenHeight()

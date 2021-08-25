@@ -4,18 +4,18 @@ import java.io.Serializable;
 
 public class ClockResponse implements Serializable {
 
-    private String deviceAddress;
+    private String deviceName;
     private long timestamp1;
     private long timestamp2;
 
-    public ClockResponse(String deviceAddress, long timestamp1, long timestamp2) {
-        this.deviceAddress = deviceAddress;
+    public ClockResponse(String deviceName, long timestamp1, long timestamp2) {
+        this.deviceName = deviceName;
         this.timestamp1 = timestamp1;
         this.timestamp2 = timestamp2;
     }
 
-    public String getDeviceAddress() {
-        return deviceAddress;
+    public String getDeviceName() {
+        return deviceName;
     }
 
     public long getTimestamp1() {

@@ -102,8 +102,8 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
             return;
         }
 
-        if (selfDevice.getDeviceAddress() != null
-                && selfDevice.getDeviceAddress().equals(hostDevice.getDeviceAddress())
+        if (selfDevice.getDeviceName() != null
+                && selfDevice.getDeviceName().equals(hostDevice.getDeviceName())
         ) {
             connectionStatus.setValue(ConnectionStatus.CONNECTED_HOST);
             return;

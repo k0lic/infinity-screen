@@ -156,20 +156,6 @@ public class LayoutManager {
         } catch (Exception e) {
             LogHelper.error(e);
         }
-
-        // Initialize SyncViewModel SyncInfoList
-        String ownAddress = connectionViewModel.getSelfDevice().getValue().getDeviceAddress();
-        ArrayList<String> deviceAddressList = new ArrayList<>();
-        Iterator<TransformInfo> iterator = list.iterator();
-        while (iterator.hasNext()) {
-            TransformInfo next = iterator.next();
-            String deviceAddress = next.getDeviceAddress();
-            // Do not include own address
-            if (!deviceAddress.equals(ownAddress)) {
-                deviceAddressList.add(deviceAddress);
-            }
-        }
-        syncViewModel.initSyncInfoList(deviceAddressList);
     }
 
     public void hostViewportListener(TransformInfo viewport) {
@@ -184,7 +170,7 @@ public class LayoutManager {
     }
 
     public TransformInfo calculateSelfTransform() {
-        String deviceAddress = connectionViewModel.getSelfDevice().getValue().getDeviceAddress();
+        String deviceName = connectionViewModel.getSelfDevice().getValue().getDeviceName();
 
         Integer[] pixelCount = getPixelCount();
 
@@ -195,7 +181,7 @@ public class LayoutManager {
         LogHelper.log("Screen dimensions : (" + screenWidth + ", " + screenHeight + ")");
 
         return new TransformInfo(
-                deviceAddress,
+                deviceName,
                 0,  // dummy value - will be overwritten
                 screenWidth,
                 screenHeight

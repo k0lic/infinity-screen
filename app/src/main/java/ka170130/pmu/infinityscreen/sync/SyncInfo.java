@@ -11,18 +11,18 @@ public class SyncInfo implements Serializable {
     private static final int COUNT_THRESHOLD = 10;
     private static final double FACTOR = 0.15;
 
-    private String deviceAddress;
+    private String deviceName;
     private long clockDiff;
     private int count;
 
-    public SyncInfo(String deviceAddress) {
-        this.deviceAddress = deviceAddress;
+    public SyncInfo(String deviceName) {
+        this.deviceName = deviceName;
         clockDiff = 0;
         count = 0;
     }
 
-    public String getDeviceAddress() {
-        return deviceAddress;
+    public String getDeviceName() {
+        return deviceName;
     }
 
     public long getClockDiff() {
@@ -41,7 +41,7 @@ public class SyncInfo implements Serializable {
             this.clockDiff = Math.round(latency * FACTOR + this.clockDiff * (1 - FACTOR));
         }
 
-        LogHelper.log(SyncInfo.LOG_TAG, "UPDATED LATENCY for " + deviceAddress + " is " + this.clockDiff);
+        LogHelper.log(SyncInfo.LOG_TAG, "UPDATED LATENCY for " + deviceName + " is " + this.clockDiff);
 
         count++;
     }

@@ -49,19 +49,19 @@ public class SyncViewModel extends ViewModel implements Resettable {
         savedStateHandle.set(SYNC_LIST_KEY, syncInfoList);
     }
 
-    public void initSyncInfoList(List<String> deviceAddressList) {
+    public void initSyncInfoList(List<String> deviceNameList) {
         ArrayList<SyncInfo> list = new ArrayList<>();
 
-        Iterator<String> iterator = deviceAddressList.iterator();
+        Iterator<String> iterator = deviceNameList.iterator();
         while (iterator.hasNext()) {
-            String deviceAddress = iterator.next();
-            list.add(new SyncInfo(deviceAddress));
+            String deviceName = iterator.next();
+            list.add(new SyncInfo(deviceName));
         }
 
         setSyncInfoList(list);
     }
 
-    public void updateSyncInfoListElement(String deviceAddress, long clockDiff) {
+    public void updateSyncInfoListElement(String deviceName, long clockDiff) {
         ArrayList<SyncInfo> list = syncInfoList;
 
         Iterator<SyncInfo> iterator = list.iterator();
@@ -69,7 +69,7 @@ public class SyncViewModel extends ViewModel implements Resettable {
         // Find element with matching address
         while (iterator.hasNext() && !updated) {
             SyncInfo next = iterator.next();
-            if (next.getDeviceAddress().equals(deviceAddress)) {
+            if (next.getDeviceName().equals(deviceName)) {
                 // Update element with matching address
                 next.update(clockDiff);
                 updated = true;
@@ -82,11 +82,11 @@ public class SyncViewModel extends ViewModel implements Resettable {
         }
     }
 
-    public SyncInfo getSyncInfoListElement(String deviceAddress) {
+    public SyncInfo getSyncInfoListElement(String deviceName) {
         Iterator<SyncInfo> iterator = syncInfoList.iterator();
         while (iterator.hasNext()) {
             SyncInfo next = iterator.next();
-            if (next.getDeviceAddress().equals(deviceAddress)) {
+            if (next.getDeviceName().equals(deviceName)) {
                 return next;
             }
         }

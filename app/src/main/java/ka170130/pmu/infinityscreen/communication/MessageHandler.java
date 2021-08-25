@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.Semaphore;
 
 import ka170130.pmu.infinityscreen.MainActivity;
@@ -167,9 +169,10 @@ public class MessageHandler {
             rememberPeer(moreInfo);
         } else {
             // forward the peer info to the host
-            PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+            InetAddress hostAddress =
+                    connectionViewModel.getHostDevice().getValue().getInetAddress();
             Message forward = Message.newPeerInfoMessage(moreInfo);
-            taskManager.runSenderTask(host.getInetAddress(), forward);
+            taskManager.runSenderTask(hostAddress, forward);
         }
     }
 
@@ -458,15 +461,14 @@ public class MessageHandler {
 
     // handle CLOCK_REQUEST message
     private void handleClockRequestMessage(Message message, InetAddress inetAddress) throws IOException, ClassNotFoundException {
-        // timestamp of sender
-        Long timestamp1 = (Long) message.extractObject();
+        ClockResponse request = (ClockResponse) message.extractObject();
+
         // own timestamp
         long timestamp2 = System.currentTimeMillis();
-        // own address
-        String address = connectionViewModel.getSelfDevice().getValue().getDeviceAddress();
-        ClockResponse clockResponse = new ClockResponse(address, timestamp1, timestamp2);
+        ClockResponse response = new ClockResponse(
+                request.getDeviceName(), request.getTimestamp1(), timestamp2);
 
-        taskManager.runSenderTask(inetAddress, Message.newClockResponseMessage(clockResponse));
+        taskManager.runSenderTask(inetAddress, Message.newClockResponseMessage(response));
     }
 
     // handle CLOCK_RESPONSE message
@@ -482,13 +484,13 @@ public class MessageHandler {
         long clockDiff = timestamp2 - timestamp1 - latency;
 
         LogHelper.log(SyncInfo.LOG_TAG,
-                "CLOCK_RESPONSE for device " + clockResponse.getDeviceAddress() + ": roundTripTime = " + roundTripTime + " clockDiff = " + clockDiff);
+                "CLOCK_RESPONSE for device " + clockResponse.getDeviceName() + ": roundTripTime = " + roundTripTime + " clockDiff = " + clockDiff);
 
         // Update Average Round Trip time - used to monitor load
         syncViewModel.updateAverageRoundTripTime(roundTripTime);
 
         // Update Latency of SyncInfoList Element with matching address
-        syncViewModel.updateSyncInfoListElement(clockResponse.getDeviceAddress(), clockDiff);
+        syncViewModel.updateSyncInfoListElement(clockResponse.getDeviceName(), clockDiff);
     }
 
     // handle SEEK_TO_ORDER message
@@ -508,12 +510,30 @@ public class MessageHandler {
     }
 
     private void rememberPeer(PeerInetAddressInfo peerInfo) throws IOException {
-        connectionViewModel.selectDevice(peerInfo);
+        PeerInetAddressInfo peerInfoWithRealMac = null;
+        // Get real MAC (the one sent by the other device might be 02:00:00:00:00:00)
+        Collection<PeerInfo> availableList = connectionViewModel.getAvailableList().getValue();
+        Iterator<PeerInfo> iterator = availableList.iterator();
+        while (iterator.hasNext() && peerInfoWithRealMac == null) {
+            PeerInfo next = iterator.next();
+            if (next.getDeviceName().equals(peerInfo.getDeviceName())) {
+                peerInfoWithRealMac = new PeerInetAddressInfo(next, peerInfo.getInetAddress());
+            }
+        }
+
+        // If we did not fetch real mac - skip
+        if (peerInfoWithRealMac == null) {
+            LogHelper.log("Could not fetch real MAC address for " + peerInfo.getDeviceName());
+            return;
+        }
+
+        // Save Peer Info with fixed MAC address
+        connectionViewModel.selectDevice(peerInfoWithRealMac);
 
         // respond with HOST_ACK
         PeerInfo self = connectionViewModel.getSelfDevice().getValue();
         Message response = Message.newHostAckMessage(self);
-        taskManager.runSenderTask(peerInfo.getInetAddress(), response);
+        taskManager.runSenderTask(peerInfoWithRealMac.getInetAddress(), response);
     }
 
     private void rememberHost(Message message, InetAddress inetAddress) throws IOException, ClassNotFoundException {

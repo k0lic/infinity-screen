@@ -2,6 +2,8 @@ package ka170130.pmu.infinityscreen.helpers;
 
 import android.util.Log;
 
+import java.net.InetAddress;
+
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
@@ -17,7 +19,6 @@ public class StateChangeHelper {
     ) {
         try {
             Boolean isHost = connectionViewModel.getIsHost().getValue();
-            PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
 
             if (isHost) {
                 mainActivity.getTaskManager()
@@ -26,8 +27,10 @@ public class StateChangeHelper {
 //                        Message.newStateChangeMessage(state)
 //                );
             } else {
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
                 mainActivity.getTaskManager().runSenderTask(
-                        host.getInetAddress(),
+                        hostAddress,
                         Message.newStateChangeRequestMessage(state)
                 );
             }

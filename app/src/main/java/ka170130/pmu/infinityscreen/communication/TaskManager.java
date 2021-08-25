@@ -104,8 +104,8 @@ public class TaskManager {
         }
 
         if (toHost) {
-            PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
-            runSenderTask(host.getInetAddress(), message);
+            InetAddress hostAddress = connectionViewModel.getHostDevice().getValue().getInetAddress();
+            runSenderTask(hostAddress, message);
         }
     }
 

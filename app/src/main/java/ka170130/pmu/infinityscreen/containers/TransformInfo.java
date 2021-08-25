@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class TransformInfo implements Serializable {
 
-    private String deviceAddress;
+    private String deviceName;
     private int numberId;
 
     private double screenWidth;
@@ -12,8 +12,8 @@ public class TransformInfo implements Serializable {
 
     private DeviceRepresentation.Position position;
 
-    public TransformInfo(String deviceAddress, int numberId, double screenWidth, double screenHeight) {
-        this.deviceAddress = deviceAddress;
+    public TransformInfo(String deviceName, int numberId, double screenWidth, double screenHeight) {
+        this.deviceName = deviceName;
         this.numberId = numberId;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -21,8 +21,8 @@ public class TransformInfo implements Serializable {
         position = new DeviceRepresentation.Position(); // 0 0
     }
 
-    public String getDeviceAddress() {
-        return deviceAddress;
+    public String getDeviceName() {
+        return deviceName;
     }
 
     public int getNumberId() {

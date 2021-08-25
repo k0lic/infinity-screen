@@ -10,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
@@ -17,6 +19,7 @@ import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentLayoutBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
@@ -24,12 +27,14 @@ import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
+import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 
 public class LayoutFragment extends ConnectionAwareFragment {
 
     private FragmentLayoutBinding binding;
     private StateViewModel stateViewModel;
     private LayoutViewModel layoutViewModel;
+    private SyncViewModel syncViewModel;
 
     private LayoutManager layoutManager;
 
@@ -43,6 +48,7 @@ public class LayoutFragment extends ConnectionAwareFragment {
 
         stateViewModel = new ViewModelProvider(mainActivity).get(StateViewModel.class);
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
+        syncViewModel = new ViewModelProvider(mainActivity).get(SyncViewModel.class);
 
         layoutManager = new LayoutManager(mainActivity);
     }
@@ -80,6 +86,16 @@ public class LayoutFragment extends ConnectionAwareFragment {
         TransformInfo selfTransform = layoutManager.calculateSelfTransform();
         layoutViewModel.setSelfTransform(selfTransform);
         layoutManager.reportSelfTransform(selfTransform);
+
+        // Initialize SyncViewModel SyncInfoList
+        Collection<PeerInetAddressInfo> group = connectionViewModel.getGroupList().getValue();
+        ArrayList<String> deviceNameList = new ArrayList<>();
+        Iterator<PeerInetAddressInfo> groupIter = group.iterator();
+        while (groupIter.hasNext()) {
+            PeerInetAddressInfo next = groupIter.next();
+            deviceNameList.add(next.getDeviceName());
+        }
+        syncViewModel.initSyncInfoList(deviceNameList);
 
         // Attach Host Listeners - broadcast layout changes
         if (isHost) {

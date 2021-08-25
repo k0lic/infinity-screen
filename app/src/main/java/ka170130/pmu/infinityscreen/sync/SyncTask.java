@@ -3,7 +3,6 @@ package ka170130.pmu.infinityscreen.sync;
 import androidx.lifecycle.ViewModelProvider;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -74,25 +73,27 @@ public class SyncTask implements Runnable {
                     continue;
                 }
 
-                // Find InetAddress of device which selected Sync Info belongs to
+                // Find Connection Info of device which selected Sync Info belongs to
                 Iterator<PeerInetAddressInfo> iterator = groupList.iterator();
-                InetAddress inetAddress = null;
-                while (iterator.hasNext() && inetAddress == null) {
+                PeerInetAddressInfo peer = null;
+                while (iterator.hasNext() && peer == null) {
                     PeerInetAddressInfo next = iterator.next();
-                    if (next.getDeviceAddress().equals(syncInfo.getDeviceAddress())) {
-                        inetAddress = next.getInetAddress();
+                    if (next.getDeviceName().equals(syncInfo.getDeviceName())) {
+                        peer = next;
                     }
                 }
 
-                // Skip if InetAddress was not found
-                if (inetAddress == null) {
+                // Skip if Connection Info was not found
+                if (peer == null) {
                     counter = (counter + 1) % syncInfoList.size();
                     continue;
                 }
 
                 // Send CLOCK_REQUEST message in order to update SyncInfo with the CLOCK_RESPONSE message
-                Message message = Message.newClockRequestMessage(System.currentTimeMillis());
-                mainActivity.getTaskManager().runSenderTask(inetAddress, message);
+                ClockResponse clockResponse = new ClockResponse(
+                        syncInfo.getDeviceName(), System.currentTimeMillis(), 0);
+                Message message = Message.newClockRequestMessage(clockResponse);
+                mainActivity.getTaskManager().runSenderTask(peer.getInetAddress(), message);
 
                 // Increment counter
                 counter = (counter + 1) % syncInfoList.size();

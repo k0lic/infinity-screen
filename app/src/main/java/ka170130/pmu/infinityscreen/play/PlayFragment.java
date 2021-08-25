@@ -384,9 +384,10 @@ public class PlayFragment extends FullScreenFragment {
                         .sendToAllInGroup(Message.newFileIndexUpdateMessage(index), true);
 //                        .runBroadcastTask(Message.newFileIndexUpdateMessage(index));
             } else {
-                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
                 mainActivity.getTaskManager().runSenderTask(
-                        host.getInetAddress(), Message.newFileIndexUpdateRequestMessage(index));
+                        hostAddress, Message.newFileIndexUpdateRequestMessage(index));
 //                        .sendToAllInGroup(Message.newFileIndexUpdateRequestMessage(index));
 //                        .runBroadcastTask(Message.newFileIndexUpdateRequestMessage(index));
             }
@@ -721,12 +722,12 @@ public class PlayFragment extends FullScreenFragment {
             exoPlayer.setMediaItem(mediaItem);
         } else {
             // file is streamed over WiFi P2P
-            PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
-            String hostAddress = host.getInetAddress().getHostAddress();
+            InetAddress hostAddress =
+                    connectionViewModel.getHostDevice().getValue().getInetAddress();
             int fileIndex = mediaViewModel.getCurrentFileIndex().getValue();
 
             StringBuilder proxyPath = new StringBuilder("http://");
-            proxyPath.append(hostAddress);
+            proxyPath.append(hostAddress.getHostAddress());
             proxyPath.append(":");
             proxyPath.append(TaskManager.PROXY_PORT);
             proxyPath.append("/");
@@ -765,8 +766,8 @@ public class PlayFragment extends FullScreenFragment {
                 mainActivity.getMediaManager().requestPlay(fileIndex);
             } else {
                 // send message to host requesting Play
-                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
-                InetAddress hostAddress = host.getInetAddress();
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
                 PlaybackStatusCommand command =
                         new PlaybackStatusCommand(fileIndex, FileInfo.PlaybackStatus.PLAY);
 
@@ -787,8 +788,8 @@ public class PlayFragment extends FullScreenFragment {
                 mainActivity.getMediaManager().requestPause(fileIndex);
             } else {
                 // send message to host requesting Pause
-                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
-                InetAddress hostAddress = host.getInetAddress();
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
                 PlaybackStatusCommand command =
                         new PlaybackStatusCommand(fileIndex, FileInfo.PlaybackStatus.PAUSE);
 
@@ -813,8 +814,8 @@ public class PlayFragment extends FullScreenFragment {
                     return;
                 }
 
-                PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
-                InetAddress hostAddress = host.getInetAddress();
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
 
                 Message message = Message.newSeekToRequestMessage(timestamp);
                 mainActivity.getTaskManager().runSenderTask(hostAddress, message);

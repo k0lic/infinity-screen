@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModelProvider;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
@@ -222,7 +223,7 @@ public class MediaManager {
             PeerInetAddressInfo next = iterator.next();
 
             // Adjust timestamp according to Sync information
-            SyncInfo syncInfo = syncViewModel.getSyncInfoListElement(next.getDeviceAddress());
+            SyncInfo syncInfo = syncViewModel.getSyncInfoListElement(next.getDeviceName());
             command.setTimestamp(ownTimestamp + syncInfo.getClockDiff());
 
             // Send PLAYBACK_STATUS_COMMAND message to peer
@@ -234,9 +235,9 @@ public class MediaManager {
         command.setTimestamp(ownTimestamp);
 
         // Send PLAYBACK_STATUS_COMMAND message to self
-        PeerInetAddressInfo host = connectionViewModel.getHostDevice().getValue();
+        InetAddress hostAddress = connectionViewModel.getHostDevice().getValue().getInetAddress();
         Message message = Message.newPlaybackStatusCommandMessage(command);
-        mainActivity.getTaskManager().runSenderTask(host.getInetAddress(), message);
+        mainActivity.getTaskManager().runSenderTask(hostAddress, message);
     }
 
     public void requestPause(int fileIndex) throws IOException {
