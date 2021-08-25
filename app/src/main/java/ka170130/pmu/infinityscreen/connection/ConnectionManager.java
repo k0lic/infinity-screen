@@ -67,7 +67,13 @@ public class ConnectionManager {
             return pair;
         }
 
-        channel = manager.initialize(mainActivity, mainActivity.getMainLooper(), null);
+        channel = manager.initialize(mainActivity, mainActivity.getMainLooper(), new WifiP2pManager.ChannelListener() {
+            @Override
+            public void onChannelDisconnected() {
+                // TODO: try to restore channel?
+                LogHelper.log("UhOh Channel Disconnected! :( Sadge");
+            }
+        });
         if (channel == null) {
             pair.second = "Cannot initialize Wi-Fi Direct.";
             return pair;
