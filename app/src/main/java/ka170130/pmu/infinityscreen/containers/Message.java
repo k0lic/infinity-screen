@@ -29,6 +29,7 @@ public class Message {
         STATE_CHANGE,
         REQUEST_TRANSFORM,
         TRANSFORM,
+        TRANSFORM_UPDATE,
         TRANSFORM_LIST_UPDATE,
         VIEWPORT_UPDATE,
         FILE_INFO_LIST_UPDATE,
@@ -107,6 +108,10 @@ public class Message {
 
     public static Message newTransformMessage(TransformInfo transformInfo) throws IOException {
         return createMessageFromSerializable(MessageType.TRANSFORM, transformInfo);
+    }
+
+    public static Message newTransformUpdateMessage(TransformInfo transformInfo) throws IOException {
+        return createMessageFromSerializable(MessageType.TRANSFORM_UPDATE, transformInfo);
     }
 
     public static Message newTransformListUpdateMessage(TransformUpdate transformUpdate) throws IOException {

@@ -19,6 +19,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     private static final String BACKUP_TRANSFORM_LIST_KEY = "layout-backup-transform-list-key";
     private static final String VIEWPORT_KEY = "layout-viewport-key";
     private static final String BACKUP_VIEWPORT_KEY = "layout-backup-viewport-key";
+    private static final String UPDATE_COUNT_KEY = "layout-update-count-key";
     private static final String GENERATOR_EXECUTED_KEY = "layout-generator-executed-key";
 
     private SavedStateHandle savedStateHandle;
@@ -31,6 +32,8 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     private MutableLiveData<TransformInfo> viewport;
     private MutableLiveData<TransformInfo> backupViewport;
 
+    private Integer updateCount;
+
     private Boolean layoutGeneratorExecuted;
 
     public LayoutViewModel(SavedStateHandle savedStateHandle) {
@@ -40,13 +43,18 @@ public class LayoutViewModel extends ViewModel implements Resettable {
 //        selfTransform = new MutableLiveData<>();
         transformList = savedStateHandle.getLiveData(TRANSFORM_LIST_KEY, new ArrayList<>());
 //        transformList = new MutableLiveData<>(new ArrayList<>());
-        backupTransformList = savedStateHandle.getLiveData(BACKUP_TRANSFORM_LIST_KEY, null);
+        backupTransformList = savedStateHandle.getLiveData(BACKUP_TRANSFORM_LIST_KEY, new ArrayList<>());
 
         selfAuto = new MediatorLiveData<>();
         selfAuto.addSource(transformList, this::refreshSelfAuto);
 
         viewport = savedStateHandle.getLiveData(VIEWPORT_KEY, null);
         backupViewport = savedStateHandle.getLiveData(BACKUP_VIEWPORT_KEY, null);
+
+        updateCount = savedStateHandle.get(UPDATE_COUNT_KEY);
+        if (updateCount == null) {
+            updateCount = 0;
+        }
 
         layoutGeneratorExecuted = savedStateHandle.get(GENERATOR_EXECUTED_KEY);
         if (layoutGeneratorExecuted == null) {
@@ -78,9 +86,10 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     @Override
     public void reset() {
         setTransformList(new ArrayList<>());
-        setBackupTransformList(null);
+        setBackupTransformList(new ArrayList<>());
         setViewport(null);
         setBackupViewport(null);
+        setUpdateCount(0);
         setLayoutGeneratorExecuted(false);
     }
 
@@ -130,6 +139,33 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         setTransformList(list);
     }
 
+    // TODO: maybe guard for concurrent calls?
+    public ArrayList<TransformInfo> updateTransform(TransformInfo transformInfo) {
+        ArrayList<TransformInfo> list = transformList.getValue();
+
+        boolean updated = false;
+        Iterator<TransformInfo> iterator = list.iterator();
+        while (!updated && iterator.hasNext()) {
+            TransformInfo next = iterator.next();
+            if (transformInfo.getDeviceName().equals(next.getDeviceName())) {
+                list.remove(next);
+                list.add(transformInfo);
+
+                updated = true;
+            }
+        }
+
+        Integer count = getUpdateCount();
+        setUpdateCount(count + 1);
+
+        if (updated) {
+            setTransformList(list);
+            return list;
+        }
+
+        return null;
+    }
+
     public LiveData<ArrayList<TransformInfo>> getBackupTransformList() {
         return backupTransformList;
     }
@@ -173,6 +209,15 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         if (backupViewport != null) {
             setViewport(backupViewport);
         }
+    }
+
+    public Integer getUpdateCount() {
+        return updateCount;
+    }
+
+    public void setUpdateCount(Integer updateCount) {
+        this.updateCount = updateCount;
+        savedStateHandle.set(UPDATE_COUNT_KEY, updateCount);
     }
 
     public Boolean getLayoutGeneratorExecuted() {

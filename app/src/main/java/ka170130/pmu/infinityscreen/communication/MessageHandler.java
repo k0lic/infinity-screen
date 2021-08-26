@@ -103,6 +103,9 @@ public class MessageHandler {
                 case TRANSFORM:
                     handleTransformMessage(message);
                     break;
+                case TRANSFORM_UPDATE:
+                    handleTransformUpdateMessage(message);
+                    break;
                 case TRANSFORM_LIST_UPDATE:
                     handleTransformListUpdateMessage(message);
                     break;
@@ -229,6 +232,23 @@ public class MessageHandler {
         layoutViewModel.addTransform(transformInfo);
     }
 
+    // handle TRANSFORM_UPDATE message
+    private void handleTransformUpdateMessage(Message message) throws IOException, ClassNotFoundException {
+        TransformInfo transformInfo = (TransformInfo) message.extractObject();
+
+        ArrayList<TransformInfo> updatedList = layoutViewModel.updateTransform(transformInfo);
+
+        // Don't count the host
+        int groupSize = connectionViewModel.getGroupList().getValue().size();
+
+        // Send the updated list to everyone, if all updates were applied
+        if (layoutViewModel.getUpdateCount() == groupSize) {
+            TransformUpdate update = new TransformUpdate(updatedList, false);
+            taskManager.sendToAllInGroup(
+                    Message.newTransformListUpdateMessage(update), false);
+        }
+    }
+
     // handle TRANSFORM_LIST_UPDATE message
     private void handleTransformListUpdateMessage(Message message) throws IOException, ClassNotFoundException {
         TransformUpdate transformUpdate = (TransformUpdate) message.extractObject();
@@ -286,10 +306,10 @@ public class MessageHandler {
     private void handleFileIndexUpdateRequestMessage(Message message) throws IOException, ClassNotFoundException {
         Integer index = (Integer) message.extractObject();
 
-        if (mediaViewModel.isFileInfoListIndexOutOfBounds(index)) {
-            // ignore
-            return;
-        }
+//        if (mediaViewModel.isFileInfoListIndexOutOfBounds(index)) {
+//            // ignore
+//            return;
+//        }
 
         taskManager.sendToAllInGroup(Message.newFileIndexUpdateMessage(index), true);
 //        taskManager.runBroadcastTask(Message.newFileIndexUpdateMessage(index));

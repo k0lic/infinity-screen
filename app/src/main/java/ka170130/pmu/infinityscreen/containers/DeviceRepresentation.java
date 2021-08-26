@@ -95,5 +95,10 @@ public class DeviceRepresentation {
             this.x = x;
             this.y = y;
         }
+
+        public Position(Position other) {
+            this.x = other.x;
+            this.y = other.y;
+        }
     }
 }

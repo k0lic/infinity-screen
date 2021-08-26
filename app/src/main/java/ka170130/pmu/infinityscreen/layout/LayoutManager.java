@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.lifecycle.ViewModelProvider;
 
 import java.io.IOException;
@@ -112,6 +113,63 @@ public class LayoutManager {
         LogHelper.log("Matrix: wr: " + minRatio * fixWidth + " hr: " + minRatio * fixHeight
                 + " dx: " + horizontal + " dy: " + vertical);
         return matrix;
+    }
+
+    public void performTranslateEvent(
+            TransformInfo transform,
+            float distanceX,
+            float distanceY
+    ) {
+        Integer[] pixelCount = getPixelCount();
+
+//        DisplayMetrics dm = new DisplayMetrics();
+//        mainActivity.getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+        double deltaX = distanceX / pixelCount[PIXEL_COUNT_WIDTH_INDEX];
+        deltaX *= transform.getScreenWidth();
+//        double deltaX = distanceX / dm.xdpi * INCH_TO_CM;
+        double deltaY = distanceY / pixelCount[PIXEL_COUNT_HEIGHT_INDEX];
+        deltaY *= transform.getScreenHeight();
+//        double deltaY = distanceY / dm.ydpi * INCH_TO_CM;
+
+        DeviceRepresentation.Position newPosition = new DeviceRepresentation.Position(0, 0);
+        newPosition.x = (float) (transform.getPosition().x + deltaX);
+        newPosition.y = (float) (transform.getPosition().y + deltaY);
+
+        transform.setPosition(newPosition);
+    }
+
+    public void performZoomEvent(
+            TransformInfo transform,
+            float scaleFactor,
+            float focusX,
+            float focusY
+    ) {
+        Integer[] pixelCount = getPixelCount();
+        double deltaX =
+                focusX / pixelCount[PIXEL_COUNT_WIDTH_INDEX] * transform.getScreenWidth();
+        double deltaY =
+                focusY / pixelCount[PIXEL_COUNT_HEIGHT_INDEX] * transform.getScreenHeight();
+
+        // change screen width and height
+        double screenWidth = transform.getScreenWidth();
+        double screenHeight = transform.getScreenHeight();
+
+        screenWidth /= scaleFactor;
+        screenHeight /= scaleFactor;
+
+        transform.setScreenWidth(screenWidth);
+        transform.setScreenHeight(screenHeight);
+
+        // change position
+        deltaX -= focusX / pixelCount[PIXEL_COUNT_WIDTH_INDEX] * transform.getScreenWidth();
+        deltaY -= focusY / pixelCount[PIXEL_COUNT_HEIGHT_INDEX] * transform.getScreenHeight();
+
+        DeviceRepresentation.Position newPosition = new DeviceRepresentation.Position(0, 0);
+        newPosition.x = (float) (transform.getPosition().x + deltaX);
+        newPosition.y = (float) (transform.getPosition().y + deltaY);
+
+        transform.setPosition(newPosition);
     }
 
     public void reportSelfTransform(TransformInfo selfTransform) {

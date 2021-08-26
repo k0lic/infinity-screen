@@ -21,6 +21,15 @@ public class TransformInfo implements Serializable {
         position = new DeviceRepresentation.Position(); // 0 0
     }
 
+    public TransformInfo(TransformInfo other) {
+        this.deviceName = other.getDeviceName();
+        this.numberId = other.getNumberId();
+        this.screenWidth = other.getScreenWidth();
+        this.screenHeight = other.getScreenHeight();
+
+        position = new DeviceRepresentation.Position(other.getPosition());
+    }
+
     public String getDeviceName() {
         return deviceName;
     }
@@ -33,8 +42,16 @@ public class TransformInfo implements Serializable {
         return screenWidth;
     }
 
+    public void setScreenWidth(double screenWidth) {
+        this.screenWidth = screenWidth;
+    }
+
     public double getScreenHeight() {
         return screenHeight;
+    }
+
+    public void setScreenHeight(double screenHeight) {
+        this.screenHeight = screenHeight;
     }
 
     public DeviceRepresentation.Position getPosition() {

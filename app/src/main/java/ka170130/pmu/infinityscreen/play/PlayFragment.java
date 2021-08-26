@@ -48,8 +48,8 @@ import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
 public class PlayFragment extends FullScreenFragment {
 
-    private static final long CONTROLS_TIMEOUT = 10_000;
-    private static final long AUTO_HIDE_CHECK_INTERVAL = 500;
+    public static final long CONTROLS_TIMEOUT = 10_000;
+    public static final long AUTO_HIDE_CHECK_INTERVAL = 500;
 
     private static final long MINIMUM_DEFERRED_DELAY = 10;
     private static final long SEEK_TO_DELAY = 100;
