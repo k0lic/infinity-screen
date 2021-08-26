@@ -109,12 +109,12 @@ public class Message {
         return createMessageFromSerializable(MessageType.TRANSFORM, transformInfo);
     }
 
-    public static Message newTransformListUpdateMessage(ArrayList<TransformInfo> transformList) throws IOException {
-        return createMessageFromSerializable(MessageType.TRANSFORM_LIST_UPDATE, transformList);
+    public static Message newTransformListUpdateMessage(TransformUpdate transformUpdate) throws IOException {
+        return createMessageFromSerializable(MessageType.TRANSFORM_LIST_UPDATE, transformUpdate);
     }
 
-    public static Message newViewportUpdateMessage(TransformInfo transformInfo) throws IOException {
-        return createMessageFromSerializable(MessageType.VIEWPORT_UPDATE, transformInfo);
+    public static Message newViewportUpdateMessage(TransformUpdate transformUpdate) throws IOException {
+        return createMessageFromSerializable(MessageType.VIEWPORT_UPDATE, transformUpdate);
     }
 
     public static Message newFileInfoListUpdateMessage(ArrayList<FileInfo> fileInfos) throws IOException {

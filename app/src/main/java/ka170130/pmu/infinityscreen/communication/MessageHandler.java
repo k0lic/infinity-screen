@@ -12,6 +12,7 @@ import java.util.concurrent.Semaphore;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.connection.ConnectionManager;
+import ka170130.pmu.infinityscreen.containers.TransformUpdate;
 import ka170130.pmu.infinityscreen.sync.ClockResponse;
 import ka170130.pmu.infinityscreen.containers.FileContentPackage;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
@@ -230,23 +231,23 @@ public class MessageHandler {
 
     // handle TRANSFORM_LIST_UPDATE message
     private void handleTransformListUpdateMessage(Message message) throws IOException, ClassNotFoundException {
-        Boolean isHost = connectionViewModel.getIsHost().getValue();
+        TransformUpdate transformUpdate = (TransformUpdate) message.extractObject();
+        ArrayList<TransformInfo> list = transformUpdate.getTransformInfoList();
 
-        // Host should not react to Transform List Updates as he is the one that issues them upon change
-        if (!isHost) {
-            ArrayList<TransformInfo> list = (ArrayList<TransformInfo>) message.extractObject();
-            layoutViewModel.setTransformList(list);
+        layoutViewModel.setTransformList(list);
+        if (transformUpdate.isBackup()) {
+            layoutViewModel.setBackupTransformList(list);
         }
     }
 
     // handle VIEWPORT_UPDATE message
     private void handleViewportUpdateMessage(Message message) throws IOException, ClassNotFoundException {
-        Boolean isHost = connectionViewModel.getIsHost().getValue();
+        TransformUpdate transformUpdate = (TransformUpdate) message.extractObject();
+        TransformInfo viewport = transformUpdate.getTransformInfoList().get(0);
 
-        // Host should not react to Viewport Updates as he is the one that issues them upon change
-        if (!isHost) {
-            TransformInfo viewport = (TransformInfo) message.extractObject();
-            layoutViewModel.setViewport(viewport);
+        layoutViewModel.setViewport(viewport);
+        if (transformUpdate.isBackup()) {
+            layoutViewModel.setBackupViewport(viewport);
         }
     }
 

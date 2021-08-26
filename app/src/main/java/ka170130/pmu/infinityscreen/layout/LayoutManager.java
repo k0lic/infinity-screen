@@ -13,6 +13,7 @@ import android.view.WindowManager;
 
 import androidx.lifecycle.ViewModelProvider;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,6 +22,7 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
+import ka170130.pmu.infinityscreen.containers.TransformUpdate;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
@@ -144,13 +146,18 @@ public class LayoutManager {
         if (!layoutViewModel.getLayoutGeneratorExecuted()) {
             TransformInfo viewport = simpleLayoutGenerator(list);
             layoutViewModel.setLayoutGeneratorExecuted(true);
+
+            layoutViewModel.setTransformList(list);
+            layoutViewModel.setBackupTransformList(list);
             layoutViewModel.setViewport(viewport);
+            layoutViewModel.setBackupViewport(viewport);
         }
 
         // Broadcast Transform List Update
         try {
-            mainActivity.getTaskManager()
-                    .sendToAllInGroup(Message.newTransformListUpdateMessage(list), false);
+            TransformUpdate transformUpdate = new TransformUpdate(list, false);
+            mainActivity.getTaskManager().sendToAllInGroup(
+                    Message.newTransformListUpdateMessage(transformUpdate), false);
 //            mainActivity.getTaskManager()
 //                    .runBroadcastTask(Message.newTransformListUpdateMessage(list));
         } catch (Exception e) {
@@ -158,13 +165,42 @@ public class LayoutManager {
         }
     }
 
+    public void hostBackupTransformListListener(ArrayList<TransformInfo> list) {
+        // Broadcast Transform List Update
+        try {
+            TransformUpdate transformUpdate = new TransformUpdate(list, true);
+            mainActivity.getTaskManager().sendToAllInGroup(
+                    Message.newTransformListUpdateMessage(transformUpdate), false);
+        } catch (IOException e) {
+            LogHelper.error(e);
+        }
+    }
+
     public void hostViewportListener(TransformInfo viewport) {
         // Broadcast Viewport Update
         try {
-            mainActivity.getTaskManager()
-                    .sendToAllInGroup(Message.newViewportUpdateMessage(viewport), false);
+            ArrayList<TransformInfo> oneElementList = new ArrayList<>();
+            oneElementList.add(viewport);
+
+            TransformUpdate transformUpdate = new TransformUpdate(oneElementList, false);
+            mainActivity.getTaskManager().sendToAllInGroup(
+                    Message.newViewportUpdateMessage(transformUpdate), false);
 //                    .runBroadcastTask(Message.newViewportUpdateMessage(viewport));
         } catch (Exception e) {
+            LogHelper.error(e);
+        }
+    }
+
+    public void hostBackupViewportListener(TransformInfo viewport) {
+        // Broadcast Viewport Update
+        try {
+            ArrayList<TransformInfo> oneElementList = new ArrayList<>();
+            oneElementList.add(viewport);
+
+            TransformUpdate transformUpdate = new TransformUpdate(oneElementList, true);
+            mainActivity.getTaskManager().sendToAllInGroup(
+                    Message.newViewportUpdateMessage(transformUpdate), false);
+        } catch (IOException e) {
             LogHelper.error(e);
         }
     }

@@ -16,16 +16,20 @@ public class LayoutViewModel extends ViewModel implements Resettable {
 
     private static final String SELF_KEY = "layout-self-key";
     private static final String TRANSFORM_LIST_KEY = "layout-transform-list-key";
+    private static final String BACKUP_TRANSFORM_LIST_KEY = "layout-backup-transform-list-key";
     private static final String VIEWPORT_KEY = "layout-viewport-key";
+    private static final String BACKUP_VIEWPORT_KEY = "layout-backup-viewport-key";
     private static final String GENERATOR_EXECUTED_KEY = "layout-generator-executed-key";
 
     private SavedStateHandle savedStateHandle;
 
     private MutableLiveData<TransformInfo> selfTransform;
     private MutableLiveData<ArrayList<TransformInfo>> transformList;
+    private MutableLiveData<ArrayList<TransformInfo>> backupTransformList;
     private MediatorLiveData<TransformInfo> selfAuto;
 
     private MutableLiveData<TransformInfo> viewport;
+    private MutableLiveData<TransformInfo> backupViewport;
 
     private Boolean layoutGeneratorExecuted;
 
@@ -36,11 +40,13 @@ public class LayoutViewModel extends ViewModel implements Resettable {
 //        selfTransform = new MutableLiveData<>();
         transformList = savedStateHandle.getLiveData(TRANSFORM_LIST_KEY, new ArrayList<>());
 //        transformList = new MutableLiveData<>(new ArrayList<>());
+        backupTransformList = savedStateHandle.getLiveData(BACKUP_TRANSFORM_LIST_KEY, null);
 
         selfAuto = new MediatorLiveData<>();
         selfAuto.addSource(transformList, this::refreshSelfAuto);
 
         viewport = savedStateHandle.getLiveData(VIEWPORT_KEY, null);
+        backupViewport = savedStateHandle.getLiveData(BACKUP_VIEWPORT_KEY, null);
 
         layoutGeneratorExecuted = savedStateHandle.get(GENERATOR_EXECUTED_KEY);
         if (layoutGeneratorExecuted == null) {
@@ -72,7 +78,9 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     @Override
     public void reset() {
         setTransformList(new ArrayList<>());
+        setBackupTransformList(null);
         setViewport(null);
+        setBackupViewport(null);
         setLayoutGeneratorExecuted(false);
     }
 
@@ -122,6 +130,15 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         setTransformList(list);
     }
 
+    public LiveData<ArrayList<TransformInfo>> getBackupTransformList() {
+        return backupTransformList;
+    }
+
+    public void setBackupTransformList(ArrayList<TransformInfo> backupTransformList) {
+        ThreadHelper.runOnMainThread(
+                () -> savedStateHandle.set(BACKUP_TRANSFORM_LIST_KEY, backupTransformList));
+    }
+
     public LiveData<TransformInfo> getSelfAuto() {
         return selfAuto;
     }
@@ -132,6 +149,30 @@ public class LayoutViewModel extends ViewModel implements Resettable {
 
     public void setViewport(TransformInfo viewport) {
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(VIEWPORT_KEY, viewport));
+    }
+
+    public LiveData<TransformInfo> getBackupViewport() {
+        return backupViewport;
+    }
+
+    public void setBackupViewport(TransformInfo backupViewport) {
+        ThreadHelper.runOnMainThread(
+                () -> savedStateHandle.set(BACKUP_VIEWPORT_KEY, backupViewport));
+    }
+
+    public void restoreBackups() {
+        // Fetch backups
+        ArrayList<TransformInfo> backupTransformList = getBackupTransformList().getValue();
+        TransformInfo backupViewport = getBackupViewport().getValue();
+
+        // Restore backups
+        if (backupTransformList != null) {
+            setTransformList(backupTransformList);
+        }
+
+        if (backupViewport != null) {
+            setViewport(backupViewport);
+        }
     }
 
     public Boolean getLayoutGeneratorExecuted() {

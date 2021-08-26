@@ -102,8 +102,14 @@ public class LayoutFragment extends ConnectionAwareFragment {
             layoutViewModel.getTransformList().observe(getViewLifecycleOwner(),
                     list -> layoutManager.hostTransformListListener(list));
 
+            layoutViewModel.getBackupTransformList().observe(getViewLifecycleOwner(),
+                    list -> layoutManager.hostBackupTransformListListener(list));
+
             layoutViewModel.getViewport().observe(getViewLifecycleOwner(),
                     viewport -> layoutManager.hostViewportListener(viewport));
+
+            layoutViewModel.getBackupViewport().observe(getViewLifecycleOwner(),
+                    viewport -> layoutManager.hostBackupViewportListener(viewport));
         }
 
         // Listen for Layout Change - update and redraw DeviceLayoutView on change
