@@ -3,6 +3,7 @@ package ka170130.pmu.infinityscreen.layout;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.util.Log;
@@ -10,6 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -21,6 +24,7 @@ import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
+import ka170130.pmu.infinityscreen.containers.TransformUpdate;
 import ka170130.pmu.infinityscreen.databinding.FragmentLayoutBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
@@ -65,18 +69,47 @@ public class LayoutFragment extends ConnectionAwareFragment {
         setupStatusCards(binding.appBarAndStatus);
 
         // Inflate Top App Bar Menu
-        AppBarAndStatusHelper.inflateMenu(binding.appBarAndStatus, R.menu.app_bar_menu, item -> {
-            if (item.getItemId() == R.id.option_disconnect) {
-                if (isHost) {
-                    // disconnect all
-                    mainActivity.getTaskManager()
-                            .sendToAllInGroup(Message.newDisconnectMessage(), true);
-//                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
-                } else {
-                    // disconnect self
-                    mainActivity.getConnectionManager().disconnect();
-                }
-                return true;
+        AppBarAndStatusHelper.inflateMenu(binding.appBarAndStatus, R.menu.layout_app_bar_menu, item -> {
+            switch (item.getItemId()) {
+                case R.id.option_reset:
+                    if (isHost) {
+                        layoutViewModel.restoreBackups();
+                    } else {
+                        // Fetch backups
+                        ArrayList<TransformInfo> backupTransformList =
+                                layoutViewModel.getBackupTransformList().getValue();
+                        TransformInfo backupViewport =
+                                layoutViewModel.getBackupViewport().getValue();
+                        ArrayList<TransformInfo> backupViewportList = new ArrayList<>();
+                        backupViewportList.add(backupViewport);
+
+                        InetAddress hostAddress =
+                                connectionViewModel.getHostDevice().getValue().getInetAddress();
+                        try {
+                            // Send updates to host
+                            Message transformListUpdate = Message.newTransformListUpdateMessage(
+                                    new TransformUpdate(backupTransformList, false));
+                            mainActivity.getTaskManager().
+                                    runSenderTask(hostAddress, transformListUpdate);
+                            Message viewportUpdate = Message.newViewportUpdateMessage(
+                                    new TransformUpdate(backupViewportList, false));
+                            mainActivity.getTaskManager().
+                                    runSenderTask(hostAddress, viewportUpdate);
+                        } catch (IOException e) {
+                            LogHelper.error(e);
+                        }
+                    }
+                    return true;
+                case R.id.option_disconnect:
+                    if (isHost) {
+                        // disconnect all
+                        mainActivity.getTaskManager()
+                                .sendToAllInGroup(Message.newDisconnectMessage(), true);
+                    } else {
+                        // disconnect self
+                        mainActivity.getConnectionManager().disconnect();
+                    }
+                    return true;
             }
 
             return false;

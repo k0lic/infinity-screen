@@ -33,7 +33,7 @@ public abstract class FullScreenFragment extends ConnectionAwareFragment {
         exitFullScreen();
     }
 
-    private void acquireFullScreen() {
+    protected void acquireFullScreen() {
         Window window = mainActivity.getWindow();
 
         if (Build.VERSION.SDK_INT >= 30) {
@@ -50,7 +50,7 @@ public abstract class FullScreenFragment extends ConnectionAwareFragment {
         }
     }
 
-    private void exitFullScreen() {
+    protected void exitFullScreen() {
         Window window = mainActivity.getWindow();
 
         if (Build.VERSION.SDK_INT >= 30) {

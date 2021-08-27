@@ -224,6 +224,15 @@ public class LayoutManager {
     }
 
     public void hostBackupTransformListListener(ArrayList<TransformInfo> list) {
+        Iterator<TransformInfo> debugIt = list.iterator();
+        int index = 0;
+        while (debugIt.hasNext()) {
+            TransformInfo next = debugIt.next();
+            LogHelper.log(
+                    "backup#" + index + " " + next.getPosition().x + " " + next.getPosition().y);
+            index++;
+        }
+
         // Broadcast Transform List Update
         try {
             TransformUpdate transformUpdate = new TransformUpdate(list, true);

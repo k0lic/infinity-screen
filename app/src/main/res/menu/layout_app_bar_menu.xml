@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/option_reset"
+        android:title="@string/layout_reset"
+        app:showAsAction="never"
+        />
+    <item
         android:id="@+id/option_disconnect"
         android:title="@string/disconnect"
         app:showAsAction="never"

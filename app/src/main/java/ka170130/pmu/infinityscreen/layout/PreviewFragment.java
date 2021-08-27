@@ -27,11 +27,13 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.PopupMenu;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
@@ -72,6 +74,8 @@ public class PreviewFragment extends FullScreenFragment {
 
     private long lastInteraction = 0;
 
+    private PopupMenu popupMenu;
+
     private Handler handler;
     private Runnable autoHideControls = new Runnable() {
         @Override
@@ -103,11 +107,10 @@ public class PreviewFragment extends FullScreenFragment {
 
         layoutManager = mainActivity.getLayoutManager();
 
-        // TODO
         gestureDetector = new GestureDetector(mainActivity, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDown(MotionEvent e) {
-                // ignore?
+                // ignore
                 return true;
             }
 
@@ -132,51 +135,11 @@ public class PreviewFragment extends FullScreenFragment {
                     // Translate Scroll
                     layoutManager.performTranslateEvent(self, distanceX, distanceY);
                     layoutViewModel.updateTransform(self);
-//                    layoutManager.updateTransformList(self);
                 }
 
                 return true;
             }
         });
-
-//                new GestureDetector.OnGestureListener() {
-//            @Override
-//            public boolean onDown(MotionEvent event) {
-//                LogHelper.log("onDown: " + event.toString());
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onFling(MotionEvent event1, MotionEvent event2,
-//                                   float velocityX, float velocityY) {
-//                LogHelper.log("onFling: " + event1.toString() + event2.toString());
-//                return true;
-//            }
-//
-//            @Override
-//            public void onLongPress(MotionEvent event) {
-//                LogHelper.log("onLongPress: " + event.toString());
-//            }
-//
-//            @Override
-//            public boolean onScroll(MotionEvent event1, MotionEvent event2, float distanceX,
-//                                    float distanceY) {
-//                LogHelper.log("onScroll: " + event1.toString() + event2.toString());
-//                return true;
-//            }
-//
-//            @Override
-//            public void onShowPress(MotionEvent event) {
-//                LogHelper.log("onShowPress: " + event.toString());
-//            }
-//
-//            // Toggle Controls visibility
-//            @Override
-//            public boolean onSingleTapUp(MotionEvent event) {
-//                LogHelper.log("onSingleTapUp: " + event.toString());
-//                return true;
-//            }
-//        });
 
         scaleGestureDetector = new ScaleGestureDetector(mainActivity, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
@@ -215,6 +178,8 @@ public class PreviewFragment extends FullScreenFragment {
         // Inflate the layout for this fragment
         binding = FragmentPreviewBinding.inflate(inflater, container, false);
 
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+
         // Previous Button
         binding.previousButton.setOnClickListener(view -> {
             markInteraction();
@@ -241,7 +206,7 @@ public class PreviewFragment extends FullScreenFragment {
         // Menu Button
         binding.menuButton.setOnClickListener(view -> {
             markInteraction();
-            // TODO: pop up menu?
+            popupMenu.show();
         });
 
         // React to Image View touch events
@@ -304,6 +269,59 @@ public class PreviewFragment extends FullScreenFragment {
                         transform, viewport, currentDrawableWidth, currentDrawableHeight);
                 binding.imageView.setImageMatrix(matrix);
             }
+        });
+
+        // Initialize Popup Menu
+        popupMenu = new PopupMenu(mainActivity, binding.menuButton);
+        popupMenu.getMenuInflater().inflate(R.menu.preview_app_bar_menu, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(menuItem -> {
+            markInteraction();
+
+            switch (menuItem.getItemId()) {
+                case R.id.option_reset_self:
+                    ArrayList<TransformInfo> transformList =
+                            layoutViewModel.getTransformList().getValue();
+                    TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+                    ArrayList<TransformInfo> backupList =
+                            layoutViewModel.getBackupTransformList().getValue();
+
+                    // Get backup for own device
+                    Iterator<TransformInfo> backupIt = backupList.iterator();
+                    while (backupIt.hasNext()) {
+                        TransformInfo next = backupIt.next();
+
+                        if (next.getDeviceName().equals(self.getDeviceName())) {
+                            self = next;
+                        }
+                    }
+
+                    // Replace own device transform info with backup
+                    Iterator<TransformInfo> transformIt = transformList.iterator();
+                    while (transformIt.hasNext()) {
+                        TransformInfo next = transformIt.next();
+
+                        if (next.getDeviceName().equals(self.getDeviceName())) {
+                            transformList.remove(next);
+                            transformList.add(self);
+
+                            layoutViewModel.setTransformList(transformList);
+                            return true;
+                        }
+                    }
+                    return true;
+                case R.id.option_disconnect:
+                    if (isHost) {
+                        // disconnect all
+                        mainActivity.getTaskManager()
+                                .sendToAllInGroup(Message.newDisconnectMessage(), true);
+                    } else {
+                        // disconnect self
+                        mainActivity.getConnectionManager().disconnect();
+                    }
+                    return true;
+            }
+
+            return false;
         });
 
         // Initiate Auto Hide Controls
@@ -371,6 +389,8 @@ public class PreviewFragment extends FullScreenFragment {
     private void hideControls() {
         binding.topContainer.setVisibility(View.INVISIBLE);
         binding.controlsLayout.setVisibility(View.INVISIBLE);
+
+        acquireFullScreen();
     }
 
     private void showControls() {

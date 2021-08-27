@@ -139,7 +139,9 @@ public class HomeFragment extends Fragment {
     }
 
     private void checkAgain() {
-        handler.postDelayed(() -> checkPeers(), CHECK_PEERS_PERIOD);
+        if (handler != null) {
+            handler.postDelayed(() -> checkPeers(), CHECK_PEERS_PERIOD);
+        }
     }
 
     private void checkPeers() {

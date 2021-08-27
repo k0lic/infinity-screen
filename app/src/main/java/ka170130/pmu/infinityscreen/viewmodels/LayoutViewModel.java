@@ -75,12 +75,12 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         while (iterator.hasNext()) {
             TransformInfo next = iterator.next();
             if (next.getDeviceName().equals(ownName)) {
-                selfAuto.setValue(next);
+                selfAuto.setValue(getCopy(next));
                 return;
             }
         }
 
-        selfAuto.setValue(self);
+        selfAuto.setValue(getCopy(self));
     }
 
     @Override
@@ -98,7 +98,8 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setSelfTransform(TransformInfo selfTransform) {
-        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(SELF_KEY, selfTransform));
+        TransformInfo copy = getCopy(selfTransform);
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(SELF_KEY, copy));
 //        this.selfTransform.postValue(selfTransform);
     }
 
@@ -107,7 +108,8 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setTransformList(ArrayList<TransformInfo> transformList) {
-        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(TRANSFORM_LIST_KEY, transformList));
+        ArrayList<TransformInfo> copyList = getCopy(transformList);
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(TRANSFORM_LIST_KEY, copyList));
 //        this.transformList.postValue(transformList);
     }
 
@@ -171,8 +173,9 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setBackupTransformList(ArrayList<TransformInfo> backupTransformList) {
+        ArrayList<TransformInfo> copyList = getCopy(backupTransformList);
         ThreadHelper.runOnMainThread(
-                () -> savedStateHandle.set(BACKUP_TRANSFORM_LIST_KEY, backupTransformList));
+                () -> savedStateHandle.set(BACKUP_TRANSFORM_LIST_KEY, copyList));
     }
 
     public LiveData<TransformInfo> getSelfAuto() {
@@ -184,7 +187,8 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setViewport(TransformInfo viewport) {
-        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(VIEWPORT_KEY, viewport));
+        TransformInfo copy = getCopy(viewport);
+        ThreadHelper.runOnMainThread(() -> savedStateHandle.set(VIEWPORT_KEY, copy));
     }
 
     public LiveData<TransformInfo> getBackupViewport() {
@@ -192,8 +196,9 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setBackupViewport(TransformInfo backupViewport) {
+        TransformInfo copy = getCopy(backupViewport);
         ThreadHelper.runOnMainThread(
-                () -> savedStateHandle.set(BACKUP_VIEWPORT_KEY, backupViewport));
+                () -> savedStateHandle.set(BACKUP_VIEWPORT_KEY, copy));
     }
 
     public void restoreBackups() {
@@ -227,5 +232,29 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     public void setLayoutGeneratorExecuted(Boolean layoutGeneratorExecuted) {
         this.layoutGeneratorExecuted = layoutGeneratorExecuted;
         savedStateHandle.set(GENERATOR_EXECUTED_KEY, layoutGeneratorExecuted);
+    }
+
+    private TransformInfo getCopy(TransformInfo transform) {
+        TransformInfo copy = null;
+        if (transform != null) {
+            copy = new TransformInfo(transform);
+        }
+        return copy;
+    }
+
+    private ArrayList<TransformInfo> getCopy(ArrayList<TransformInfo> list) {
+        ArrayList<TransformInfo> listCopy = null;
+
+        if (list != null) {
+            listCopy = new ArrayList<>();
+            Iterator<TransformInfo> iterator = list.iterator();
+            while (iterator.hasNext()) {
+                TransformInfo next = iterator.next();
+                TransformInfo copy = getCopy(next);
+                listCopy.add(copy);
+            }
+        }
+
+        return listCopy;
     }
 }
