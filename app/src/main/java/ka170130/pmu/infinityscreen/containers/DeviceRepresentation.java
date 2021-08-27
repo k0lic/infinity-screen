@@ -10,15 +10,25 @@ public class DeviceRepresentation {
     private float height;
     private Position position;
 
+    private TransformInfo.Orientation orientation;
+
     private float repWidth;
     private float repHeight;
     private Position repPosition;
 
-    public DeviceRepresentation(int numberId, float width, float height, Position position) {
+    public DeviceRepresentation(
+            int numberId,
+            float width,
+            float height,
+            Position position,
+            TransformInfo.Orientation orientation
+    ) {
         this.numberId = numberId;
         this.width = width;
         this.height = height;
         this.position = position;
+
+        this.orientation = orientation;
 
         // placeholder values - to be overwritten
         this.repWidth = width;
@@ -31,6 +41,8 @@ public class DeviceRepresentation {
         width = (float) transformInfo.getScreenWidth();
         height = (float) transformInfo.getScreenHeight();
         position = transformInfo.getPosition();
+
+        orientation = transformInfo.getOrientation();
 
         // placeholder values - to be overwritten
         repWidth = width;
@@ -64,6 +76,14 @@ public class DeviceRepresentation {
 
     public void setPosition(Position position) {
         this.position = position;
+    }
+
+    public TransformInfo.Orientation getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(TransformInfo.Orientation orientation) {
+        this.orientation = orientation;
     }
 
     public float getRepWidth() {

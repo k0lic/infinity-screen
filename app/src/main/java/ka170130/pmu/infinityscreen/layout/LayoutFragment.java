@@ -69,7 +69,7 @@ public class LayoutFragment extends ConnectionAwareFragment {
                         TransformInfo update = new TransformInfo(
                                 transform.getDeviceName(),
                                 next.getNumberId(),
-                                transform.getOrientation(),     // TODO: orientation from DeviceRepresentation
+                                next.getOrientation(),
                                 next.getWidth(),
                                 next.getHeight()
                         );

@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
+import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.helpers.Callback;
@@ -30,20 +31,20 @@ public class DeviceLayoutView extends View {
         DeviceRepresentation.Position position = new DeviceRepresentation.Position(-30, -50);
         DeviceRepresentation device;
 
-        float widths[] = {70, 70, 70, 135, 70};
-        float heights[] = {100, 100, 100, 90, 100};
-        float posX[] = {80, 150, 220, 80, 215};
-        float posY[] = {72, 72, 72, 172, 172};
+        float[] widths = {70, 70, 70, 135, 70};
+        float[] heights = {100, 100, 100, 90, 100};
+        float[] posX = {80, 150, 220, 80, 215};
+        float[] posY = {72, 72, 72, 172, 172};
 
         for (int i = 0; i < 5; i++) {
             position = new DeviceRepresentation.Position(posX[i], posY[i]);
-            device = new DeviceRepresentation( 1 + i, widths[i], heights[i], position);
+            device = new DeviceRepresentation( 1 + i, widths[i], heights[i], position, TransformInfo.Orientation.PORTRAIT);
 
             deviceLayoutView.registerDevice(device);
         }
 
         position = new DeviceRepresentation.Position(posX[0], posY[0] + 35);
-        device = new DeviceRepresentation(-1, 210, 118, position);
+        device = new DeviceRepresentation(-1, 210, 118, position, TransformInfo.Orientation.LANDSCAPE);
         deviceLayoutView.setViewport(device);
 
         deviceLayoutView.setSelf(3);
@@ -182,7 +183,52 @@ public class DeviceLayoutView extends View {
             }
         });
 
-        // TODO: double tap for rotation?
+        gestureDetector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener() {
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                // ignore
+                return true;
+            }
+
+            // Rotate
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                if (currentTransform != null) {
+                    // Update Orientation
+                    TransformInfo.Orientation oldOrientation = currentTransform.getOrientation();
+                    TransformInfo.Orientation newOrientation = TransformInfo.Orientation.PORTRAIT;
+                    switch (oldOrientation) {
+                        case PORTRAIT:
+                            newOrientation = TransformInfo.Orientation.LANDSCAPE;
+                            break;
+                        case LANDSCAPE:
+                            newOrientation = TransformInfo.Orientation.PORTRAIT;
+                            break;
+                    }
+                    currentTransform.setOrientation(newOrientation);
+
+                    // Swap dimensions
+                    float width = currentTransform.getRepHeight();
+                    float height = currentTransform.getRepWidth();
+                    currentTransform.setRepWidth(width);
+                    currentTransform.setRepHeight(height);
+
+                    // Recalculate
+                    recalculateTransformInverse(currentTransform);
+
+                    // Callback
+                    invokeCallback(currentTransform);
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                // ignore
+                return true;
+            }
+        });
 
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
