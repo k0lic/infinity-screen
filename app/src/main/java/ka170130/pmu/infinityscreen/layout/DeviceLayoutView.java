@@ -2,11 +2,14 @@ package ka170130.pmu.infinityscreen.layout;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,10 +19,10 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.R;
+import ka170130.pmu.infinityscreen.helpers.Callback;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 // TODO: everything
@@ -56,8 +59,10 @@ public class DeviceLayoutView extends View {
     private static final float STROKE_WIDTH = 0.2f;
     private static final float TEXT_SIZE = 2.5f;
 
-    private static final int VIEWPORT_BORDER_ALPHA = 128;
-    private static final int VIEWPORT_BACKGROUND_ALPHA = 32;
+    private static final int FULL_ALPHA = 255;
+    private static final int HALF_ALPHA = 127;
+    private static final int WEAK_ALPHA = 64;
+    private static final int WEAKEST_ALPHA = 32;
 
     private Paint paintPrimary;
     private Paint paintPrimaryText;
@@ -71,6 +76,7 @@ public class DeviceLayoutView extends View {
     private List<DeviceRepresentation> devices;
     private DeviceRepresentation viewport;
     private int self;
+    private boolean focusViewport;
 
     private float areaWidth;
     private float areaHeight;
@@ -85,6 +91,9 @@ public class DeviceLayoutView extends View {
     private GestureDetector detector;
     // TODO: remove placeholder counter code
     private int counter = 0;
+
+    private Callback<String> deviceCallback;
+    private Callback<String> viewportCallback;
 
     public DeviceLayoutView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -128,13 +137,14 @@ public class DeviceLayoutView extends View {
         paintViewportBorders = new Paint();
         color = AppBarAndStatusHelper.resolveRefColor(theme, R.attr.colorNegativePrimary);
         paintViewportBorders.setColor(color);
-        paintViewportBorders.setAlpha(VIEWPORT_BORDER_ALPHA);
         paintViewportBorders.setStyle(Paint.Style.STROKE);
 
         paintViewportBackground = new Paint();
         paintViewportBackground.setColor(color);
-        paintViewportBackground.setAlpha(VIEWPORT_BACKGROUND_ALPHA);
         paintViewportBackground.setStyle(Paint.Style.FILL);
+
+        // Focus devices by default
+        changeFocus(false);
 
         // TODO: implement OnGestureListener methods
         // Setup Gesture Detector
@@ -172,6 +182,7 @@ public class DeviceLayoutView extends View {
             }
         });
 
+        // TODO: comment this line
 //        setupDummyDevices(this);
     }
 
@@ -187,12 +198,38 @@ public class DeviceLayoutView extends View {
         this.viewport = viewport;
     }
 
+    public int getSelf() {
+        return self;
+    }
+
     public void setSelf(int num) {
         self = num;
     }
 
     public void redraw() {
         invalidate();
+    }
+
+    public boolean isFocusViewport() {
+        return focusViewport;
+    }
+
+    public void changeFocus(boolean viewportFocus) {
+        focusViewport = viewportFocus;
+
+        int devicesAlpha = focusViewport ? HALF_ALPHA : FULL_ALPHA;
+        int viewportBorderAlpha = focusViewport ? FULL_ALPHA : HALF_ALPHA;
+        int viewportBackgroundAlpha = focusViewport ? WEAK_ALPHA : WEAKEST_ALPHA;
+
+        paintPrimary.setAlpha(devicesAlpha);
+        paintPrimaryText.setAlpha(devicesAlpha);
+        paintAccent.setAlpha(devicesAlpha);
+        paintAccentText.setAlpha(devicesAlpha);
+        paintHighlight.setAlpha(devicesAlpha);
+        paintBackground.setAlpha(devicesAlpha);
+
+        paintViewportBorders.setAlpha(viewportBorderAlpha);
+        paintViewportBackground.setAlpha(viewportBackgroundAlpha);
     }
 
     @Override

@@ -115,6 +115,34 @@ public class LayoutFragment extends ConnectionAwareFragment {
             return false;
         });
 
+        // Change Layout Mode Button
+        binding.changeLayoutModeButton.setOnClickListener(view -> {
+            // Change Focus in Device Layout View
+            boolean focusViewport = binding.deviceLayoutView.isFocusViewport();
+            binding.deviceLayoutView.changeFocus(!focusViewport);
+
+            // Redraw component
+            binding.deviceLayoutView.redraw();
+
+            // Change Image Button Drawable
+            int drawableId = focusViewport ?
+                    R.drawable.outline_crop_free_24 :
+                    R.drawable.outline_phone_android_24;
+            binding.changeLayoutModeButton.setImageResource(drawableId);
+        });
+
+        // Preview Button
+        binding.previewButton.setOnClickListener(view -> {
+            StateChangeHelper.requestStateChange(
+                    mainActivity, connectionViewModel, StateViewModel.AppState.PREVIEW);
+        });
+
+        // Continue Button
+        binding.continueButton.setOnClickListener(view -> {
+            StateChangeHelper.requestStateChange(
+                    mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
+        });
+
         // Calculate Transform Info
         TransformInfo selfTransform = layoutManager.calculateSelfTransform();
         layoutViewModel.setSelfTransform(selfTransform);
@@ -184,21 +212,11 @@ public class LayoutFragment extends ConnectionAwareFragment {
 
             binding.deviceNumber.setText(String.valueOf(auto.getNumberId()));
 
-            // redraw component
-            binding.deviceLayoutView.setSelf(auto.getNumberId());
-            binding.deviceLayoutView.redraw();
-        });
-
-        binding.previewButton.setOnClickListener(view -> {
-            StateChangeHelper.requestStateChange(
-                    mainActivity, connectionViewModel, StateViewModel.AppState.PREVIEW);
-//            navController.navigate(LayoutFragmentDirections.actionPreviewFragment());
-        });
-
-        binding.continueButton.setOnClickListener(view -> {
-            StateChangeHelper.requestStateChange(
-                    mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
-//            navController.navigate(LayoutFragmentDirections.actionFileSelectionFragment());
+            if (binding.deviceLayoutView.getSelf() != auto.getNumberId()) {
+                // redraw component
+                binding.deviceLayoutView.setSelf(auto.getNumberId());
+                binding.deviceLayoutView.redraw();
+            }
         });
 
         // Listen for App State change

@@ -62,6 +62,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             />
 
+        <ImageButton
+            android:id="@+id/change_layout_mode_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/outline_crop_free_24"
+            android:background="@color/transparent"
+            android:padding="@dimen/default_element_padding"
+            android:layout_marginBottom="@dimen/vertical_margin_tiny"
+            app:layout_constraintBottom_toTopOf="@id/device_layout_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
         <ka170130.pmu.infinityscreen.layout.DeviceLayoutView
             android:id="@+id/device_layout_view"
             android:layout_width="match_parent"
