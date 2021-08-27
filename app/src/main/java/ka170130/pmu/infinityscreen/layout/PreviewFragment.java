@@ -134,7 +134,7 @@ public class PreviewFragment extends FullScreenFragment {
                 if (e2.getPointerCount() == 1) {
                     // Translate Scroll
                     layoutManager.performTranslateEvent(self, distanceX, distanceY);
-                    layoutViewModel.updateTransform(self);
+                    layoutViewModel.updateTransform(self, false);
                 }
 
                 return true;
@@ -152,7 +152,7 @@ public class PreviewFragment extends FullScreenFragment {
                         detector.getFocusX(),
                         detector.getFocusY()
                 );
-                layoutViewModel.updateTransform(self);
+                layoutViewModel.updateTransform(self, false);
 
                 return true;
             }
@@ -190,6 +190,30 @@ public class PreviewFragment extends FullScreenFragment {
         binding.nextButton.setOnClickListener(view -> {
             markInteraction();
             handleIndexChange(1);
+        });
+
+        // Rotate Button
+        binding.rotateButton.setOnClickListener(view -> {
+            TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+
+            TransformInfo.Orientation orientation = self.getOrientation();
+            TransformInfo.Orientation newOrientation = TransformInfo.Orientation.PORTRAIT;
+            switch (orientation) {
+                case PORTRAIT:
+                    newOrientation = TransformInfo.Orientation.LANDSCAPE;
+                    break;
+                case LANDSCAPE:
+                    newOrientation = TransformInfo.Orientation.PORTRAIT;
+                    break;
+            }
+            self.setOrientation(newOrientation);
+
+            double width = self.getScreenHeight();
+            double height = self.getScreenWidth();
+            self.setScreenWidth(width);
+            self.setScreenHeight(height);
+
+            layoutViewModel.updateTransform(self, false);
         });
 
         // Back Button
@@ -334,15 +358,17 @@ public class PreviewFragment extends FullScreenFragment {
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             if (state == StateViewModel.AppState.LAYOUT) {
                 // Report updated Own Transform to host
-                try {
-                    TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+                if (!isHost) {
+                    try {
+                        TransformInfo self = layoutViewModel.getSelfAuto().getValue();
 
-                    InetAddress hostAddress =
-                            connectionViewModel.getHostDevice().getValue().getInetAddress();
-                    Message message = Message.newTransformUpdateMessage(self);
-                    mainActivity.getTaskManager().runSenderTask(hostAddress, message);
-                } catch (IOException e) {
-                    LogHelper.error(e);
+                        InetAddress hostAddress =
+                                connectionViewModel.getHostDevice().getValue().getInetAddress();
+                        Message message = Message.newTransformUpdateMessage(self);
+                        mainActivity.getTaskManager().runSenderTask(hostAddress, message);
+                    } catch (IOException e) {
+                        LogHelper.error(e);
+                    }
                 }
 
                 navController.navigate(PreviewFragmentDirections.actionPop());
@@ -389,6 +415,7 @@ public class PreviewFragment extends FullScreenFragment {
     private void hideControls() {
         binding.topContainer.setVisibility(View.INVISIBLE);
         binding.controlsLayout.setVisibility(View.INVISIBLE);
+        binding.bottomContainer.setVisibility(View.INVISIBLE);
 
         acquireFullScreen();
     }
@@ -396,6 +423,7 @@ public class PreviewFragment extends FullScreenFragment {
     private void showControls() {
         binding.topContainer.setVisibility(View.VISIBLE);
         binding.controlsLayout.setVisibility(View.VISIBLE);
+        binding.bottomContainer.setVisibility(View.VISIBLE);
     }
 
     private void markInteraction() {

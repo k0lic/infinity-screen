@@ -236,7 +236,7 @@ public class MessageHandler {
     private void handleTransformUpdateMessage(Message message) throws IOException, ClassNotFoundException {
         TransformInfo transformInfo = (TransformInfo) message.extractObject();
 
-        ArrayList<TransformInfo> updatedList = layoutViewModel.updateTransform(transformInfo);
+        ArrayList<TransformInfo> updatedList = layoutViewModel.updateTransform(transformInfo, true);
 
         // Don't count the host
         int groupSize = connectionViewModel.getGroupList().getValue().size();
@@ -254,9 +254,11 @@ public class MessageHandler {
         TransformUpdate transformUpdate = (TransformUpdate) message.extractObject();
         ArrayList<TransformInfo> list = transformUpdate.getTransformInfoList();
 
-        layoutViewModel.setTransformList(list);
+//        layoutViewModel.setTransformList(list);
         if (transformUpdate.isBackup()) {
             layoutViewModel.setBackupTransformList(list);
+        } else {
+            layoutViewModel.setTransformList(list);
         }
     }
 
@@ -265,9 +267,11 @@ public class MessageHandler {
         TransformUpdate transformUpdate = (TransformUpdate) message.extractObject();
         TransformInfo viewport = transformUpdate.getTransformInfoList().get(0);
 
-        layoutViewModel.setViewport(viewport);
+//        layoutViewModel.setViewport(viewport);
         if (transformUpdate.isBackup()) {
             layoutViewModel.setBackupViewport(viewport);
+        } else {
+            layoutViewModel.setViewport(viewport);
         }
     }
 

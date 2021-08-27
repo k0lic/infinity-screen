@@ -4,17 +4,24 @@ import java.io.Serializable;
 
 public class TransformInfo implements Serializable {
 
+    public enum Orientation {
+        PORTRAIT,
+        LANDSCAPE
+    }
+
     private String deviceName;
     private int numberId;
 
+    private Orientation orientation;
     private double screenWidth;
     private double screenHeight;
 
     private DeviceRepresentation.Position position;
 
-    public TransformInfo(String deviceName, int numberId, double screenWidth, double screenHeight) {
+    public TransformInfo(String deviceName, int numberId, Orientation orientation, double screenWidth, double screenHeight) {
         this.deviceName = deviceName;
         this.numberId = numberId;
+        this.orientation = orientation;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
 
@@ -24,6 +31,7 @@ public class TransformInfo implements Serializable {
     public TransformInfo(TransformInfo other) {
         this.deviceName = other.getDeviceName();
         this.numberId = other.getNumberId();
+        this.orientation = other.orientation;
         this.screenWidth = other.getScreenWidth();
         this.screenHeight = other.getScreenHeight();
 
@@ -36,6 +44,14 @@ public class TransformInfo implements Serializable {
 
     public int getNumberId() {
         return numberId;
+    }
+
+    public Orientation getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(Orientation orientation) {
+        this.orientation = orientation;
     }
 
     public double getScreenWidth() {

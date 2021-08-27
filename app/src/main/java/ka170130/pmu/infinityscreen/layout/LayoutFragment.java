@@ -3,21 +3,22 @@ package ka170130.pmu.infinityscreen.layout;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 
-import android.util.Log;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.android.exoplayer2.text.span.TextAnnotation;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
-import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
@@ -35,12 +36,112 @@ import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 
 public class LayoutFragment extends ConnectionAwareFragment {
 
+    private static int DEFERRED_UPDATE_DELAY = 200;
+
     private FragmentLayoutBinding binding;
     private StateViewModel stateViewModel;
     private LayoutViewModel layoutViewModel;
     private SyncViewModel syncViewModel;
 
     private LayoutManager layoutManager;
+
+    private Handler handler;
+    private final Runnable deferredLayoutUpdate = new Runnable() {
+        @Override
+        public void run() {
+            ArrayList<TransformInfo> transformList = layoutViewModel.getTransformList().getValue();
+            ArrayList<TransformInfo> updatedList = new ArrayList<>();
+
+            Iterator<DeviceRepresentation> repIt =
+                    binding.deviceLayoutView.getDevices().iterator();
+            // Iterate through Device Representation list
+            while (repIt.hasNext()) {
+                DeviceRepresentation next = repIt.next();
+
+                boolean updated = false;
+                Iterator<TransformInfo> transformIt = transformList.iterator();
+                // Iterate through Transform Info list
+                while (transformIt.hasNext() && !updated) {
+                    TransformInfo transform = transformIt.next();
+                    // Match by Number ID
+                    if (transform.getNumberId() == next.getNumberId()) {
+                        // Update element
+                        TransformInfo update = new TransformInfo(
+                                transform.getDeviceName(),
+                                next.getNumberId(),
+                                transform.getOrientation(),     // TODO: orientation from DeviceRepresentation
+                                next.getWidth(),
+                                next.getHeight()
+                        );
+                        update.setPosition(new DeviceRepresentation.Position(next.getPosition()));
+
+                        updatedList.add(update);
+
+                        updated = true;
+                    }
+                }
+            }
+
+            // Report update
+            Boolean isHost = connectionViewModel.getIsHost().getValue();
+            if (isHost) {
+                // Update list
+                layoutViewModel.setTransformList(updatedList);
+            } else {
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
+
+                // Send List Update to host
+                try {
+                    Message transformListUpdate = Message.newTransformListUpdateMessage(
+                            new TransformUpdate(updatedList, false));
+                    mainActivity.getTaskManager().
+                            runSenderTask(hostAddress, transformListUpdate);
+                } catch (IOException e) {
+                    LogHelper.error(e);
+                }
+            }
+        }
+    };
+    private Runnable deferredViewportUpdate = new Runnable() {
+        @Override
+        public void run() {
+            TransformInfo viewport = layoutViewModel.getViewport().getValue();
+            DeviceRepresentation viewportRep = binding.deviceLayoutView.getViewport();
+
+            TransformInfo update = new TransformInfo(
+                    viewport.getDeviceName(),
+                    viewport.getNumberId(),
+                    viewport.getOrientation(),
+                    viewportRep.getWidth(),
+                    viewportRep.getHeight()
+            );
+            update.setPosition(new DeviceRepresentation.Position(viewportRep.getPosition()));
+
+            // Report update
+            Boolean isHost = connectionViewModel.getIsHost().getValue();
+            if (isHost) {
+                // Update viewport
+                layoutViewModel.setViewport(update);
+            } else {
+                InetAddress hostAddress =
+                        connectionViewModel.getHostDevice().getValue().getInetAddress();
+
+                // Send Viewport Update to host
+                try {
+                    ArrayList<TransformInfo> oneElementList = new ArrayList<>();
+                    oneElementList.add(update);
+
+                    Message viewportUpdate = Message.newViewportUpdateMessage(
+                            new TransformUpdate(oneElementList, false));
+                    mainActivity.getTaskManager().
+                            runSenderTask(hostAddress, viewportUpdate);
+                } catch (IOException e) {
+                    LogHelper.error(e);
+                }
+            }
+        }
+    };
 
     public LayoutFragment() {
         // Required empty public constructor
@@ -54,7 +155,9 @@ public class LayoutFragment extends ConnectionAwareFragment {
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
         syncViewModel = new ViewModelProvider(mainActivity).get(SyncViewModel.class);
 
-        layoutManager = new LayoutManager(mainActivity);
+        layoutManager = mainActivity.getLayoutManager();
+
+        handler = new Handler(mainActivity.getMainLooper());
     }
 
     @Override
@@ -126,8 +229,8 @@ public class LayoutFragment extends ConnectionAwareFragment {
 
             // Change Image Button Drawable
             int drawableId = focusViewport ?
-                    R.drawable.outline_crop_free_24 :
-                    R.drawable.outline_phone_android_24;
+                    R.drawable.crop_free_24 :
+                    R.drawable.phone_android_24;
             binding.changeLayoutModeButton.setImageResource(drawableId);
         });
 
@@ -172,6 +275,21 @@ public class LayoutFragment extends ConnectionAwareFragment {
             layoutViewModel.getBackupViewport().observe(getViewLifecycleOwner(),
                     viewport -> layoutManager.hostBackupViewportListener(viewport));
         }
+
+        // Device Layout View Callbacks
+        binding.deviceLayoutView.setDeviceCallback(device -> {
+            handler.removeCallbacks(deferredLayoutUpdate);
+            handler.postDelayed(deferredLayoutUpdate, DEFERRED_UPDATE_DELAY);
+
+            binding.deviceLayoutView.redraw();
+        });
+
+        binding.deviceLayoutView.setViewportCallback(device -> {
+            handler.removeCallbacks(deferredViewportUpdate);
+            handler.postDelayed(deferredViewportUpdate, DEFERRED_UPDATE_DELAY);
+
+            binding.deviceLayoutView.redraw();
+        });
 
         // Listen for Layout Change - update and redraw DeviceLayoutView on change
         layoutViewModel.getTransformList().observe(getViewLifecycleOwner(), list -> {

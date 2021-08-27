@@ -216,8 +216,6 @@ public class LayoutManager {
             TransformUpdate transformUpdate = new TransformUpdate(list, false);
             mainActivity.getTaskManager().sendToAllInGroup(
                     Message.newTransformListUpdateMessage(transformUpdate), false);
-//            mainActivity.getTaskManager()
-//                    .runBroadcastTask(Message.newTransformListUpdateMessage(list));
         } catch (Exception e) {
             LogHelper.error(e);
         }
@@ -252,7 +250,6 @@ public class LayoutManager {
             TransformUpdate transformUpdate = new TransformUpdate(oneElementList, false);
             mainActivity.getTaskManager().sendToAllInGroup(
                     Message.newViewportUpdateMessage(transformUpdate), false);
-//                    .runBroadcastTask(Message.newViewportUpdateMessage(viewport));
         } catch (Exception e) {
             LogHelper.error(e);
         }
@@ -286,6 +283,7 @@ public class LayoutManager {
         return new TransformInfo(
                 deviceName,
                 0,  // dummy value - will be overwritten
+                TransformInfo.Orientation.PORTRAIT,
                 screenWidth,
                 screenHeight
         );
@@ -304,7 +302,12 @@ public class LayoutManager {
         double viewportHeight = x / 1.78;
 
         return new TransformInfo(
-                "viewport", -1, viewportWidth, viewportHeight);
+                "viewport",
+                -1,
+                TransformInfo.Orientation.LANDSCAPE,
+                viewportWidth,
+                viewportHeight
+        );
     }
 
     public Integer[] getPixelCount() {

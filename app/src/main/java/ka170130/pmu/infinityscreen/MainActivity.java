@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -65,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public LayoutManager getLayoutManager() {
+        if (layoutManager == null) {
+            layoutManager = new LayoutManager(this);
+        }
         return layoutManager;
     }
 

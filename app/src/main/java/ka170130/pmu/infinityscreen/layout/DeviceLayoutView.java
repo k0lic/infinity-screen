@@ -2,21 +2,19 @@ package ka170130.pmu.infinityscreen.layout;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
@@ -25,7 +23,6 @@ import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.helpers.Callback;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
-// TODO: everything
 public class DeviceLayoutView extends View {
 
     // TODO: remove setupDummyDevices
@@ -64,6 +61,8 @@ public class DeviceLayoutView extends View {
     private static final int WEAK_ALPHA = 64;
     private static final int WEAKEST_ALPHA = 32;
 
+    private static final float SPAN_RATIO = 2;
+
     private Paint paintPrimary;
     private Paint paintPrimaryText;
     private Paint paintAccent;
@@ -88,12 +87,13 @@ public class DeviceLayoutView extends View {
 
     private float realToViewFactor = 1;
 
-    private GestureDetector detector;
-    // TODO: remove placeholder counter code
-    private int counter = 0;
+    private GestureDetector gestureDetector;
+    private ScaleGestureDetector scaleGestureDetector;
+    private DeviceRepresentation currentTransform;
+    private DeviceRepresentation currentlyScaling;
 
-    private Callback<String> deviceCallback;
-    private Callback<String> viewportCallback;
+    private Callback<DeviceRepresentation> deviceCallback;
+    private Callback<DeviceRepresentation> viewportCallback;
 
     public DeviceLayoutView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -146,44 +146,121 @@ public class DeviceLayoutView extends View {
         // Focus devices by default
         changeFocus(false);
 
-        // TODO: implement OnGestureListener methods
-        // Setup Gesture Detector
-        detector = new GestureDetector(context, new GestureDetector.OnGestureListener() {
+        // Setup Gesture Detectors
+        gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDown(MotionEvent e) {
-                counter++;
-                invalidate();
+                // Get clicked transform
+                float x = e.getX();
+                float y = e.getY();
+                currentTransform = getClickedTransform(x, y);
+
                 return true;
             }
 
             @Override
-            public void onShowPress(MotionEvent e) {
-
-            }
-
-            @Override
-            public boolean onSingleTapUp(MotionEvent e) {
-                return false;
-            }
-
-            @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                return false;
+                // e1 is DownEvent, e2 is MoveEvent
+                if (e2.getPointerCount() == 1) {
+                    // Translate Scroll
+                    if (currentTransform != null) {
+                        // Update position
+                        DeviceRepresentation.Position newPosition = new DeviceRepresentation.Position();
+                        newPosition.x = currentTransform.getRepPosition().x - distanceX;
+                        newPosition.y = currentTransform.getRepPosition().y - distanceY;
+                        currentTransform.setRepPosition(newPosition);
+
+                        // Recalculate
+                        recalculateTransformInverse(currentTransform);
+
+                        // Callback
+                        invokeCallback(currentTransform);
+                    }
+                }
+
+                return true;
+            }
+        });
+
+        // TODO: double tap for rotation?
+
+        scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                if (currentlyScaling != null) {
+                    // Translate to center
+                    DeviceRepresentation.Position newPosition = new DeviceRepresentation.Position();
+                    newPosition.x = currentlyScaling.getRepPosition().x +
+                            currentlyScaling.getRepWidth() * 0.5f;
+                    newPosition.y = currentlyScaling.getRepPosition().y +
+                            currentlyScaling.getRepHeight() * 0.5f;
+
+                    // Calculate Scale Factors
+                    float scaleFactor = detector.getScaleFactor();
+                    float spanX = detector.getCurrentSpanX();
+                    float spanY = detector.getCurrentSpanY();
+                    float horizontalFactor = 1f;
+                    float verticalFactor = 1f;
+                    if (spanY == 0 || spanX / spanY > SPAN_RATIO) {
+                        horizontalFactor = scaleFactor;
+                        verticalFactor = 1f;
+                    } else if (spanX == 0 || spanY / spanX > SPAN_RATIO) {
+                        horizontalFactor = 1f;
+                        verticalFactor = scaleFactor;
+                    } else {
+                        horizontalFactor = scaleFactor;
+                        verticalFactor = scaleFactor;
+                    }
+
+                    // Update dimensions
+                    float width = currentlyScaling.getRepWidth() * horizontalFactor;
+                    float height = currentlyScaling.getRepHeight() * verticalFactor;
+                    currentlyScaling.setRepWidth(width);
+                    currentlyScaling.setRepHeight(height);
+
+                    // Translate to center inverse
+                    newPosition.x -= currentlyScaling.getRepWidth() * 0.5f;
+                    newPosition.y -= currentlyScaling.getRepHeight() * 0.5f;
+
+                    // Update position
+                    currentlyScaling.setRepPosition(newPosition);
+
+                    // Recalculate
+                    recalculateTransformInverse(currentlyScaling);
+
+                    //  Callback
+                    invokeCallback(currentlyScaling);
+                }
+
+                return true;
             }
 
             @Override
-            public void onLongPress(MotionEvent e) {
+            public boolean onScaleBegin(ScaleGestureDetector detector) {
+                // Get clicked transform
+                float x = detector.getFocusX();
+                float y = detector.getFocusY();
+                currentlyScaling = getClickedTransform(x, y);
 
+                return true;
             }
 
             @Override
-            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                return false;
+            public void onScaleEnd(ScaleGestureDetector detector) {
+                currentlyScaling = null;
             }
         });
 
         // TODO: comment this line
 //        setupDummyDevices(this);
+    }
+
+    public List<DeviceRepresentation> getDevices() {
+        return devices;
+    }
+
+    public DeviceRepresentation getViewport() {
+        return viewport;
     }
 
     public void registerDevice(DeviceRepresentation device) {
@@ -232,6 +309,14 @@ public class DeviceLayoutView extends View {
         paintViewportBackground.setAlpha(viewportBackgroundAlpha);
     }
 
+    public void setDeviceCallback(Callback<DeviceRepresentation> deviceCallback) {
+        this.deviceCallback = deviceCallback;
+    }
+
+    public void setViewportCallback(Callback<DeviceRepresentation> viewportCallback) {
+        this.viewportCallback = viewportCallback;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -243,12 +328,8 @@ public class DeviceLayoutView extends View {
         recalculateViewport();
 
         DeviceRepresentation ownDevice = null;
+        // Draw all devices but own
         for (DeviceRepresentation device : devices) {
-            // for 0 all devices are visible
-            if (counter % (devices.size() + 1) == device.getNumberId()) {
-                continue;
-            }
-
             if (device.getNumberId() == self) {
                 ownDevice = device;
                 continue;
@@ -257,18 +338,19 @@ public class DeviceLayoutView extends View {
             drawDevice(canvas, device);
         }
 
-        // Paint own device last
+        // Draw own device last
         if (ownDevice != null) {
             drawDevice(canvas, ownDevice);
         }
 
-        // Paint viewport
+        // Draw viewport
         drawViewport(canvas);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        boolean result = detector.onTouchEvent(event);
+        boolean result = gestureDetector.onTouchEvent(event);
+        result = scaleGestureDetector.onTouchEvent(event) || result;
         return result;
     }
 
@@ -456,5 +538,78 @@ public class DeviceLayoutView extends View {
 
         paintPrimaryText.setTextSize(textSize);
         paintAccentText.setTextSize(textSize);
+    }
+
+    private void reportDeviceChange(DeviceRepresentation device) {
+        invokeCallback(deviceCallback, device);
+    }
+
+    private void reportViewportChange(DeviceRepresentation viewport) {
+        invokeCallback(viewportCallback, viewport);
+    }
+
+    private void invokeCallback(DeviceRepresentation transform) {
+        if (focusViewport) {
+            invokeCallback(viewportCallback, transform);
+        } else {
+            invokeCallback(deviceCallback, transform);
+        }
+    }
+
+    private void invokeCallback(Callback<DeviceRepresentation> callback, DeviceRepresentation arg) {
+        if (callback == null) {
+            // skip
+            return;
+        }
+
+        callback.invoke(arg);
+    }
+
+    private DeviceRepresentation getClickedTransform(float x, float y) {
+        if (focusViewport) {
+            // Check if Viewport was clicked
+            if (inside(viewport, x, y)) {
+                return viewport;
+            }
+        } else {
+            // Iterate through devices and check if each was clicked
+            Iterator<DeviceRepresentation> iterator = devices.iterator();
+            while (iterator.hasNext()) {
+                DeviceRepresentation next = iterator.next();
+                if (inside(next, x, y)) {
+                    return next;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean inside(DeviceRepresentation transform, float x, float y) {
+        // Paint selection
+        Paint paintBorders = focusViewport ?
+                paintViewportBorders :
+                (transform.getNumberId() == self ? paintAccent : paintPrimary);
+
+        // Calculate Edges
+        float fix = paintBorders.getStrokeWidth();
+        float left = transform.getRepPosition().x + buffer + autoMarginLeft + fix;
+        float top = transform.getRepPosition().y + buffer + autoMarginTop + fix;
+        float right = left + transform.getRepWidth() - fix;
+        float bottom = top + transform.getRepHeight() - fix;
+
+        // Check if inside
+        return x > left && x < right && y > top && y < bottom;
+    }
+
+    private void recalculateTransformInverse(DeviceRepresentation transform) {
+        transform.setWidth(transform.getRepWidth() / realToViewFactor);
+        transform.setHeight(transform.getRepHeight() / realToViewFactor);
+
+        DeviceRepresentation.Position repPosition = transform.getRepPosition();
+        DeviceRepresentation.Position position = new DeviceRepresentation.Position();
+        position.x = (repPosition.x / realToViewFactor) + areaOrigin.x;
+        position.y = (repPosition.y / realToViewFactor) + areaOrigin.y;
+        transform.setPosition(position);
     }
 }

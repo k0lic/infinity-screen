@@ -133,6 +133,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         TransformInfo toAdd = new TransformInfo(
                 transformInfo.getDeviceName(),
                 size + 1,
+                transformInfo.getOrientation(),
                 transformInfo.getScreenWidth(),
                 transformInfo.getScreenHeight()
         );
@@ -142,7 +143,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     // TODO: maybe guard for concurrent calls?
-    public ArrayList<TransformInfo> updateTransform(TransformInfo transformInfo) {
+    public ArrayList<TransformInfo> updateTransform(TransformInfo transformInfo, boolean inc) {
         ArrayList<TransformInfo> list = transformList.getValue();
 
         boolean updated = false;
@@ -157,8 +158,10 @@ public class LayoutViewModel extends ViewModel implements Resettable {
             }
         }
 
-        Integer count = getUpdateCount();
-        setUpdateCount(count + 1);
+        if (inc) {
+            Integer count = getUpdateCount();
+            setUpdateCount(count + 1);
+        }
 
         if (updated) {
             setTransformList(list);
