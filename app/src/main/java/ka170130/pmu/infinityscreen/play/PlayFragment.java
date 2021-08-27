@@ -18,6 +18,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.google.android.exoplayer2.MediaItem;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
@@ -69,7 +71,8 @@ public class PlayFragment extends FullScreenFragment {
     private LayoutViewModel layoutViewModel;
     private MediaViewModel mediaViewModel;
 
-//    private MediaPlayer mediaPlayer;
+    private PopupMenu popupMenu;
+
     private SimpleExoPlayer exoPlayer;
 
     private String currentContent;
@@ -165,6 +168,8 @@ public class PlayFragment extends FullScreenFragment {
         // Inflate the layout for this fragment
         binding = FragmentPlayBinding.inflate(inflater, container, false);
 
+        Boolean isHost = connectionViewModel.getIsHost().getValue();
+
         // Play/Pause button
         binding.playButton.setOnClickListener(view -> {
             if (mediaPlayerState == MediaPlayerState.PLAYING) {
@@ -227,11 +232,10 @@ public class PlayFragment extends FullScreenFragment {
             }
         });
 
-        // TODO: remove this code - replace with popup menu or something
+        // Menu Button
         binding.menuButton.setOnClickListener(view -> {
-            StateChangeHelper.requestStateChange(
-                    mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
             markInteraction();
+            popupMenu.show();
         });
 
         // Block accidental background clicks
@@ -326,6 +330,32 @@ public class PlayFragment extends FullScreenFragment {
 
         // Automatically update Slider and Current Time Label
         handler.post(updateSliderAndCurrentTimeLabel);
+
+        // Initialize Popup Menu
+        popupMenu = new PopupMenu(mainActivity, binding.menuButton);
+        popupMenu.getMenuInflater().inflate(R.menu.play_app_bar_menu, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(menuItem -> {
+            markInteraction();
+
+            switch (menuItem.getItemId()) {
+                case R.id.option_file_selection:
+                    StateChangeHelper.requestStateChange(
+                            mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
+                    return true;
+                case R.id.option_disconnect:
+                    if (isHost) {
+                        // disconnect all
+                        mainActivity.getTaskManager()
+                                .sendToAllInGroup(Message.newDisconnectMessage(), true);
+                    } else {
+                        // disconnect self
+                        mainActivity.getConnectionManager().disconnect();
+                    }
+                    return true;
+            }
+
+            return false;
+        });
 
         // Set media player surface
         binding.textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
@@ -530,8 +560,6 @@ public class PlayFragment extends FullScreenFragment {
                     break;
                 case STOPPED:
                     LogHelper.log("STOPPED to PLAYING");
-//                    mediaPlayer.setOnPreparedListener(MediaPlayer::start);
-//                    mediaPlayer.prepareAsync();
                     exoPlayer.prepare();
                     exoPlayer.play();
                     mediaPlayerState = MediaPlayerState.PLAYING;
@@ -613,14 +641,12 @@ public class PlayFragment extends FullScreenFragment {
                         // set matrix
                         setVideoMatrix(fileInfo);
 
-//                        mediaPlayer.prepare();
                         exoPlayer.prepare();
                         mediaPlayerState = MediaPlayerState.PAUSED;
                         break;
                     case PLAYING:
                         LogHelper.log("PLAYING to PAUSED");
 
-//                            mediaPlayer.pause();
                         exoPlayer.pause();
 
                         mediaPlayerState = MediaPlayerState.PAUSED;
@@ -717,7 +743,6 @@ public class PlayFragment extends FullScreenFragment {
         if (isHost) {
             // file is on local device
             Uri uri = extractUri(isHost, contentDescriptor);
-//            mediaPlayer.setDataSource(mainActivity, uri);
             MediaItem mediaItem = MediaItem.fromUri(uri);
             exoPlayer.setMediaItem(mediaItem);
         } else {
@@ -742,7 +767,6 @@ public class PlayFragment extends FullScreenFragment {
             String path = proxyPath.toString();
             LogHelper.log("Proxy path: " + path);
 
-//            mediaPlayer.setDataSource(path);
             Uri uri = Uri.parse(path);
             MediaItem mediaItem = MediaItem.fromUri(uri);
             exoPlayer.setMediaItem(mediaItem);
@@ -832,6 +856,8 @@ public class PlayFragment extends FullScreenFragment {
     private void hideControls() {
         binding.menuButton.setVisibility(View.INVISIBLE);
         binding.controlsLayout.setVisibility(View.INVISIBLE);
+
+        acquireFullScreen();
     }
 
     private void showControls() {

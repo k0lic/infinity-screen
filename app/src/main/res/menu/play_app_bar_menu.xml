@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item
+        android:id="@+id/option_file_selection"
+        android:title="@string/play_back_to_file_selection"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/option_disconnect"
+        android:title="@string/disconnect"
+        app:showAsAction="never"
+        />
 </menu>

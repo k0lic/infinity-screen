@@ -17,10 +17,13 @@ import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 
 public abstract class FullScreenFragment extends ConnectionAwareFragment {
 
+    private boolean active = false;
+
     @Override
     public void onResume() {
         super.onResume();
 
+        active = true;
         // Acquire Full Screen
         acquireFullScreen();
     }
@@ -29,11 +32,17 @@ public abstract class FullScreenFragment extends ConnectionAwareFragment {
     public void onStop() {
         super.onStop();
 
+        active = false;
         // Exit Full Screen
         exitFullScreen();
     }
 
     protected void acquireFullScreen() {
+        // If Fragment is not active, do nothing
+        if (!active) {
+            return;
+        }
+
         Window window = mainActivity.getWindow();
 
         if (Build.VERSION.SDK_INT >= 30) {

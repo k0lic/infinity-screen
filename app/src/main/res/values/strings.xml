@@ -55,6 +55,7 @@
 
     <!-- Play Fragment -->
     <string name="play_buffering_message">Waiting for video to load.</string>
+    <string name="play_back_to_file_selection">Back to files</string>
 
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>
