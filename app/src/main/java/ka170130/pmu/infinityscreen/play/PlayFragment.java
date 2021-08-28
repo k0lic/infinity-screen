@@ -1,9 +1,14 @@
 package ka170130.pmu.infinityscreen.play;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.Drawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.os.Handler;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -31,13 +37,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
-import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
 import ka170130.pmu.infinityscreen.databinding.FragmentPlayBinding;
@@ -80,6 +84,21 @@ public class PlayFragment extends FullScreenFragment {
 
     private long lastInteraction = 0;
     private boolean durationSet = false;
+
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private SensorEventListener accelerometerListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            // TODO
+            LogHelper.log(event.toString());
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // ignore
+        }
+    };
 
     private Handler handler;
     private Runnable autoHideControls = new Runnable() {
@@ -159,6 +178,9 @@ public class PlayFragment extends FullScreenFragment {
         currentContent = null;
         mediaPlayerState = MediaPlayerState.IDLE;
 
+        sensorManager = (SensorManager) mainActivity.getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+
         handler = new Handler(mainActivity.getMainLooper());
     }
 
@@ -235,6 +257,21 @@ public class PlayFragment extends FullScreenFragment {
         // Menu Button
         binding.menuButton.setOnClickListener(view -> {
             markInteraction();
+
+            Boolean accelerometerActive = mediaViewModel.getAccelerometerActive().getValue();
+            Menu menu = popupMenu.getMenu();
+            if (accelerometerActive) {
+                menu.findItem(R.id.option_activate_accelerometer).setVisible(false);
+//                menu.findItem(R.id.option_activate_accelerometer).setEnabled(false);
+                menu.findItem(R.id.option_deactivate_accelerometer).setVisible(true);
+//                menu.findItem(R.id.option_deactivate_accelerometer).setEnabled(true);
+            } else {
+                menu.findItem(R.id.option_activate_accelerometer).setVisible(true);
+//                menu.findItem(R.id.option_activate_accelerometer).setEnabled(true);
+                menu.findItem(R.id.option_deactivate_accelerometer).setVisible(false);
+//                menu.findItem(R.id.option_deactivate_accelerometer).setEnabled(false);
+            }
+
             popupMenu.show();
         });
 
@@ -252,6 +289,17 @@ public class PlayFragment extends FullScreenFragment {
             }
 
             markInteraction();
+        });
+
+        // Listen for Accelerometer activation/deactivation
+        mediaViewModel.getAccelerometerActive().observe(getViewLifecycleOwner(), active -> {
+            if (active) {
+                // Activate Accelerometer Listener
+                activateAccelerometerListener();
+            } else {
+                // Deactivate Accelerometer Listener
+                deactivateAccelerometerListener();
+            }
         });
 
         // Listen for File Info change
@@ -338,6 +386,12 @@ public class PlayFragment extends FullScreenFragment {
             markInteraction();
 
             switch (menuItem.getItemId()) {
+                case R.id.option_activate_accelerometer:
+                    mediaViewModel.setAccelerometerActive(true);
+                    return true;
+                case R.id.option_deactivate_accelerometer:
+                    mediaViewModel.setAccelerometerActive(false);
+                    return true;
                 case R.id.option_file_selection:
                     StateChangeHelper.requestStateChange(
                             mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
@@ -395,6 +449,13 @@ public class PlayFragment extends FullScreenFragment {
         });
 
         return  binding.getRoot();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        deactivateAccelerometerListener();
     }
 
     private void handleIndexChange(int delta) {
@@ -599,7 +660,7 @@ public class PlayFragment extends FullScreenFragment {
 
                 Toast.makeText(
                         mainActivity,
-                        "Playing video failed! Message latency too high.",
+                        getResources().getString(R.string.play_error_latency),
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
@@ -877,5 +938,38 @@ public class PlayFragment extends FullScreenFragment {
         binding.currentTime.setVisibility(View.VISIBLE);
         binding.totalTime.setVisibility(View.VISIBLE);
         binding.slider.setVisibility(View.VISIBLE);
+    }
+
+    private void activateAccelerometerListener() {
+        if (sensorManager == null) {
+            // skip
+            return;
+        }
+
+        if (accelerometer == null) {
+            // Report issue
+            Toast.makeText(
+                    mainActivity,
+                    getResources().getString(R.string.play_error_accelerometer_missing),
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            // Automatically deactivate
+            mediaViewModel.setAccelerometerActive(false);
+            return;
+        }
+
+        // Register Sensor Listener
+        sensorManager.registerListener(
+                accelerometerListener,
+                accelerometer,
+                SensorManager.SENSOR_DELAY_NORMAL
+        );
+    }
+
+    private void deactivateAccelerometerListener() {
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(accelerometerListener);
+        }
     }
 }

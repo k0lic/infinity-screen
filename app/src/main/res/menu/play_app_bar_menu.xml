@@ -3,6 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/option_activate_accelerometer"
+        android:title="@string/play_activate_accelerometer"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/option_deactivate_accelerometer"
+        android:title="@string/play_deactivate_accelerometer"
+        app:showAsAction="never"
+        />
+    <item
         android:id="@+id/option_file_selection"
         android:title="@string/play_back_to_file_selection"
         app:showAsAction="never"

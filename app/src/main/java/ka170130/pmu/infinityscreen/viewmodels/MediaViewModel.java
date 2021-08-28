@@ -27,6 +27,7 @@ public class MediaViewModel extends ViewModel implements Resettable {
     private static final String FILE_INFO_KEY = "media-file-info-key";
     private static final String CURRENT_INDEX_KEY = "media-current-file-index-key";
     private static final String CURRENT_TIMESTAMP_KEY = "media-current-timestamp-key";
+    private static final String ACCELEROMETER_KEY = "media-aceelerometer-key";
     private static final String READY_MATRIX_KEY = "media-ready-matrix-key";
     private static final String CONTENT_TASK_CREATED_KEY = "media-content-task-created-key";
     private static final String CREATED_FILES_KEY = "media-created-files-key";
@@ -39,6 +40,8 @@ public class MediaViewModel extends ViewModel implements Resettable {
     private MediatorLiveData<FileInfo> currentFileInfo;
 
     private MutableLiveData<Long> currentTimestamp;
+
+    private MutableLiveData<Boolean> accelerometerActive;
 
     // host only
     private boolean[][] readyMatrix;
@@ -59,6 +62,8 @@ public class MediaViewModel extends ViewModel implements Resettable {
         currentFileInfo.addSource(currentFileIndex, index -> refreshCurrentFileInfo());
 
         currentTimestamp = savedStateHandle.getLiveData(CURRENT_TIMESTAMP_KEY, 0L);
+
+        accelerometerActive = savedStateHandle.getLiveData(ACCELEROMETER_KEY, false);
 
         readyMatrix = savedStateHandle.get(READY_MATRIX_KEY);
         contentTaskCreated = savedStateHandle.get(CONTENT_TASK_CREATED_KEY);
@@ -87,6 +92,7 @@ public class MediaViewModel extends ViewModel implements Resettable {
         clearFileInfoList();
         setCurrentFileIndex(0);
         setCurrentTimestamp(0L);
+        setAccelerometerActive(false);
         setReadyMatrix(null);
         setContentTaskCreated(false);
         setCreatedFiles(null);
@@ -204,6 +210,15 @@ public class MediaViewModel extends ViewModel implements Resettable {
 
     public void setCurrentTimestamp(Long timestamp) {
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(CURRENT_TIMESTAMP_KEY, timestamp));
+    }
+
+    public LiveData<Boolean> getAccelerometerActive() {
+        return accelerometerActive;
+    }
+
+    public void setAccelerometerActive(Boolean accelerometerActive) {
+        ThreadHelper.runOnMainThread(
+                () -> savedStateHandle.set(ACCELEROMETER_KEY, accelerometerActive));
     }
 
     public boolean[][] getReadyMatrix() {
