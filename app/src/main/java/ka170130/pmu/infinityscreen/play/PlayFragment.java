@@ -37,9 +37,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.TreeSet;
 
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
+import ka170130.pmu.infinityscreen.containers.AccelerometerInfo;
+import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
@@ -61,6 +65,10 @@ public class PlayFragment extends FullScreenFragment {
     private static final long SEEK_TO_DELAY = 100;
     private static final long SLIDER_UPDATE_DELAY = 250;
 
+    private static final float SPEED_THRESHOLD = 0.1f;
+    private static final float SPEED_DECAY = 0.01f;
+    private static final float MOVEMENT_FACTOR = 0.0001f;
+
     private enum MediaPlayerState {
         IDLE,
         PREPARING,
@@ -80,18 +88,67 @@ public class PlayFragment extends FullScreenFragment {
     private SimpleExoPlayer exoPlayer;
 
     private String currentContent;
+    private int currentImageWidth;
+    private int currentImageHeight;
     private MediaPlayerState mediaPlayerState;
 
     private long lastInteraction = 0;
     private boolean durationSet = false;
+
+    private AccelerometerInfo accelerometerInfo;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private SensorEventListener accelerometerListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            // TODO
-            LogHelper.log(event.toString());
+            // Get timestamp
+            long now = System.currentTimeMillis();
+
+            // Fetch RAW values
+            float x = event.values[0];
+            float y = -event.values[1];
+
+            // Calibrate
+            if (accelerometerInfo.calibrationLeft > 0) {
+                accelerometerInfo.offset[0] += x;
+                accelerometerInfo.offset[1] += y;
+
+                accelerometerInfo.calibrationLeft--;
+                accelerometerInfo.calibrationCount++;
+
+                if (accelerometerInfo.calibrationLeft == 0) {
+                    accelerometerInfo.offset[0] /= accelerometerInfo.calibrationCount;
+                    accelerometerInfo.offset[1] /= accelerometerInfo.calibrationCount;
+                }
+
+                accelerometerInfo.lastMovement = now;
+                return;
+            }
+
+            // Filter values
+            x -= accelerometerInfo.offset[0];
+            y -= accelerometerInfo.offset[1];
+
+            accelerometerInfo.xAccel = x * AccelerometerInfo.FILTER_FACTOR +
+                    accelerometerInfo.xAccel * (1 - AccelerometerInfo.FILTER_FACTOR);
+            accelerometerInfo.yAccel = y * AccelerometerInfo.FILTER_FACTOR +
+                    accelerometerInfo.yAccel * (1 - AccelerometerInfo.FILTER_FACTOR);
+
+            // Fetch transform information
+            TransformInfo transform = layoutViewModel.getSelfAuto().getValue();
+            TransformInfo viewport = layoutViewModel.getViewport().getValue();
+
+            // Perform translation
+            mainActivity.getLayoutManager().performAccelerometerEvent(
+                    transform,
+                    viewport,
+                    accelerometerInfo,
+                    now
+            );
+
+            // Perform transform update
+            layoutViewModel.updateTransform(transform, false);
         }
 
         @Override
@@ -178,6 +235,8 @@ public class PlayFragment extends FullScreenFragment {
         currentContent = null;
         mediaPlayerState = MediaPlayerState.IDLE;
 
+        accelerometerInfo = new AccelerometerInfo();
+
         sensorManager = (SensorManager) mainActivity.getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
@@ -262,14 +321,12 @@ public class PlayFragment extends FullScreenFragment {
             Menu menu = popupMenu.getMenu();
             if (accelerometerActive) {
                 menu.findItem(R.id.option_activate_accelerometer).setVisible(false);
-//                menu.findItem(R.id.option_activate_accelerometer).setEnabled(false);
                 menu.findItem(R.id.option_deactivate_accelerometer).setVisible(true);
-//                menu.findItem(R.id.option_deactivate_accelerometer).setEnabled(true);
+                menu.findItem(R.id.option_reset_self).setVisible(false);
             } else {
                 menu.findItem(R.id.option_activate_accelerometer).setVisible(true);
-//                menu.findItem(R.id.option_activate_accelerometer).setEnabled(true);
                 menu.findItem(R.id.option_deactivate_accelerometer).setVisible(false);
-//                menu.findItem(R.id.option_deactivate_accelerometer).setEnabled(false);
+                menu.findItem(R.id.option_reset_self).setVisible(true);
             }
 
             popupMenu.show();
@@ -341,6 +398,36 @@ public class PlayFragment extends FullScreenFragment {
             mainActivity.getTaskManager().getReadTask().changeFocus(index);
         });
 
+        // Listen for Movement
+        layoutViewModel.getSelfAuto().observe(getViewLifecycleOwner(), transform -> {
+            FileInfo fileInfo = mediaViewModel.getCurrentFileInfo().getValue();
+            String contentDescriptor = fetchContentDescriptor(fileInfo);
+
+            if (contentDescriptor == null) {
+                // skip
+                return;
+            }
+
+            if (!contentDescriptor.equals(currentContent)) {
+                // skip
+                return;
+            }
+
+            // React to device movement
+            switch (fileInfo.getFileType()) {
+                case IMAGE:
+                    TransformInfo viewport = layoutViewModel.getViewport().getValue();
+
+                    Matrix matrix = mainActivity.getLayoutManager()
+                            .getMatrix(transform, viewport, currentImageWidth, currentImageHeight);
+                    binding.imageView.setImageMatrix(matrix);
+                    break;
+                case VIDEO:
+                    setVideoMatrix(fileInfo);
+                    break;
+            }
+        });
+
         // Listen for Exo Player Playback State change
         exoPlayer.addListener(new Player.Listener() {
             @Override
@@ -391,6 +478,23 @@ public class PlayFragment extends FullScreenFragment {
                     return true;
                 case R.id.option_deactivate_accelerometer:
                     mediaViewModel.setAccelerometerActive(false);
+                    return true;
+                case R.id.option_reset_self:
+                    TransformInfo self = layoutViewModel.getSelfAuto().getValue();
+                    ArrayList<TransformInfo> backupList =
+                            layoutViewModel.getBackupTransformList().getValue();
+
+                    // Get backup for own device
+                    Iterator<TransformInfo> backupIt = backupList.iterator();
+                    while (backupIt.hasNext()) {
+                        TransformInfo next = backupIt.next();
+
+                        if (next.getDeviceName().equals(self.getDeviceName())) {
+                            self = next;
+                        }
+                    }
+
+                    layoutViewModel.updateTransform(self, false);
                     return true;
                 case R.id.option_file_selection:
                     StateChangeHelper.requestStateChange(
@@ -555,6 +659,10 @@ public class PlayFragment extends FullScreenFragment {
             Matrix matrix = mainActivity.getLayoutManager()
                     .getMatrix(self, viewport, drawableWidth, drawableHeight);
             binding.imageView.setImageMatrix(matrix);
+
+            // Save Drawable information
+            currentImageWidth = drawableWidth;
+            currentImageHeight = drawableHeight;
 
             currentContent = contentDescriptor;
         } else {
@@ -963,7 +1071,7 @@ public class PlayFragment extends FullScreenFragment {
         sensorManager.registerListener(
                 accelerometerListener,
                 accelerometer,
-                SensorManager.SENSOR_DELAY_NORMAL
+                SensorManager.SENSOR_DELAY_GAME
         );
     }
 
@@ -971,5 +1079,7 @@ public class PlayFragment extends FullScreenFragment {
         if (sensorManager != null) {
             sensorManager.unregisterListener(accelerometerListener);
         }
+
+        accelerometerInfo.reset();
     }
 }

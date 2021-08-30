@@ -13,6 +13,11 @@
         app:showAsAction="never"
         />
     <item
+        android:id="@+id/option_reset_self"
+        android:title="@string/play_reset_self"
+        app:showAsAction="never"
+        />
+    <item
         android:id="@+id/option_file_selection"
         android:title="@string/play_back_to_file_selection"
         app:showAsAction="never"

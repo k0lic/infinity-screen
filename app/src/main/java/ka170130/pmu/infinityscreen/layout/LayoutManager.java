@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.MainActivity;
+import ka170130.pmu.infinityscreen.containers.AccelerometerInfo;
 import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
@@ -137,6 +138,71 @@ public class LayoutManager {
         newPosition.y = (float) (transform.getPosition().y + deltaY);
 
         transform.setPosition(newPosition);
+    }
+
+    public void performAccelerometerEvent(
+            TransformInfo transform,
+            TransformInfo viewport,
+            AccelerometerInfo accelerometerInfo,
+            long now
+    ) {
+        // Calculate elapsed time from last accelerometer event
+        float deltaTime = (now - accelerometerInfo.lastMovement) / 1000f;
+
+        // Calculate movement
+        float deltaX = accelerometerInfo.xVel * deltaTime +
+                accelerometerInfo.xAccel * deltaTime * deltaTime / 2;
+        float deltaY = accelerometerInfo.yVel * deltaTime +
+                accelerometerInfo.yAccel * deltaTime * deltaTime / 2;
+
+        Integer[] pixelCount = getPixelCount();
+        // Ignore small movements
+        if (Math.abs(deltaX) > AccelerometerInfo.MOVE_THRESHOLD) {
+            // Calculate movement in CM
+            float delta = deltaX * AccelerometerInfo.SENSITIVITY;
+            delta /= pixelCount[PIXEL_COUNT_WIDTH_INDEX];
+            delta *= transform.getScreenWidth();
+
+            transform.getPosition().x += delta;
+        }
+
+        if (Math.abs(deltaY) > AccelerometerInfo.MOVE_THRESHOLD) {
+            // Calculate movement in CM
+            float delta = deltaY * AccelerometerInfo.SENSITIVITY;
+            delta /= pixelCount[PIXEL_COUNT_HEIGHT_INDEX];
+            delta *= transform.getScreenHeight();
+
+            transform.getPosition().y += delta;
+        }
+
+        // Restrict movement
+        float xMax = viewport.getPosition().x + (float) viewport.getScreenWidth();
+        float yMax = viewport.getPosition().y + (float) viewport.getScreenHeight();
+        float xMin = viewport.getPosition().x - (float) transform.getScreenWidth();
+        float yMin = viewport.getPosition().y - (float) transform.getScreenHeight();
+
+        if (transform.getPosition().x > xMax) {
+            transform.getPosition().x = xMax;
+        } else if (transform.getPosition().x < xMin) {
+            transform.getPosition().x = xMin;
+        }
+
+        if (transform.getPosition().y > yMax) {
+            transform.getPosition().y = yMax;
+        } else if (transform.getPosition().y < yMin) {
+            transform.getPosition().y = yMin;
+        }
+
+        // Update velocity
+        accelerometerInfo.xVel += accelerometerInfo.xAccel * deltaTime;
+        accelerometerInfo.yVel += accelerometerInfo.yAccel * deltaTime;
+
+        // Dampen velocity to combat drift
+        accelerometerInfo.xVel *= AccelerometerInfo.VELOCITY_DECAY;
+        accelerometerInfo.yVel *= AccelerometerInfo.VELOCITY_DECAY;
+
+        // Update last movement timestamp
+        accelerometerInfo.lastMovement = now;
     }
 
     public void performZoomEvent(

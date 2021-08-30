@@ -60,6 +60,7 @@
     <string name="play_error_accelerometer_missing">Activating accelerometer failed! Could not find sensor.</string>
     <string name="play_activate_accelerometer">React to movements</string>
     <string name="play_deactivate_accelerometer">Ignore movements</string>
+    <string name="play_reset_self">Reset position</string>
 
     <!-- Dialogs -->
     <string name="dialog_ok">OK</string>

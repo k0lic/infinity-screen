@@ -29,6 +29,8 @@ import ka170130.pmu.infinityscreen.connection.ConnectionAwareFragment;
 import ka170130.pmu.infinityscreen.connection.DeviceConnectedAdapter;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
+import ka170130.pmu.infinityscreen.containers.TransformInfo;
+import ka170130.pmu.infinityscreen.containers.TransformUpdate;
 import ka170130.pmu.infinityscreen.databinding.FragmentFileSelectionBinding;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
@@ -36,6 +38,7 @@ import ka170130.pmu.infinityscreen.helpers.FileSelectionHelper;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.layout.PreviewFragmentDirections;
+import ka170130.pmu.infinityscreen.viewmodels.LayoutViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.MediaViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 
@@ -46,6 +49,7 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
     private FragmentFileSelectionBinding binding;
     private StateViewModel stateViewModel;
     private MediaViewModel mediaViewModel;
+    private LayoutViewModel layoutViewModel;
 
     private String[] mimeTypes;
 
@@ -59,6 +63,7 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
 
         stateViewModel = new ViewModelProvider(mainActivity).get(StateViewModel.class);
         mediaViewModel = new ViewModelProvider(mainActivity).get(MediaViewModel.class);
+        layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
 
         String[] mimeTypes = { "image/*", "video/*" };
         this.mimeTypes = mimeTypes;
@@ -178,6 +183,16 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
                 }
             });
         });
+
+        // Broadcast layout as new backup - necessary for resetting while playing
+        try {
+            ArrayList<TransformInfo> transformList = layoutViewModel.getTransformList().getValue();
+            TransformUpdate transformUpdate = new TransformUpdate(transformList, true);
+            mainActivity.getTaskManager().sendToAllInGroup(
+                    Message.newTransformListUpdateMessage(transformUpdate), true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
