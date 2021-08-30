@@ -50,6 +50,57 @@ public class DeviceLayoutView extends View {
         deviceLayoutView.setSelf(3);
     }
 
+    public static void setupDummyDevices2ElectricBoogaloo(DeviceLayoutView deviceLayoutView) {
+        // Generate test devices
+        ArrayList<TransformInfo> transformList = new ArrayList<>();
+        double[] widthArray = {
+                05.5, 05.6, 06.9, 04.8, 07.1, 24.0, 04.6, 06.0, 06.8, 05.5
+        };
+        double[] heightArray = {
+                10.1, 09.6, 13.8, 09.1, 14.9, 16.0, 08.9, 12.5, 13.1, 10.4
+        };
+
+        for (int i = 0; i < widthArray.length && i < heightArray.length; i++) {
+            TransformInfo transform = new TransformInfo(
+                    "Device#" + (i + 1),
+                    i + 1,
+                    TransformInfo.Orientation.PORTRAIT,
+                    widthArray[i],
+                    heightArray[i]
+            );
+            transformList.add(transform);
+        }
+
+        // Generate test viewport
+        TransformInfo viewport = new TransformInfo(
+                "viewport",
+                -1,
+                TransformInfo.Orientation.LANDSCAPE,                // to be overwritten
+                0,                                       // to be overwritten
+                0                                       // to be overwritten
+        );
+
+        // Create Layout Generator
+        LayoutGenerator generator = new SimpleLayoutGenerator();
+
+        // Generate Layout
+        generator.generate(transformList, viewport);
+
+        // Register Devices
+        Iterator<TransformInfo> iterator = transformList.iterator();
+        while (iterator.hasNext()) {
+            TransformInfo next = iterator.next();
+            DeviceRepresentation deviceRep = new DeviceRepresentation(next);
+            deviceLayoutView.registerDevice(deviceRep);
+        }
+
+        deviceLayoutView.setSelf(1);
+
+        // Register Viewport
+        DeviceRepresentation viewportRep = new DeviceRepresentation(viewport);
+        deviceLayoutView.setViewport(viewportRep);
+    }
+
     private static final float MINIMUM_AREA_WIDTH = 10;
     private static final float MINIMUM_AREA_HEIGHT = 10;
     private static final float BUFFER_FACTOR = 0.1f;
@@ -297,8 +348,9 @@ public class DeviceLayoutView extends View {
             }
         });
 
-        // TODO: comment this line
+        // TODO: comment following test code
 //        setupDummyDevices(this);
+        setupDummyDevices2ElectricBoogaloo(this);
     }
 
     public List<DeviceRepresentation> getDevices() {

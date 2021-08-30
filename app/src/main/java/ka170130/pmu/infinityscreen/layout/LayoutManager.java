@@ -41,12 +41,16 @@ public class LayoutManager {
     private LayoutViewModel layoutViewModel;
     private SyncViewModel syncViewModel;
 
+    private LayoutGenerator layoutGenerator;
+
     public LayoutManager(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
 
         connectionViewModel = new ViewModelProvider(mainActivity).get(ConnectionViewModel.class);
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
         syncViewModel = new ViewModelProvider(mainActivity).get(SyncViewModel.class);
+
+        layoutGenerator = new SimpleLayoutGenerator();
     }
 
     public Matrix getMatrix(
@@ -268,9 +272,20 @@ public class LayoutManager {
 
         // Execute Layout generation
         if (!layoutViewModel.getLayoutGeneratorExecuted()) {
-            TransformInfo viewport = simpleLayoutGenerator(list);
+            // Initialize Viewport Transform
+            TransformInfo viewport = new TransformInfo(
+                    "viewport",
+                    -1,
+                    TransformInfo.Orientation.LANDSCAPE,                // to be overwritten
+                    0,                                       // to be overwritten
+                    0                                       // to be overwritten
+            );
+
+            // Execute Layout Generation
+            layoutGenerator.generate(list, viewport);
             layoutViewModel.setLayoutGeneratorExecuted(true);
 
+            // Save Layout
             layoutViewModel.setTransformList(list);
             layoutViewModel.setBackupTransformList(list);
             layoutViewModel.setViewport(viewport);
@@ -352,27 +367,6 @@ public class LayoutManager {
                 TransformInfo.Orientation.PORTRAIT,
                 screenWidth,
                 screenHeight
-        );
-    }
-
-    // place all devices in order, side by side, no rotation
-    private TransformInfo simpleLayoutGenerator(ArrayList<TransformInfo> transformInfos) {
-        double x = transformInfos.get(0).getScreenWidth();
-        for (int i = 1; i < transformInfos.size(); i++) {
-            TransformInfo info = transformInfos.get(i);
-            info.setPosition(new DeviceRepresentation.Position((float) x, 0));
-            x += info.getScreenWidth();
-        }
-
-        double viewportWidth = x;
-        double viewportHeight = x / 1.78;
-
-        return new TransformInfo(
-                "viewport",
-                -1,
-                TransformInfo.Orientation.LANDSCAPE,
-                viewportWidth,
-                viewportHeight
         );
     }
 
