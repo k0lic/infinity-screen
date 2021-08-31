@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
-import android.util.Log;
 import android.view.View;
 
 import ka170130.pmu.infinityscreen.MainActivity;
@@ -45,10 +44,15 @@ public class ConnectionAwareFragment extends Fragment {
         connectionViewModel.getConnectionStatus().observe(getViewLifecycleOwner(), status -> {
             // Navigate to HomeFragment if disconnected
             if (status == ConnectionViewModel.ConnectionStatus.NOT_CONNECTED) {
+                onConnectionClose();
                 LogHelper.log("ConnectionStatus.NOT_CONNECTED detected");
                 navController.navigate(HomeFragmentDirections.globalHomeFragment());
             }
         });
+    }
+
+    protected void onConnectionClose() {
+        // do nothing
     }
 
     protected void setupStatusCards(AppBarAndStatusBinding binding) {

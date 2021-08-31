@@ -38,12 +38,10 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.TreeSet;
 
 import ka170130.pmu.infinityscreen.R;
 import ka170130.pmu.infinityscreen.communication.TaskManager;
 import ka170130.pmu.infinityscreen.containers.AccelerometerInfo;
-import ka170130.pmu.infinityscreen.containers.DeviceRepresentation;
 import ka170130.pmu.infinityscreen.containers.FileInfo;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PlaybackStatusCommand;
@@ -225,11 +223,6 @@ public class PlayFragment extends FullScreenFragment {
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
         mediaViewModel = new ViewModelProvider(mainActivity).get(MediaViewModel.class);
 
-//        mediaPlayer = new MediaPlayer();
-//        mediaPlayer.setLooping(false);
-//        mediaPlayer.setOnCompletionListener(mp -> {
-//            mediaPlayerState = MediaPlayerState.COMPLETED;
-//        });
         exoPlayer = new SimpleExoPlayer.Builder(mainActivity).build();
 
         currentContent = null;
@@ -520,7 +513,6 @@ public class PlayFragment extends FullScreenFragment {
             @Override
             public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
                 Surface surface = new Surface(surfaceTexture);
-//                mediaPlayer.setSurface(surface);
                 exoPlayer.setVideoSurface(surface);
             }
 
@@ -544,7 +536,6 @@ public class PlayFragment extends FullScreenFragment {
         // Listen for App State change
         stateViewModel.getState().observe(getViewLifecycleOwner(), state -> {
             if (state == StateViewModel.AppState.FILE_SELECTION) {
-//                mediaPlayer.reset();
                 resetExoPlayer();
                 currentContent = null;
                 mediaViewModel.reset();
@@ -553,6 +544,15 @@ public class PlayFragment extends FullScreenFragment {
         });
 
         return  binding.getRoot();
+    }
+
+    @Override
+    protected void onConnectionClose() {
+        super.onConnectionClose();
+
+        resetExoPlayer();
+        currentContent = null;
+        mediaViewModel.reset();
     }
 
     @Override
@@ -598,7 +598,6 @@ public class PlayFragment extends FullScreenFragment {
 
         // stop media player - if it is active
         if (mediaPlayerState != MediaPlayerState.IDLE) {
-//            mediaPlayer.reset();
             resetExoPlayer();
             mediaPlayerState = MediaPlayerState.IDLE;
             currentContent = null;
@@ -681,7 +680,6 @@ public class PlayFragment extends FullScreenFragment {
         String contentDescriptor = fetchContentDescriptor(fileInfo);
         // reset media player if necessary
         if (contentDescriptor == null || !contentDescriptor.equals(currentContent)) {
-//            mediaPlayer.reset();
             resetExoPlayer();
 
             currentContent = null;
@@ -723,7 +721,6 @@ public class PlayFragment extends FullScreenFragment {
                     break;
                 case PAUSED:
                     LogHelper.log("PAUSED to PLAYING");
-//                    mediaPlayer.start();
                     exoPlayer.play();
                     mediaPlayerState = MediaPlayerState.PLAYING;
                     break;
