@@ -1,6 +1,8 @@
 package ka170130.pmu.infinityscreen.containers;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class TransformInfo implements Serializable {
 
@@ -76,5 +78,23 @@ public class TransformInfo implements Serializable {
 
     public void setPosition(DeviceRepresentation.Position position) {
         this.position = position;
+    }
+
+    public void rotate() {
+        // Change orientation
+        switch (orientation) {
+            case PORTRAIT:
+                orientation = TransformInfo.Orientation.LANDSCAPE;
+                break;
+            case LANDSCAPE:
+                orientation = TransformInfo.Orientation.PORTRAIT;
+                break;
+        }
+
+        // Swap dimensions
+        double width = screenHeight;
+        double height = screenWidth;
+        screenWidth = width;
+        screenHeight = height;
     }
 }

@@ -50,7 +50,7 @@ public class LayoutManager {
         layoutViewModel = new ViewModelProvider(mainActivity).get(LayoutViewModel.class);
         syncViewModel = new ViewModelProvider(mainActivity).get(SyncViewModel.class);
 
-        layoutGenerator = new SimpleLayoutGenerator();
+        layoutGenerator = new MaximalRectanglesLayoutGenerator();
     }
 
     public Matrix getMatrix(

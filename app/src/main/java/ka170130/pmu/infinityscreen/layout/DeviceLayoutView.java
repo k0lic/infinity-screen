@@ -26,7 +26,6 @@ import ka170130.pmu.infinityscreen.helpers.LogHelper;
 
 public class DeviceLayoutView extends View {
 
-    // TODO: remove setupDummyDevices
     public static void setupDummyDevices(DeviceLayoutView deviceLayoutView) {
         DeviceRepresentation.Position position = new DeviceRepresentation.Position(-30, -50);
         DeviceRepresentation device;
@@ -81,7 +80,8 @@ public class DeviceLayoutView extends View {
         );
 
         // Create Layout Generator
-        LayoutGenerator generator = new SimpleLayoutGenerator();
+//        LayoutGenerator generator = new SimpleLayoutGenerator();
+        LayoutGenerator generator = new MaximalRectanglesLayoutGenerator();
 
         // Generate Layout
         generator.generate(transformList, viewport);
@@ -350,7 +350,7 @@ public class DeviceLayoutView extends View {
 
         // TODO: comment following test code
 //        setupDummyDevices(this);
-        setupDummyDevices2ElectricBoogaloo(this);
+//        setupDummyDevices2ElectricBoogaloo(this);
     }
 
     public List<DeviceRepresentation> getDevices() {

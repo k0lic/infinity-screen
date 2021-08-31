@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import ka170130.pmu.infinityscreen.containers.TransformInfo;
+import ka170130.pmu.infinityscreen.helpers.CopyHelper;
 import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 
 public class LayoutViewModel extends ViewModel implements Resettable {
@@ -75,12 +76,12 @@ public class LayoutViewModel extends ViewModel implements Resettable {
         while (iterator.hasNext()) {
             TransformInfo next = iterator.next();
             if (next.getDeviceName().equals(ownName)) {
-                selfAuto.setValue(getCopy(next));
+                selfAuto.setValue(CopyHelper.getCopy(next));
                 return;
             }
         }
 
-        selfAuto.setValue(getCopy(self));
+        selfAuto.setValue(CopyHelper.getCopy(self));
     }
 
     @Override
@@ -98,7 +99,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setSelfTransform(TransformInfo selfTransform) {
-        TransformInfo copy = getCopy(selfTransform);
+        TransformInfo copy = CopyHelper.getCopy(selfTransform);
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(SELF_KEY, copy));
 //        this.selfTransform.postValue(selfTransform);
     }
@@ -108,7 +109,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setTransformList(ArrayList<TransformInfo> transformList) {
-        ArrayList<TransformInfo> copyList = getCopy(transformList);
+        ArrayList<TransformInfo> copyList = CopyHelper.getCopy(transformList);
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(TRANSFORM_LIST_KEY, copyList));
 //        this.transformList.postValue(transformList);
     }
@@ -176,7 +177,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setBackupTransformList(ArrayList<TransformInfo> backupTransformList) {
-        ArrayList<TransformInfo> copyList = getCopy(backupTransformList);
+        ArrayList<TransformInfo> copyList = CopyHelper.getCopy(backupTransformList);
         ThreadHelper.runOnMainThread(
                 () -> savedStateHandle.set(BACKUP_TRANSFORM_LIST_KEY, copyList));
     }
@@ -190,7 +191,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setViewport(TransformInfo viewport) {
-        TransformInfo copy = getCopy(viewport);
+        TransformInfo copy = CopyHelper.getCopy(viewport);
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(VIEWPORT_KEY, copy));
     }
 
@@ -199,7 +200,7 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     }
 
     public void setBackupViewport(TransformInfo backupViewport) {
-        TransformInfo copy = getCopy(backupViewport);
+        TransformInfo copy = CopyHelper.getCopy(backupViewport);
         ThreadHelper.runOnMainThread(
                 () -> savedStateHandle.set(BACKUP_VIEWPORT_KEY, copy));
     }
@@ -235,29 +236,5 @@ public class LayoutViewModel extends ViewModel implements Resettable {
     public void setLayoutGeneratorExecuted(Boolean layoutGeneratorExecuted) {
         this.layoutGeneratorExecuted = layoutGeneratorExecuted;
         savedStateHandle.set(GENERATOR_EXECUTED_KEY, layoutGeneratorExecuted);
-    }
-
-    private TransformInfo getCopy(TransformInfo transform) {
-        TransformInfo copy = null;
-        if (transform != null) {
-            copy = new TransformInfo(transform);
-        }
-        return copy;
-    }
-
-    private ArrayList<TransformInfo> getCopy(ArrayList<TransformInfo> list) {
-        ArrayList<TransformInfo> listCopy = null;
-
-        if (list != null) {
-            listCopy = new ArrayList<>();
-            Iterator<TransformInfo> iterator = list.iterator();
-            while (iterator.hasNext()) {
-                TransformInfo next = iterator.next();
-                TransformInfo copy = getCopy(next);
-                listCopy.add(copy);
-            }
-        }
-
-        return listCopy;
     }
 }

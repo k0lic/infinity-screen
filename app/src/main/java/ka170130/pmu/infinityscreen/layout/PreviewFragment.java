@@ -195,24 +195,7 @@ public class PreviewFragment extends FullScreenFragment {
         // Rotate Button
         binding.rotateButton.setOnClickListener(view -> {
             TransformInfo self = layoutViewModel.getSelfAuto().getValue();
-
-            TransformInfo.Orientation orientation = self.getOrientation();
-            TransformInfo.Orientation newOrientation = TransformInfo.Orientation.PORTRAIT;
-            switch (orientation) {
-                case PORTRAIT:
-                    newOrientation = TransformInfo.Orientation.LANDSCAPE;
-                    break;
-                case LANDSCAPE:
-                    newOrientation = TransformInfo.Orientation.PORTRAIT;
-                    break;
-            }
-            self.setOrientation(newOrientation);
-
-            double width = self.getScreenHeight();
-            double height = self.getScreenWidth();
-            self.setScreenWidth(width);
-            self.setScreenHeight(height);
-
+            self.rotate();
             layoutViewModel.updateTransform(self, false);
         });
 
