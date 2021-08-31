@@ -54,7 +54,7 @@
     <string name="wait_file_selection">Waiting for the host to select files.</string>
 
     <!-- Play Fragment -->
-    <string name="play_buffering_message">Waiting for video to load.</string>
+    <string name="play_buffering_message">Waiting for content to load.</string>
     <string name="play_back_to_file_selection">Back to files</string>
     <string name="play_error_latency">Playing video failed! Message latency too high.</string>
     <string name="play_error_accelerometer_missing">Activating accelerometer failed! Could not find sensor.</string>
