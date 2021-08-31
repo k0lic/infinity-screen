@@ -200,14 +200,6 @@ public class MediaManager {
     }
 
     public void requestPlay(int fileIndex) throws IOException {
-        // TODO: optimize so playback is synchronous, maybe add check(s)
-        // Authorize Play
-//        Message message = Message.newPlaybackStatusCommandMessage(new PlaybackStatusCommand(
-//                fileIndex,
-//                FileInfo.PlaybackStatus.PLAY
-//        ));
-//        mainActivity.getTaskManager().sendToAllInGroup(message, true);
-
         // Authorize Deferred Play
         long now = System.currentTimeMillis();
         long ownTimestamp = now + getDeferredDelay();
@@ -241,7 +233,6 @@ public class MediaManager {
     }
 
     public void requestPause(int fileIndex) throws IOException {
-        // TODO: optimize so playback is synchronous, maybe add check(s)
         // Authorize Pause
         Message message = Message.newPlaybackStatusCommandMessage(new PlaybackStatusCommand(
                 fileIndex,

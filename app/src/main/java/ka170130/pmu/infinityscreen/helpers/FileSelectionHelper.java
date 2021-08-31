@@ -23,7 +23,6 @@ public class FileSelectionHelper {
         FileSelectionHelper.mainActivity = mainActivity;
 
         launcher = mainActivity.registerForActivityResult(
-                // TODO: maybe replace with persistable uris - like in FinalProject
                 new ActivityResultContracts.OpenMultipleDocuments(),
                 result -> {
                     if (callback != null) {

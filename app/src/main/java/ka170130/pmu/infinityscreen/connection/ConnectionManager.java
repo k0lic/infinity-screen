@@ -126,7 +126,6 @@ public class ConnectionManager {
     }
 
     public void disconnect() {
-        // TODO
         manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {

@@ -212,7 +212,6 @@ public class MessageHandler {
         StateViewModel.AppState state = (StateViewModel.AppState) message.extractObject();
         // TODO: check if change request should be granted
         taskManager.sendToAllInGroup(Message.newStateChangeMessage(state), true);
-//        taskManager.runBroadcastTask(Message.newStateChangeMessage(state));
     }
 
     // handle STATE_CHANGE message
@@ -385,14 +384,6 @@ public class MessageHandler {
             createdFiles.set(fileIndex, file);
             mediaViewModel.setCreatedFiles(createdFiles);
         }
-
-        // TODO: maybe this activation is not needed - since StreamProxy is now used for videos
-        // activate video content
-//        if (fileInfo.getFileType() == FileInfo.FileType.VIDEO
-//                && fileInfo.getNextPackage() >= FileInfo.VIDEO_PACKAGE_THRESHOLD
-//        ) {
-//            activateContent(file, fileIndex, hostAddress);
-//        }
 
         // Submit 'Append content to file' task
         WriteTask.WriteCommand command =

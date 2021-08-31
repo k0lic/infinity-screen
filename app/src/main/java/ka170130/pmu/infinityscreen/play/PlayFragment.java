@@ -762,10 +762,7 @@ public class PlayFragment extends FullScreenFragment {
             long delay = fileInfo.getTimestamp() - System.currentTimeMillis();
             if (delay < MINIMUM_DEFERRED_DELAY) {
                 LogHelper.log("Delay (" + delay + ") is less than MINIMUM_DEFERRED_DELAY(" + MINIMUM_DEFERRED_DELAY + ")! What now?");
-                // TODO: handle late deferred handling - notify host and ask for abortion?
-                // just request pause
                 requestPause();
-
                 Toast.makeText(
                         mainActivity,
                         getResources().getString(R.string.play_error_latency),

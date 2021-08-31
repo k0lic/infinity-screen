@@ -149,9 +149,9 @@ public class StreamProxyTask implements Runnable {
         long cbToSend = fileSize - position;
         OutputStream output = null;
         byte[] buff = new byte[Message.MESSAGE_MAX_SIZE];
-//        byte[] buff = new byte[64 * 1024];  // TODO: adjust size
+//        byte[] buff = new byte[64 * 1024];
 //        output = new BufferedOutputStream(socket.getOutputStream(), Message.MESSAGE_MAX_SIZE);
-        output = new BufferedOutputStream(socket.getOutputStream(), 32*1024);  // TODO: adjust size
+        output = new BufferedOutputStream(socket.getOutputStream(), 32*1024);
         output.write(headers.getBytes());
 
         // Loop as long as there's stuff to send

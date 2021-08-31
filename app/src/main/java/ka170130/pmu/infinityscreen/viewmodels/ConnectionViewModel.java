@@ -32,19 +32,11 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
 
     private SavedStateHandle savedStateHandle;
 
-    // System info
-//    private MutableLiveData<Boolean> wifiEnabled; - ONLY SET NEVER READ
-//    private MutableLiveData<Boolean> gpsEnabled; - NOT USED
-
     // Device Info
     private MutableLiveData<PeerInfo> selfDevice;
     private MutableLiveData<PeerInetAddressInfo> hostDevice;
     private MutableLiveData<Boolean> isHost;
     private MediatorLiveData<ConnectionStatus> connectionStatus;
-//    private MutableLiveData<PeerInfo> groupOwnerDevice; - NOT USED
-
-    // Connection Info
-//    private MutableLiveData<WifiP2pInfo> info; - NOT USED
 
     // Peer Lists
     private MutableLiveData<Collection<PeerInfo>> discoveryList;
@@ -54,18 +46,10 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
     public ConnectionViewModel(SavedStateHandle savedStateHandle) {
         this.savedStateHandle = savedStateHandle;
 
-        // System Info Initialization
-//        wifiEnabled = new MutableLiveData<>();
-//        gpsEnabled = new MutableLiveData<>();
-
         // Device Info Initialization
         selfDevice = savedStateHandle.getLiveData(SELF_DEVICE_KEY, null);
-//        selfDevice = new MutableLiveData<>();
         hostDevice = savedStateHandle.getLiveData(HOST_DEVICE_KEY, null);
-//        hostDevice = new MutableLiveData<>();
         isHost = savedStateHandle.getLiveData(IS_HOST_KEY, false);
-//        isHost = new MutableLiveData<>(false);
-//        groupOwnerDevice = new MutableLiveData<>();
 
         LogHelper.log("Device Info Init: "
                 + (selfDevice.getValue() == null ? "<NULL>" : selfDevice.getValue().getDeviceName()) + " "
@@ -76,13 +60,9 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
         connectionStatus.addSource(selfDevice, device -> refreshConnectionStatus());
         connectionStatus.addSource(hostDevice, device -> refreshConnectionStatus());
 
-        // Connection Info Initialization
-//        info = new MutableLiveData<>();
-
         // Peer Lists Initialization
         discoveryList = new MutableLiveData<>(new ArrayList<>());
         groupList = savedStateHandle.getLiveData(GROUP_LIST_KEY, new ArrayList<>());
-//        groupList = new MutableLiveData<>(new ArrayList<>());
 
         availableList = new MediatorLiveData<>();
         availableList.addSource(discoveryList, list -> refreshAvailableList());
@@ -144,30 +124,6 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
         setGroupList(new ArrayList<>());
     }
 
-//    public LiveData<Boolean> getWifiEnabled() {
-//        return wifiEnabled;
-//    }
-//
-//    public void setWifiEnabled(boolean wifiEnabled) {
-//        this.wifiEnabled.postValue(wifiEnabled);
-//    }
-
-//    public LiveData<Boolean> getGpsEnabled() {
-//        return gpsEnabled;
-//    }
-//
-//    public void setGpsEnabled(boolean gpsEnabled) {
-//        this.gpsEnabled.postValue(gpsEnabled);
-//    }
-
-//    public LiveData<WifiP2pInfo> getInfo() {
-//        return info;
-//    }
-//
-//    public void setInfo(WifiP2pInfo info) {
-//        this.info.postValue(info);
-//    }
-
     public MediatorLiveData<ConnectionStatus> getConnectionStatus() {
         return connectionStatus;
     }
@@ -178,7 +134,6 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
 
     public void setIsHost(Boolean isHost) {
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(IS_HOST_KEY, isHost));
-        // this.isHost.postValue(isHost);
     }
 
     public LiveData<PeerInfo> getSelfDevice() {
@@ -187,7 +142,6 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
 
     public void setSelfDevice(PeerInfo selfDevice) {
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(SELF_DEVICE_KEY, selfDevice));
-//        this.selfDevice.postValue(selfDevice);
     }
 
     public LiveData<PeerInetAddressInfo> getHostDevice() {
@@ -196,7 +150,6 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
 
     public void setHostDevice(PeerInetAddressInfo hostDevice) {
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(HOST_DEVICE_KEY, hostDevice));
-//        this.hostDevice.postValue(hostDevice);
     }
 
     public void setDiscoveryList(Collection<PeerInfo> discoveryList) {
@@ -209,7 +162,6 @@ public class ConnectionViewModel extends ViewModel implements Resettable {
 
     public void setGroupList(Collection<PeerInetAddressInfo> groupList) {
         ThreadHelper.runOnMainThread(() -> savedStateHandle.set(GROUP_LIST_KEY, groupList));
-//        this.groupList.postValue(groupList);
     }
 
     public void selectDevice(PeerInetAddressInfo device) {

@@ -86,7 +86,6 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
                     // disconnect all
                     mainActivity.getTaskManager()
                             .sendToAllInGroup(Message.newDisconnectMessage(), true);
-//                    mainActivity.getTaskManager().runBroadcastTask(Message.newDisconnectMessage());
                 } else {
                     // disconnect self
                     mainActivity.getConnectionManager().disconnect();
@@ -158,10 +157,8 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
             try {
                 mainActivity.getTaskManager()
                         .sendToAllInGroup(Message.newFileIndexUpdateMessage(0), true);
-//                        .runBroadcastTask(Message.newFileIndexUpdateMessage(0));
                 mainActivity.getTaskManager().sendToAllInGroup(
                         Message.newFileInfoListUpdateMessage(fileInfos), true);
-//                        .runBroadcastTask(Message.newFileInfoListUpdateMessage(fileInfos));
             } catch (IOException e) {
                 LogHelper.error(e);
             }
@@ -179,7 +176,6 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
 
                     StateChangeHelper.requestStateChange(
                             mainActivity, connectionViewModel, StateViewModel.AppState.PLAY);
-//                    navController.navigate(FileSelectionFragmentDirections.actionPlayFragment());
                 }
             });
         });
@@ -209,9 +205,5 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        // sync App State - necessary for the Back button to work
-//        StateChangeHelper.requestStateChange(
-//                mainActivity, connectionViewModel, StateViewModel.AppState.FILE_SELECTION);
     }
 }
