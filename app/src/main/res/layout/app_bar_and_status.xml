@@ -27,79 +27,105 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-<!-- Device Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/top_device_card"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/top_device_card_container"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        tools:cardBackgroundColor="?attr/colorDeviceAvailable"
         app:layout_constraintTop_toBottomOf="@id/top_app_bar_layout"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/top_host_card_container"
+        android:layout_marginEnd="@dimen/horizontal_margin_small"
         >
 
-        <LinearLayout
-            android:id="@+id/top_device_layout"
+        <!-- Device Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/top_device_card"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            style="@style/StatusCardLayout"
+            tools:cardBackgroundColor="?attr/colorDeviceAvailable"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             >
 
-            <TextView
-                android:id="@+id/top_device_name"
+            <LinearLayout
+                android:id="@+id/top_device_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="@string/device_name_2"
-                android:textColor="?attr/colorOnDeviceAvailable"
-                />
+                android:orientation="vertical"
+                style="@style/StatusCardLayout"
+                >
 
-            <TextView
-                android:id="@+id/top_device_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="@string/device_status_available"
-                android:textColor="?attr/colorOnDeviceAvailable"
-                />
+                <TextView
+                    android:id="@+id/top_device_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="@string/device_name_2"
+                    android:textColor="?attr/colorOnDeviceAvailable"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    />
 
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:id="@+id/top_device_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="@string/device_status_available"
+                    android:textColor="?attr/colorOnDeviceAvailable"
+                    />
 
-<!-- Host Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/top_host_card"
-        android:layout_width="wrap_content"
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/top_host_card_container"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        tools:cardBackgroundColor="?attr/colorNeutral"
         app:layout_constraintTop_toBottomOf="@id/top_app_bar_layout"
+        app:layout_constraintStart_toEndOf="@id/top_device_card_container"
         app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="@dimen/horizontal_margin_small"
         >
 
-        <LinearLayout
-            android:id="@+id/top_host_container"
+        <!-- Host Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/top_host_card"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            style="@style/StatusCardLayout"
-            android:gravity="end"
+            tools:cardBackgroundColor="?attr/colorNeutral"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             >
 
-            <TextView
-                android:id="@+id/top_host_name"
+            <LinearLayout
+                android:id="@+id/top_host_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="@string/device_name_1"
-                android:textColor="?attr/colorOnNeutral"
-                />
+                android:orientation="vertical"
+                style="@style/StatusCardLayout"
+                android:gravity="end"
+                >
 
-            <TextView
-                android:id="@+id/top_host_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/host"
-                android:textColor="?attr/colorOnNeutral"
-                />
+                <TextView
+                    android:id="@+id/top_host_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="@string/device_name_1"
+                    android:textColor="?attr/colorOnNeutral"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    />
 
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:id="@+id/top_host_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/host"
+                    android:textColor="?attr/colorOnNeutral"
+                    />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

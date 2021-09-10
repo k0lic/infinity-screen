@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".connection.DeviceListFragment"
+    style="@style/FragmentWithBackground"
+    >
+
+    <include
+        android:id="@+id/app_bar_and_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/app_bar_and_status"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content_layout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        style="@style/ContentLayoutStyle"
+        app:layout_constraintTop_toBottomOf="@id/app_bar_and_status"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        >
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/inner_layout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="@dimen/default_horizontal_margin"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/continue_button"
+            >
+
+            <TextView
+                android:id="@+id/available_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/list_available"
+                style="@style/TextOnBackgroundRegular"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+            <TextView
+                android:id="@+id/available_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/list_devices_empty"
+                style="@style/TextOnBackgroundRegular"
+                android:textStyle="italic"
+                android:layout_marginTop="@dimen/vertical_margin_extra_large"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/available_label"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/guideline"
+                />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/available_recycler_view"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                tools:listitem="@layout/view_holder_device_available"
+                tools:itemCount="4"
+                android:layout_marginTop="@dimen/default_vertical_margin"
+                android:layout_marginHorizontal="@dimen/default_horizontal_margin"
+                app:layout_constraintTop_toBottomOf="@id/available_label"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/guideline"
+                />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5"
+                />
+
+            <TextView
+                android:id="@+id/connected_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/list_connected"
+                style="@style/TextOnBackgroundRegular"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/guideline"
+                />
+
+            <TextView
+                android:id="@+id/connected_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="4"
+                style="@style/TextOnBackgroundRegular"
+                android:layout_marginStart="@dimen/horizontal_margin_small"
+                app:layout_constraintTop_toTopOf="@id/connected_label"
+                app:layout_constraintStart_toEndOf="@id/connected_label"
+                />
+
+            <TextView
+                android:id="@+id/connected_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/list_devices_empty"
+                style="@style/TextOnBackgroundRegular"
+                android:textStyle="italic"
+                android:layout_marginTop="@dimen/vertical_margin_extra_large"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/connected_label"
+                app:layout_constraintStart_toEndOf="@id/guideline"
+                app:layout_constraintEnd_toEndOf="parent"
+                />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/connected_recycler_view"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                tools:listitem="@layout/view_holder_device_connected"
+                tools:itemCount="4"
+                android:layout_marginTop="@dimen/default_vertical_margin"
+                android:layout_marginHorizontal="@dimen/default_horizontal_margin"
+                app:layout_constraintTop_toBottomOf="@id/connected_label"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/guideline"
+                app:layout_constraintEnd_toEndOf="parent"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Button
+            android:id="@+id/continue_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/continue_button"
+            style="@style/PrimaryButton"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

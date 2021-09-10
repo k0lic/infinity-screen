@@ -455,8 +455,15 @@ public class MessageHandler {
         if (status == FileInfo.PlaybackStatus.DEFERRED_PLAY) {
             mediaViewModel.setFileInfoListElementDeferredPlaybackStatus(
                     command.getFileIndex(), status, command.getTimestamp());
+            mediaManager.decreaseDeferredDelay();
         } else {
             mediaViewModel.setFileInfoListElementPlaybackStatus(command.getFileIndex(), status);
+
+            long timestamp = command.getTimestamp();
+            if (timestamp != PlaybackStatusCommand.NO_TIMESTAMP) {
+                mediaViewModel.setCurrentTimestamp(timestamp);
+                mediaManager.increaseDeferredDelay(MediaManager.DEFAULT_DEFERRED_INCREMENT);
+            }
         }
     }
 
@@ -471,7 +478,7 @@ public class MessageHandler {
         ) {
             mediaManager.requestPlay(fileIndex);
         } else if (status == FileInfo.PlaybackStatus.PAUSE) {
-            mediaManager.requestPause(fileIndex);
+            mediaManager.requestPause(fileIndex, command.getTimestamp());
         }
     }
 
@@ -505,8 +512,10 @@ public class MessageHandler {
         // Update Average Round Trip time - used to monitor load
         syncViewModel.updateAverageRoundTripTime(roundTripTime);
 
-        // Update Latency of SyncInfoList Element with matching address
-        syncViewModel.updateSyncInfoListElement(clockResponse.getDeviceName(), clockDiff);
+        // Update Clock Difference of SyncInfoList Element with matching address
+        if (roundTripTime < SyncInfo.MAXIMUM_ROUND_TRIP_TIME) {
+            syncViewModel.updateSyncInfoListElement(clockResponse.getDeviceName(), clockDiff);
+        }
     }
 
     // handle SEEK_TO_ORDER message

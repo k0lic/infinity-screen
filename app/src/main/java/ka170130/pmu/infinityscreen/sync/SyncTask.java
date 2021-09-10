@@ -1,5 +1,7 @@
 package ka170130.pmu.infinityscreen.sync;
 
+import android.widget.Toast;
+
 import androidx.lifecycle.ViewModelProvider;
 
 import java.io.IOException;
@@ -11,6 +13,7 @@ import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.containers.Message;
 import ka170130.pmu.infinityscreen.containers.PeerInetAddressInfo;
 import ka170130.pmu.infinityscreen.helpers.LogHelper;
+import ka170130.pmu.infinityscreen.helpers.ThreadHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 
@@ -41,6 +44,8 @@ public class SyncTask implements Runnable {
         sleepCounter = 0;
     }
 
+    private boolean toastMessage = true;
+
     @Override
     public void run() {
         while (true) {
@@ -61,6 +66,24 @@ public class SyncTask implements Runnable {
                 // Skip if counter is out of range (includes case when list is empty)
                 if (syncInfoList.size() <= counter) {
                     counter = 0;
+                    continue;
+                }
+
+                // Iterate to first sync info that is not yet set
+                int alreadySetCounter = 0;
+                while (syncInfoList.get(counter).getClockDiff() != 0 && alreadySetCounter < syncInfoList.size()) {
+                    alreadySetCounter++;
+                    counter = (counter + 1) % syncInfoList.size();
+                }
+
+                // Skip if all Sync Info elements Clock Diff fields have been set
+                if (alreadySetCounter == syncInfoList.size()) {
+                    if (toastMessage) {
+                        toastMessage = false;
+                        ThreadHelper.runOnMainThread(() -> {
+                            Toast.makeText(mainActivity, "Sync Info Set", Toast.LENGTH_SHORT).show();
+                        });
+                    }
                     continue;
                 }
 

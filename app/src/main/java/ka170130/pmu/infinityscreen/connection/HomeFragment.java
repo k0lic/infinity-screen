@@ -1,9 +1,16 @@
 package ka170130.pmu.infinityscreen.connection;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -21,6 +28,7 @@ import ka170130.pmu.infinityscreen.containers.PeerInfo;
 import ka170130.pmu.infinityscreen.helpers.AppBarAndStatusHelper;
 import ka170130.pmu.infinityscreen.MainActivity;
 import ka170130.pmu.infinityscreen.databinding.FragmentHomeBinding;
+import ka170130.pmu.infinityscreen.helpers.PermissionsHelper;
 import ka170130.pmu.infinityscreen.helpers.StateChangeHelper;
 import ka170130.pmu.infinityscreen.viewmodels.ConnectionViewModel;
 import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
@@ -28,6 +36,7 @@ import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 public class HomeFragment extends Fragment {
 
     private static final int CHECK_PEERS_PERIOD = 10000;
+    private static final int DEVICE_INFO_REQUEST_PERIOD = 5000;
 
     private FragmentHomeBinding binding;
     private MainActivity mainActivity;
@@ -35,6 +44,31 @@ public class HomeFragment extends Fragment {
     private NavController navController;
 
     private Handler handler;
+    private Runnable deviceInfoRequester = new Runnable() {
+        @SuppressLint("MissingPermission")
+        @Override
+        public void run() {
+            PeerInfo device = connectionViewModel.getSelfDevice().getValue();
+            if (device != null) {
+                return;
+            }
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                return;
+            }
+
+            String[] permissions = { Manifest.permission.ACCESS_FINE_LOCATION };
+            PermissionsHelper.request(permissions, s -> {
+                mainActivity.getConnectionManager().getManager().requestDeviceInfo(
+                        mainActivity.getConnectionManager().getChannel(),
+                        wifiP2pDevice -> {
+                            PeerInfo self = new PeerInfo(wifiP2pDevice);
+                            connectionViewModel.setSelfDevice(self);
+                        });
+                getHandler().postDelayed(deviceInfoRequester, DEVICE_INFO_REQUEST_PERIOD);
+            });
+        }
+    };
 
     public HomeFragment() {
         // Required empty public constructor
@@ -76,10 +110,14 @@ public class HomeFragment extends Fragment {
 
         // Find Devices Button
         binding.findDevicesButton.setOnClickListener(view -> {
+            PeerInfo self = connectionViewModel.getSelfDevice().getValue();
+            if (self == null) {
+                return;
+            }
+
             if (mainActivity.checkPeerDiscovery()) {
                 // Set View Model Host info
                 connectionViewModel.setIsHost(true);
-                PeerInfo self = connectionViewModel.getSelfDevice().getValue();
                 PeerInetAddressInfo info = new PeerInetAddressInfo(self, null);
                 connectionViewModel.setHostDevice(info);
 
@@ -87,6 +125,12 @@ public class HomeFragment extends Fragment {
                 navController.navigate(HomeFragmentDirections.actionDeviceListFragment());
             }
         });
+
+        // Request device info if it is not yet available
+        PeerInfo device = connectionViewModel.getSelfDevice().getValue();
+        if (device == null) {
+            getHandler().postDelayed(deviceInfoRequester, DEVICE_INFO_REQUEST_PERIOD);
+        }
 
         // Listen for connections
         connectionViewModel.getConnectionStatus().observe(getViewLifecycleOwner(), status -> {
@@ -114,7 +158,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        handler = new Handler(Looper.getMainLooper());
+        getHandler();
         checkAgain();
 
         // sync App State - necessary for the Back button to work
@@ -147,5 +191,12 @@ public class HomeFragment extends Fragment {
     private void checkPeers() {
         mainActivity.getConnectionManager().discoverPeers();
         checkAgain();
+    }
+
+    private Handler getHandler() {
+        if (handler == null) {
+            handler = new Handler(Looper.getMainLooper());
+        }
+        return handler;
     }
 }

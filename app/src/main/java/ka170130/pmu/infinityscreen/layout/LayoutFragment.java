@@ -354,13 +354,4 @@ public class LayoutFragment extends ConnectionAwareFragment {
 
         return  binding.getRoot();
     }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        // sync App State - necessary for the Back button to work
-//        StateChangeHelper.requestStateChange(
-//                mainActivity, connectionViewModel, StateViewModel.AppState.LAYOUT);
-    }
 }

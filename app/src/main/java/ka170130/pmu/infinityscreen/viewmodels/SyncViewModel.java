@@ -71,7 +71,8 @@ public class SyncViewModel extends ViewModel implements Resettable {
             SyncInfo next = iterator.next();
             if (next.getDeviceName().equals(deviceName)) {
                 // Update element with matching address
-                next.update(clockDiff);
+                next.setClockDiff(clockDiff);
+//                next.update(clockDiff);
                 updated = true;
             }
         }

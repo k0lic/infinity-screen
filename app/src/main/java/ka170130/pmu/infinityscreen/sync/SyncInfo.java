@@ -8,6 +8,8 @@ public class SyncInfo implements Serializable {
 
     public static final String LOG_TAG = "sync-info-log-tag";
 
+    public static final long MAXIMUM_ROUND_TRIP_TIME = 100;
+
     private static final int COUNT_THRESHOLD = 10;
     private static final double FACTOR = 0.15;
 
@@ -44,5 +46,9 @@ public class SyncInfo implements Serializable {
         LogHelper.log(SyncInfo.LOG_TAG, "UPDATED LATENCY for " + deviceName + " is " + this.clockDiff);
 
         count++;
+    }
+
+    public void setClockDiff(long clockDiff) {
+        this.clockDiff = clockDiff;
     }
 }

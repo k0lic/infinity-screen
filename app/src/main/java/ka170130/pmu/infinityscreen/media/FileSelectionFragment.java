@@ -1,5 +1,6 @@
 package ka170130.pmu.infinityscreen.media;
 
+import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -45,6 +46,7 @@ import ka170130.pmu.infinityscreen.viewmodels.StateViewModel;
 public class FileSelectionFragment extends ConnectionAwareFragment {
 
     private static final int NUM_OF_COLUMNS = 3;
+    private static final int NUM_OF_COLUMNS_ALTERNATIVE = 1;
 
     private FragmentFileSelectionBinding binding;
     private StateViewModel stateViewModel;
@@ -117,7 +119,11 @@ public class FileSelectionFragment extends ConnectionAwareFragment {
         );
         binding.recyclerView.setHasFixedSize(false);
         binding.recyclerView.setAdapter(mediaAdapter);
-        binding.recyclerView.setLayoutManager(new GridLayoutManager(mainActivity, NUM_OF_COLUMNS));
+        int numOfColumns = NUM_OF_COLUMNS;
+        if (mainActivity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            numOfColumns = NUM_OF_COLUMNS_ALTERNATIVE;
+        }
+        binding.recyclerView.setLayoutManager(new GridLayoutManager(mainActivity, numOfColumns));
 
         // React to File Selection Change
         mediaViewModel.getSelectedMedia().observe(getViewLifecycleOwner(), stringList -> {

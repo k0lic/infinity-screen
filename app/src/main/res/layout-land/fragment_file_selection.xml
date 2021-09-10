@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".layout.LayoutFragment"
+    tools:context=".media.FileSelectionFragment"
     style="@style/FragmentWithBackground">
 
     <include
@@ -27,10 +27,10 @@
         >
 
         <TextView
-            android:id="@+id/instructions_label"
+            android:id="@+id/heading_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/layout_instructions"
+            android:text="@string/files_instruction"
             style="@style/TextOnBackgroundRegular"
             android:textAlignment="center"
             app:layout_constraintTop_toTopOf="parent"
@@ -38,63 +38,38 @@
             app:layout_constraintEnd_toStartOf="@id/guideline"
             />
 
-        <TextView
-            android:id="@+id/device_label"
+        <Button
+            android:id="@+id/select_files_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/layout_your_device"
-            style="@style/TextOnBackgroundRegular"
-            android:layout_marginEnd="@dimen/horizontal_margin_large"
-            app:layout_constraintTop_toTopOf="@id/device_number"
-            app:layout_constraintBottom_toBottomOf="@id/device_number"
-            app:layout_constraintEnd_toStartOf="@id/device_number"
+            android:text="@string/files_select"
+            style="@style/PrimaryButton"
+            android:layout_marginTop="@dimen/default_vertical_margin"
+            app:layout_constraintTop_toBottomOf="@id/heading_text"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/clear_all_button"
             />
 
-        <TextView
-            android:id="@+id/device_number"
+        <Button
+            android:id="@+id/clear_all_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="3"
-            style="@style/TextOnBackgroundExtraLarge"
-            android:layout_marginTop="@dimen/default_vertical_margin"
-            app:layout_constraintTop_toBottomOf="@id/instructions_label"
-            app:layout_constraintStart_toStartOf="parent"
+            android:text="@string/files_clear_all"
+            style="@style/NegativeButton"
+            app:layout_constraintTop_toTopOf="@id/select_files_button"
+            app:layout_constraintBottom_toBottomOf="@id/select_files_button"
+            app:layout_constraintStart_toEndOf="@id/select_files_button"
             app:layout_constraintEnd_toStartOf="@id/guideline"
             />
 
-        <ImageButton
-            android:id="@+id/change_layout_mode_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/crop_free_24"
-            android:background="@color/transparent"
-            android:padding="@dimen/default_element_padding"
-            android:layout_marginRight="@dimen/horizontal_margin_small"
-            app:layout_constraintTop_toBottomOf="@id/instructions_label"
-            app:layout_constraintBottom_toTopOf="@id/preview_button"
-            app:layout_constraintEnd_toEndOf="@id/guideline"
-            />
-
         <Button
-            android:id="@+id/preview_button"
+            android:id="@+id/play_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/preview"
-            style="@style/SecondaryButton"
+            android:text="@string/play"
+            style="@style/PrimaryButton"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/continue_button"
-            />
-
-        <Button
-            android:id="@+id/continue_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/continue_button"
-            style="@style/PrimaryButton"
-            app:layout_constraintTop_toTopOf="@id/preview_button"
-            app:layout_constraintBottom_toBottomOf="@id/preview_button"
-            app:layout_constraintStart_toEndOf="@id/preview_button"
             app:layout_constraintEnd_toStartOf="@id/guideline"
             />
 
@@ -106,15 +81,31 @@
             app:layout_constraintGuide_percent="0.6"
             />
 
-        <ka170130.pmu.infinityscreen.layout.DeviceLayoutView
-            android:id="@+id/device_layout_view"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginVertical="@dimen/default_vertical_margin"
+        <TextView
+            android:id="@+id/file_selection_empty_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/files_empty"
+            style="@style/TextOnBackgroundRegular"
+            android:textStyle="italic"
+            android:layout_marginTop="@dimen/vertical_margin_extra_large"
+            android:visibility="gone"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/guideline"
             app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guideline"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:listitem="@layout/view_holder_file"
+            tools:itemCount="7"
+            android:layout_marginStart="@dimen/default_horizontal_margin"
             />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

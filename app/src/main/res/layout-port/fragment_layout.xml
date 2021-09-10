@@ -28,14 +28,14 @@
 
         <TextView
             android:id="@+id/instructions_label"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/layout_instructions"
             style="@style/TextOnBackgroundRegular"
             android:textAlignment="center"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/guideline"
+            app:layout_constraintEnd_toEndOf="parent"
             />
 
         <TextView
@@ -59,7 +59,7 @@
             android:layout_marginTop="@dimen/default_vertical_margin"
             app:layout_constraintTop_toBottomOf="@id/instructions_label"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/guideline"
+            app:layout_constraintEnd_toEndOf="parent"
             />
 
         <ImageButton
@@ -69,10 +69,18 @@
             android:src="@drawable/crop_free_24"
             android:background="@color/transparent"
             android:padding="@dimen/default_element_padding"
-            android:layout_marginRight="@dimen/horizontal_margin_small"
-            app:layout_constraintTop_toBottomOf="@id/instructions_label"
+            android:layout_marginBottom="@dimen/vertical_margin_tiny"
+            app:layout_constraintBottom_toTopOf="@id/device_layout_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <ka170130.pmu.infinityscreen.layout.DeviceLayoutView
+            android:id="@+id/device_layout_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginVertical="@dimen/default_vertical_margin"
+            app:layout_constraintTop_toBottomOf="@id/device_number"
             app:layout_constraintBottom_toTopOf="@id/preview_button"
-            app:layout_constraintEnd_toEndOf="@id/guideline"
             />
 
         <Button
@@ -95,25 +103,6 @@
             app:layout_constraintTop_toTopOf="@id/preview_button"
             app:layout_constraintBottom_toBottomOf="@id/preview_button"
             app:layout_constraintStart_toEndOf="@id/preview_button"
-            app:layout_constraintEnd_toStartOf="@id/guideline"
-            />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.6"
-            />
-
-        <ka170130.pmu.infinityscreen.layout.DeviceLayoutView
-            android:id="@+id/device_layout_view"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginVertical="@dimen/default_vertical_margin"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/guideline"
             app:layout_constraintEnd_toEndOf="parent"
             />
 

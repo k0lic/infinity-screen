@@ -247,7 +247,7 @@ public class PlayFragment extends FullScreenFragment {
         // Play/Pause button
         binding.playButton.setOnClickListener(view -> {
             if (mediaPlayerState == MediaPlayerState.PLAYING) {
-                requestPause();
+                requestPause(false);
             } else {
                 requestPlay();
             }
@@ -275,7 +275,7 @@ public class PlayFragment extends FullScreenFragment {
                 if (mediaPlayerState == MediaPlayerState.PLAYING
                         || mediaPlayerState == MediaPlayerState.PREPARING
                 ) {
-                    requestPause();
+                    requestPause(false);
                 }
             }
 
@@ -759,7 +759,7 @@ public class PlayFragment extends FullScreenFragment {
             long delay = fileInfo.getTimestamp() - System.currentTimeMillis();
             if (delay < MINIMUM_DEFERRED_DELAY) {
                 LogHelper.log("Delay (" + delay + ") is less than MINIMUM_DEFERRED_DELAY(" + MINIMUM_DEFERRED_DELAY + ")! What now?");
-                requestPause();
+                requestPause(true);
                 Toast.makeText(
                         mainActivity,
                         getResources().getString(R.string.play_error_latency),
@@ -966,19 +966,25 @@ public class PlayFragment extends FullScreenFragment {
         }
     }
 
-    private void requestPause() {
+    private void requestPause(boolean useCurrentPosition) {
         Boolean isHost = connectionViewModel.getIsHost().getValue();
         Integer fileIndex = mediaViewModel.getCurrentFileIndex().getValue();
 
         try {
             if (isHost) {
-                mainActivity.getMediaManager().requestPause(fileIndex);
+                long timestamp = useCurrentPosition
+                        ? exoPlayer.getCurrentPosition()
+                        : PlaybackStatusCommand.NO_TIMESTAMP;
+                mainActivity.getMediaManager().requestPause(fileIndex, timestamp);
             } else {
                 // send message to host requesting Pause
                 InetAddress hostAddress =
                         connectionViewModel.getHostDevice().getValue().getInetAddress();
                 PlaybackStatusCommand command =
                         new PlaybackStatusCommand(fileIndex, FileInfo.PlaybackStatus.PAUSE);
+                if (useCurrentPosition) {
+                    command.setTimestamp(exoPlayer.getCurrentPosition());
+                }
 
                 mainActivity.getTaskManager().runSenderTask(
                         hostAddress, Message.newPlaybackStatusRequestMessage(command));

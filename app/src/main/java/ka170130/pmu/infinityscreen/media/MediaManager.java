@@ -40,8 +40,25 @@ import ka170130.pmu.infinityscreen.viewmodels.SyncViewModel;
 
 public class MediaManager {
 
+    public static final int DEFAULT_DEFERRED_INCREMENT = 6;
     private static final long[] DEFERRED_DELAYS = {
-            1000
+            800,
+            1000,
+            1200,
+            1400,
+            1600,
+            1800,
+            2000,
+            2200,
+            2400,
+            2600,
+            2800,
+            3000,
+            3200,
+            3400,
+            3600,
+            3800,
+            4000
     };
 
     private static final int DEFAULT_THUMBNAIL_SIZE = 200;
@@ -232,11 +249,12 @@ public class MediaManager {
         mainActivity.getTaskManager().runSenderTask(hostAddress, message);
     }
 
-    public void requestPause(int fileIndex) throws IOException {
+    public void requestPause(int fileIndex, long timestamp) throws IOException {
         // Authorize Pause
         Message message = Message.newPlaybackStatusCommandMessage(new PlaybackStatusCommand(
                 fileIndex,
-                FileInfo.PlaybackStatus.PAUSE
+                FileInfo.PlaybackStatus.PAUSE,
+                timestamp
         ));
         mainActivity.getTaskManager().sendToAllInGroup(message, true);
     }
@@ -245,13 +263,14 @@ public class MediaManager {
         return DEFERRED_DELAYS[deferredPicker];
     }
 
-    private void increaseDeferredDelay() {
-        if (deferredPicker + 1 < DEFERRED_DELAYS.length) {
-            deferredPicker++;
+    public void increaseDeferredDelay(int delta) {
+        deferredPicker += delta;
+        if (deferredPicker >= DEFERRED_DELAYS.length) {
+            deferredPicker = DEFERRED_DELAYS.length - 1;
         }
     }
 
-    private void decreaseDeferredDelay() {
+    public void decreaseDeferredDelay() {
         if (deferredPicker - 1 >= 0) {
             deferredPicker--;
         }
